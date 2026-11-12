@@ -1,0 +1,37 @@
+{
+ "note": "Hand reading of the synthetic set's failed answers, 2026-11-12. Strict scores are run_chat_keys.py's; 'by hand' adds answers that are correct when read in full. The key files are unchanged.",
+ "correct_by_hand": {
+  "syn01-19": {
+   "runs": "both",
+   "why": "gives \u00a3163,225 and says the letter overstated the LDs; misses only the words 'six weeks'"
+  },
+  "syn01-23": {
+   "runs": "both",
+   "why": "gives the contract's 3% above base rate against the 13.25% claimed; misses only the clause number 7.6"
+  },
+  "syn02-16": {
+   "runs": "syn-r1",
+   "why": "gives USD 2,000,000; misses only the name '12.4' / 'Data Breach Cap'"
+  },
+  "syn03-12": {
+   "runs": "both",
+   "why": "says the occupier 'is not explicitly identified/named' (a correct decline the grader's phrase list does not know)"
+  }
+ },
+ "by_design": {
+  "syn04-07": "the answer is only in Word comments, which the product never reads as document text",
+  "syn04-15": "the answer is only in tracked deletions, which the product reads as accepted (deleted words are not text)"
+ },
+ "scores": {
+  "syn-r2": {
+   "strict": "61/116",
+   "by_hand": "64/116",
+   "by_hand_without_word_markup": "64/114"
+  },
+  "syn-r1": {
+   "strict": "54/116",
+   "by_hand": "58/116",
+   "by_hand_without_word_markup": "58/114"
+  }
+ }
+}

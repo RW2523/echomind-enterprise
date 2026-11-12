@@ -53,6 +53,35 @@ latest on this case" in the chat (section "Case management" below).
 | — | Content-Security-Policy | **Tested** (config) | `frontend/nginx.law.conf`: `default-src 'self'` …, validated with `nginx -t`; the built bundle references no CDN |
 | — | Strict TypeScript for new code | **Tested** | `tsconfig.counsel.json` (`strict`), also in CI |
 
+## A realistic synthetic dataset, and how the product does on it (2026-11-12)
+
+Owner, in the 2026-11-11 evaluation report: build a realistic synthetic dataset, load it and test it. `eval/fixtures/synthetic`
+holds four fictional matters (63 files: Word with list numbering, tracked changes and comments; typeset PDFs; image-only
+scans with stamps, signatures and handwriting; text; CSV/.eml/.xlsx the product refuses), the authors' fact sheets with
+their planted traps, and 116 questions written from the documents' text alone before any answer was seen
+(`README.md` there; tools in `scripts/law/synthetic`). Run on a private copy at a119e38 (the deployed code), two chat runs:
+
+| Measure | Synthetic set | Demo data, same code |
+|---|---|---|
+| Chat questions, strict | 54/116 and 61/116 | 126/165 |
+| Read by hand | 58 and 64 of 116 | |
+| Retrieval, final Recall@5 / MRR@10 | 0.434 / 0.468 | 0.667 / 0.514 |
+| Evidence in the answer model's context | 0.563 | 0.809 |
+| "Partly supported" | 53–63 of 116 | 79 of 156 |
+
+- **Held up:** all 58 importable files indexed, none failed (scans searchable in 5.7 min median, 10.4 at most, with 58 queued);
+  OCR of typed text 93–99% of words (`extract_check.py`); Word list numbers exact; tracked changes accepted and comments
+  left out by design; questions asked in another matter declined 4/4; facts 12–13/17, lists 6–7/8, not stated 9–10/12.
+- **Fails, in order of weight:** (1) superseded and unsigned documents answered as current (a draft's step-in clause, a
+  preliminary report's dates and counts, an unsigned redline's option extension): document status is not used; (2) a
+  claim repeated instead of checked, often the other side's (the lease quoted, then the landlord's misquote endorsed);
+  (3) checks and sums not worked out (calculations 1–2/9): the rule-based working is not used for "is this figure right?";
+  (4) facts in tables, stamps, handwriting and definitions missed (92.00 hours read as "$92.00"; OCR of handwriting
+  garbles digits); (5) follow-ups 0–2/8 and which-party questions 2/8 (search finds 9% of their evidence).
+- Reports: `eval/law/reports/20261111-234830-chat-syn-r1`, `20261111-234814-chat-syn-r2`, `20261111-235426-retrieval-syn`,
+  `20261111-234836-synthetic-summary.md`, `20261112-synthetic-hand-reading.json`, `20261111-231410-synthetic-load.json`.
+  Nothing in the product changed.
+
 ## The 2026-11-11 evaluation's fix list (2026-11-12)
 
 The end-to-end evaluation of 2026-11-11 ended with sixteen fixes and a UI "Fix first" / "Fix next" table; the owner asked

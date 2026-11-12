@@ -1,0 +1,9393 @@
+{
+ "suite": "retrieval",
+ "label": "syn",
+ "commit": "c30eab4",
+ "chat": "eval/law/reports/20261111-234814-chat-syn-r2.json",
+ "summary": {
+  "items": 108,
+  "measured": 89,
+  "stages": {
+   "dense": {
+    "recall@5": 0.387,
+    "recall@10": 0.472,
+    "mrr@10": 0.423,
+    "ndcg@10": 0.363
+   },
+   "sparse": {
+    "recall@5": 0.388,
+    "recall@10": 0.461,
+    "mrr@10": 0.462,
+    "ndcg@10": 0.381
+   },
+   "keyword": {
+    "recall@5": 0.246,
+    "recall@10": 0.309,
+    "mrr@10": 0.3,
+    "ndcg@10": 0.24
+   },
+   "fused": {
+    "recall@5": 0.402,
+    "recall@10": 0.51,
+    "mrr@10": 0.467,
+    "ndcg@10": 0.389
+   },
+   "reranked": {
+    "recall@5": 0.434,
+    "recall@10": 0.598,
+    "mrr@10": 0.485,
+    "ndcg@10": 0.429
+   },
+   "floored": {
+    "recall@5": 0.434,
+    "recall@10": 0.587,
+    "mrr@10": 0.484,
+    "ndcg@10": 0.426
+   },
+   "final": {
+    "recall@5": 0.434,
+    "recall@10": 0.472,
+    "mrr@10": 0.468,
+    "ndcg@10": 0.379
+   },
+   "hybrid": {
+    "recall@5": 0.455,
+    "recall@10": 0.581,
+    "mrr@10": 0.49,
+    "ndcg@10": 0.433
+   },
+   "hybrid_sparse": {
+    "recall@5": 0.431,
+    "recall@10": 0.566,
+    "mrr@10": 0.477,
+    "ndcg@10": 0.419
+   }
+  },
+  "final_recall": 0.499,
+  "context_recall": 0.563,
+  "context_sources_mean": 6.583,
+  "context_chars_mean": 5383.278,
+  "rerank_s": {
+   "n": 287,
+   "p50": 0.7472175800940022,
+   "p95": 1.5960745849879459
+  },
+  "ce_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "floor": -10.5,
+  "by_kind": {
+   "amendment": {
+    "n": 6,
+    "final_recall": 0.25,
+    "context_recall": 0.472
+   },
+   "calculation": {
+    "n": 9,
+    "final_recall": 0.498,
+    "context_recall": 0.576
+   },
+   "conflict": {
+    "n": 16,
+    "final_recall": 0.513,
+    "context_recall": 0.554
+   },
+   "cross_doc": {
+    "n": 3,
+    "final_recall": 0.656,
+    "context_recall": 0.656
+   },
+   "date": {
+    "n": 4,
+    "final_recall": 0.792,
+    "context_recall": 0.792
+   },
+   "fact": {
+    "n": 15,
+    "final_recall": 0.567,
+    "context_recall": 0.567
+   },
+   "list": {
+    "n": 8,
+    "final_recall": 0.408,
+    "context_recall": 0.658
+   },
+   "role_party": {
+    "n": 7,
+    "final_recall": 0.086,
+    "context_recall": 0.086
+   },
+   "scan": {
+    "n": 8,
+    "final_recall": 0.562,
+    "context_recall": 0.688
+   },
+   "table": {
+    "n": 6,
+    "final_recall": 0.871,
+    "context_recall": 0.871
+   },
+   "version": {
+    "n": 7,
+    "final_recall": 0.432,
+    "context_recall": 0.432
+   }
+  },
+  "failed_by_stage": {
+   "retrieved by a channel, lost before reranking": 5,
+   "ranked out by the reranker (below the top passages or the floor)": 11,
+   "partly in context": 20,
+   "in context: answered wrong or incomplete": 11,
+   "evidence not located in the documents": 2,
+   "follow-up (not measured)": 6
+  }
+ },
+ "failed_by_stage": {
+  "retrieved by a channel, lost before reranking": [
+   "syn01-05",
+   "syn01-06",
+   "syn01-26",
+   "syn02-05",
+   "syn02-06"
+  ],
+  "ranked out by the reranker (below the top passages or the floor)": [
+   "syn01-09",
+   "syn01-18",
+   "syn01-19",
+   "syn02-01",
+   "syn02-19",
+   "syn02-26",
+   "syn03-01",
+   "syn03-06",
+   "syn04-03",
+   "syn04-07",
+   "syn04-15"
+  ],
+  "partly in context": [
+   "syn01-10",
+   "syn01-12",
+   "syn01-17",
+   "syn01-21",
+   "syn01-22",
+   "syn02-11",
+   "syn02-17",
+   "syn02-18",
+   "syn02-20",
+   "syn02-21",
+   "syn02-22",
+   "syn03-07",
+   "syn03-10",
+   "syn03-19",
+   "syn03-21",
+   "syn03-23",
+   "syn04-05",
+   "syn04-11",
+   "syn04-14",
+   "syn04-20"
+  ],
+  "in context: answered wrong or incomplete": [
+   "syn01-11",
+   "syn01-23",
+   "syn03-08",
+   "syn03-11",
+   "syn03-18",
+   "syn03-26",
+   "syn04-10",
+   "syn04-13",
+   "syn04-24",
+   "syn04-25",
+   "syn04-26"
+  ],
+  "evidence not located in the documents": [
+   "syn01-15",
+   "syn03-12"
+  ],
+  "follow-up (not measured)": [
+   "syn01-27",
+   "syn02-28",
+   "syn03-27",
+   "syn03-28",
+   "syn04-27",
+   "syn04-28"
+  ]
+ },
+ "items": [
+  {
+   "id": "syn01-01",
+   "matter": "SYN-01",
+   "kind": "fact",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5706417189553201,
+     "first": 2,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 21,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6509209298071326,
+     "first": 1,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 3909
+  },
+  {
+   "id": "syn01-02",
+   "matter": "SYN-01",
+   "kind": "fact",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5109559939712153,
+     "first": 2,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7977228895450266,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.430624116386567,
+     "first": 4,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.430624116386567,
+     "first": 4,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.45560514958746035,
+     "first": 4,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.45560514958746035,
+     "first": 4,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.45560514958746035,
+     "first": 4,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 5976
+  },
+  {
+   "id": "syn01-03",
+   "matter": "SYN-01",
+   "kind": "fact",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 36,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 7,
+   "context_chars": 5367
+  },
+  {
+   "id": "syn01-04",
+   "matter": "SYN-01",
+   "kind": "fact",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 34,
+     "found": 0.3333333333333333
+    },
+    "fused": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 6,
+   "context_chars": 3942
+  },
+  {
+   "id": "syn01-05",
+   "matter": "SYN-01",
+   "kind": "role_party",
+   "segments": 2,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 39,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 4376
+  },
+  {
+   "id": "syn01-06",
+   "matter": "SYN-01",
+   "kind": "role_party",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 8,
+   "context_chars": 6050
+  },
+  {
+   "id": "syn01-07",
+   "matter": "SYN-01",
+   "kind": "list",
+   "segments": 6,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.5
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.5
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.5
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.5
+    },
+    "floored": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.5
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.5
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.5
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.5
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 0.5,
+   "context_sources": 6,
+   "context_chars": 3966
+  },
+  {
+   "id": "syn01-08",
+   "matter": "SYN-01",
+   "kind": "list",
+   "segments": 12,
+   "located": 7,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 31,
+     "found": 0.42857142857142855
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 0.42857142857142855
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 24,
+     "found": 0.42857142857142855
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 11,
+     "found": 0.42857142857142855
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 27,
+     "found": 0.42857142857142855
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 27,
+     "found": 0.42857142857142855
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 18,
+     "found": 0.42857142857142855
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 0.42857142857142855
+    }
+   },
+   "final_recall": 0.42857142857142855,
+   "context_recall": 0.42857142857142855,
+   "context_sources": 6,
+   "context_chars": 3250
+  },
+  {
+   "id": "syn01-09",
+   "matter": "SYN-01",
+   "kind": "calculation",
+   "segments": 22,
+   "located": 22,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 21,
+     "found": 0.4090909090909091
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 14,
+     "found": 0.7272727272727273
+    },
+    "keyword": {
+     "recall@5": 0.36363636363636365,
+     "recall@10": 0.36363636363636365,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.12647135138382856,
+     "first": 2,
+     "found": 0.36363636363636365
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 13,
+     "found": 0.6818181818181818
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 0.6818181818181818
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 0.6818181818181818
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.36363636363636365,
+     "mrr@10": 0.1,
+     "ndcg@10": 0.07311683844390995,
+     "first": 9,
+     "found": 0.6818181818181818
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 14,
+     "found": 0.6818181818181818
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 4986
+  },
+  {
+   "id": "syn01-10",
+   "matter": "SYN-01",
+   "kind": "calculation",
+   "segments": 10,
+   "located": 10,
+   "stages": {
+    "dense": {
+     "recall@5": 0.1,
+     "recall@10": 0.2,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.31608365985743925,
+     "first": 1,
+     "found": 0.2
+    },
+    "sparse": {
+     "recall@5": 0.1,
+     "recall@10": 0.1,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.14606834984270645,
+     "first": 3,
+     "found": 0.1
+    },
+    "keyword": {
+     "recall@5": 0.1,
+     "recall@10": 0.1,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.3391602052736161,
+     "first": 0,
+     "found": 0.1
+    },
+    "fused": {
+     "recall@5": 0.1,
+     "recall@10": 0.1,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.3391602052736161,
+     "first": 0,
+     "found": 0.2
+    },
+    "reranked": {
+     "recall@5": 0.2,
+     "recall@10": 0.2,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3156484524795145,
+     "first": 2,
+     "found": 0.2
+    },
+    "floored": {
+     "recall@5": 0.2,
+     "recall@10": 0.2,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3156484524795145,
+     "first": 2,
+     "found": 0.2
+    },
+    "final": {
+     "recall@5": 0.1,
+     "recall@10": 0.1,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.21398626473452756,
+     "first": 1,
+     "found": 0.1
+    },
+    "hybrid": {
+     "recall@5": 0.1,
+     "recall@10": 0.2,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.3347975674340217,
+     "first": 1,
+     "found": 0.2
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.1,
+     "recall@10": 0.1,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.21398626473452756,
+     "first": 1,
+     "found": 0.2
+    }
+   },
+   "final_recall": 0.1,
+   "context_recall": 0.2,
+   "context_sources": 8,
+   "context_chars": 6159
+  },
+  {
+   "id": "syn01-11",
+   "matter": "SYN-01",
+   "kind": "date",
+   "segments": 6,
+   "located": 6,
+   "stages": {
+    "dense": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.8333333333333334,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.4982506457922279,
+     "first": 2,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5173633627401372,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6325414799409711,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.36885567213865283,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.36885567213865283,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.424926013816671,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6203974344166847,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.424926013816671,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 8,
+   "context_chars": 6102
+  },
+  {
+   "id": "syn01-12",
+   "matter": "SYN-01",
+   "kind": "date",
+   "segments": 3,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.5
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.5,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.19342640361727081,
+     "first": 7,
+     "found": 0.5
+    },
+    "keyword": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3065735963827292,
+     "first": 2,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.5
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3065735963827292,
+     "first": 2,
+     "found": 0.5
+    },
+    "floored": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3065735963827292,
+     "first": 2,
+     "found": 0.5
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2640681225725909,
+     "first": 3,
+     "found": 0.5
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.5
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2640681225725909,
+     "first": 3,
+     "found": 0.5
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 0.5,
+   "context_sources": 8,
+   "context_chars": 5718
+  },
+  {
+   "id": "syn01-13",
+   "matter": "SYN-01",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 3099
+  },
+  {
+   "id": "syn01-14",
+   "matter": "SYN-01",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 3713
+  },
+  {
+   "id": "syn01-15",
+   "matter": "SYN-01",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 5381
+  },
+  {
+   "id": "syn01-16",
+   "matter": "SYN-01",
+   "kind": "version",
+   "segments": 7,
+   "located": 7,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5714285714285714,
+     "recall@10": 0.5714285714285714,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.45920859271393394,
+     "first": 0,
+     "found": 0.8571428571428571
+    },
+    "sparse": {
+     "recall@5": 0.8571428571428571,
+     "recall@10": 0.8571428571428571,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.43949400282172263,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 12,
+     "found": 0.14285714285714285
+    },
+    "fused": {
+     "recall@5": 0.8571428571428571,
+     "recall@10": 0.8571428571428571,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4928485157616413,
+     "first": 1,
+     "found": 0.8571428571428571
+    },
+    "reranked": {
+     "recall@5": 0.8571428571428571,
+     "recall@10": 0.8571428571428571,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4793111553823665,
+     "first": 1,
+     "found": 0.8571428571428571
+    },
+    "floored": {
+     "recall@5": 0.8571428571428571,
+     "recall@10": 0.8571428571428571,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4793111553823665,
+     "first": 1,
+     "found": 0.8571428571428571
+    },
+    "final": {
+     "recall@5": 0.8571428571428571,
+     "recall@10": 0.8571428571428571,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.3949969211264808,
+     "first": 1,
+     "found": 0.8571428571428571
+    },
+    "hybrid": {
+     "recall@5": 0.8571428571428571,
+     "recall@10": 0.8571428571428571,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4928485157616413,
+     "first": 1,
+     "found": 0.8571428571428571
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.8571428571428571,
+     "recall@10": 0.8571428571428571,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4793111553823665,
+     "first": 1,
+     "found": 0.8571428571428571
+    }
+   },
+   "final_recall": 0.8571428571428571,
+   "context_recall": 0.8571428571428571,
+   "context_sources": 6,
+   "context_chars": 4198
+  },
+  {
+   "id": "syn01-17",
+   "matter": "SYN-01",
+   "kind": "version",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 0.3333333333333333
+    },
+    "sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "keyword": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 0.3333333333333333
+    },
+    "fused": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 6,
+   "context_chars": 3780
+  },
+  {
+   "id": "syn01-18",
+   "matter": "SYN-01",
+   "kind": "amendment",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 13,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 0.5
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 11,
+     "found": 0.5
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 22,
+     "found": 0.5
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 22,
+     "found": 0.5
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 19,
+     "found": 0.5
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 32,
+     "found": 0.5
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 4066
+  },
+  {
+   "id": "syn01-19",
+   "matter": "SYN-01",
+   "kind": "conflict",
+   "segments": 4,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 0.3333333333333333
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 12,
+     "found": 0.3333333333333333
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 27,
+     "found": 0.3333333333333333
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 22,
+     "found": 0.3333333333333333
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.15642624200758548,
+     "first": 6,
+     "found": 0.3333333333333333
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.15642624200758548,
+     "first": 6,
+     "found": 0.3333333333333333
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 11,
+     "found": 0.3333333333333333
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.1480409554829326,
+     "first": 7,
+     "found": 0.3333333333333333
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 7,
+   "context_chars": 5527
+  },
+  {
+   "id": "syn01-20",
+   "matter": "SYN-01",
+   "kind": "conflict",
+   "segments": 13,
+   "located": 13,
+   "stages": {
+    "dense": {
+     "recall@5": 0.07692307692307693,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.4554182655296562,
+     "first": 2,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.07692307692307693,
+     "recall@10": 0.3076923076923077,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.49786328212473263,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.07692307692307693,
+     "recall@10": 0.07692307692307693,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.3026024134988135,
+     "first": 0,
+     "found": 0.8461538461538461
+    },
+    "fused": {
+     "recall@5": 0.07692307692307693,
+     "recall@10": 0.8461538461538461,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.498930317754552,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.07692307692307693,
+     "recall@10": 0.8461538461538461,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.47035245467007214,
+     "first": 1,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.07692307692307693,
+     "recall@10": 0.8461538461538461,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.47035245467007214,
+     "first": 1,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.15384615384615385,
+     "recall@10": 0.15384615384615385,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.30798345931689824,
+     "first": 1,
+     "found": 0.15384615384615385
+    },
+    "hybrid": {
+     "recall@5": 0.07692307692307693,
+     "recall@10": 0.8461538461538461,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.498930317754552,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.15384615384615385,
+     "recall@10": 0.3076923076923077,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5107574098602351,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.15384615384615385,
+   "context_recall": 0.15384615384615385,
+   "context_sources": 6,
+   "context_chars": 4132
+  },
+  {
+   "id": "syn01-21",
+   "matter": "SYN-01",
+   "kind": "cross_doc",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.43734888382569426,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4632423659320675,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "fused": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6105456988825855,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.758586654365518,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.758586654365518,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6364391809889587,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6364391809889587,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4632423659320675,
+     "first": 1,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.6666666666666666,
+   "context_recall": 0.6666666666666666,
+   "context_sources": 8,
+   "context_chars": 5943
+  },
+  {
+   "id": "syn01-22",
+   "matter": "SYN-01",
+   "kind": "conflict",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 18,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7988614740430418,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7039180890341347,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7039180890341347,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "hybrid": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.6666666666666666,
+   "context_recall": 0.6666666666666666,
+   "context_sources": 8,
+   "context_chars": 3728
+  },
+  {
+   "id": "syn01-23",
+   "matter": "SYN-01",
+   "kind": "conflict",
+   "segments": 2,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4052
+  },
+  {
+   "id": "syn01-24",
+   "matter": "SYN-01",
+   "kind": "table",
+   "segments": 13,
+   "located": 10,
+   "stages": {
+    "dense": {
+     "recall@5": 0.9,
+     "recall@10": 0.9,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.27108847097297983,
+     "first": 2,
+     "found": 0.9
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.7,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.31204907722178066,
+     "first": 1,
+     "found": 0.9
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.9,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.20904936749052636,
+     "first": 6,
+     "found": 0.9
+    },
+    "fused": {
+     "recall@5": 0.9,
+     "recall@10": 0.9,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2583297509898471,
+     "first": 3,
+     "found": 0.9
+    },
+    "reranked": {
+     "recall@5": 0.7,
+     "recall@10": 0.7,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.30240383049385083,
+     "first": 1,
+     "found": 0.9
+    },
+    "floored": {
+     "recall@5": 0.7,
+     "recall@10": 0.7,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.30240383049385083,
+     "first": 1,
+     "found": 0.9
+    },
+    "final": {
+     "recall@5": 0.7,
+     "recall@10": 0.7,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.2489083270225946,
+     "first": 1,
+     "found": 0.7
+    },
+    "hybrid": {
+     "recall@5": 0.7,
+     "recall@10": 0.7,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2583297509898471,
+     "first": 3,
+     "found": 0.9
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.7,
+     "recall@10": 0.7,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.3885264725763437,
+     "first": 1,
+     "found": 0.9
+    }
+   },
+   "final_recall": 0.8,
+   "context_recall": 0.8,
+   "context_sources": 6,
+   "context_chars": 4554
+  },
+  {
+   "id": "syn01-25",
+   "matter": "SYN-01",
+   "kind": "scan",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.23719771276929622,
+     "first": 4,
+     "found": 0.5
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 14,
+     "found": 0.5
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3065735963827292,
+     "first": 2,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.5,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.19342640361727081,
+     "first": 7,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.5,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.19342640361727081,
+     "first": 7,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2640681225725909,
+     "first": 3,
+     "found": 0.5
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.23719771276929622,
+     "first": 4,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2640681225725909,
+     "first": 3,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 0.5,
+   "context_sources": 6,
+   "context_chars": 3746
+  },
+  {
+   "id": "syn01-26",
+   "matter": "SYN-01",
+   "kind": "scan",
+   "segments": 2,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 24,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 3400
+  },
+  {
+   "id": "syn02-01",
+   "matter": "SYN-02",
+   "kind": "fact",
+   "segments": 1,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 21,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 13,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.3562071871080222,
+     "first": 5,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.3333333333333333,
+     "first": 6,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 5516
+  },
+  {
+   "id": "syn02-02",
+   "matter": "SYN-02",
+   "kind": "fact",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9197207891481876,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.5,
+     "mrr@10": 0.1,
+     "ndcg@10": 0.17723928678404774,
+     "first": 9,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9197207891481876,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9197207891481876,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9197207891481876,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9197207891481876,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4665
+  },
+  {
+   "id": "syn02-03",
+   "matter": "SYN-02",
+   "kind": "fact",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8503449055347546,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.5,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.18457569677956817,
+     "first": 8,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.42177340954886444,
+     "first": 4,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.5
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8175295903539445,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 0.5,
+   "context_sources": 8,
+   "context_chars": 6680
+  },
+  {
+   "id": "syn02-04",
+   "matter": "SYN-02",
+   "kind": "fact",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.5307212739772434,
+     "first": 1,
+     "found": 0.6666666666666666
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 15,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 27,
+     "found": 0.3333333333333333
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 11,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.34870224750355494,
+     "first": 4,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.3235866969737877,
+     "first": 5,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 9,
+   "context_chars": 8102
+  },
+  {
+   "id": "syn02-05",
+   "matter": "SYN-02",
+   "kind": "role_party",
+   "segments": 1,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 31,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 7,
+   "context_chars": 6012
+  },
+  {
+   "id": "syn02-06",
+   "matter": "SYN-02",
+   "kind": "role_party",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 20,
+     "found": 0.5
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 8,
+   "context_chars": 6697
+  },
+  {
+   "id": "syn02-07",
+   "matter": "SYN-02",
+   "kind": "list",
+   "segments": 1,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 7028
+  },
+  {
+   "id": "syn02-08",
+   "matter": "SYN-02",
+   "kind": "list",
+   "segments": 1,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 15,
+   "context_chars": 13006
+  },
+  {
+   "id": "syn02-09",
+   "matter": "SYN-02",
+   "kind": "calculation",
+   "segments": 4,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 19,
+     "found": 0.25
+    },
+    "sparse": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3065735963827292,
+     "first": 2,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.25,
+     "mrr@10": 0.1,
+     "ndcg@10": 0.17723928678404774,
+     "first": 9,
+     "found": 0.25
+    },
+    "reranked": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.25
+    },
+    "floored": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.25
+    },
+    "final": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.25
+    },
+    "hybrid": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2640681225725909,
+     "first": 3,
+     "found": 0.25
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.25
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 1.0,
+   "context_sources": 8,
+   "context_chars": 7114
+  },
+  {
+   "id": "syn02-10",
+   "matter": "SYN-02",
+   "kind": "date",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 0.6666666666666666
+    },
+    "reranked": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "floored": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "final": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "hybrid": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3065735963827292,
+     "first": 2,
+     "found": 0.6666666666666666
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    }
+   },
+   "final_recall": 0.6666666666666666,
+   "context_recall": 0.6666666666666666,
+   "context_sources": 8,
+   "context_chars": 9271
+  },
+  {
+   "id": "syn02-11",
+   "matter": "SYN-02",
+   "kind": "calculation",
+   "segments": 4,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 0.3333333333333333
+    },
+    "sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.2960819109658652,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6508205185601091,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "fused": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.2960819109658652,
+     "first": 1,
+     "found": 0.6666666666666666
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.2960819109658652,
+     "first": 1,
+     "found": 0.6666666666666666
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.2960819109658652,
+     "first": 1,
+     "found": 0.6666666666666666
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.2960819109658652,
+     "first": 1,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.2960819109658652,
+     "first": 1,
+     "found": 0.6666666666666666
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.2960819109658652,
+     "first": 1,
+     "found": 0.6666666666666666
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 6,
+   "context_chars": 5798
+  },
+  {
+   "id": "syn02-12",
+   "matter": "SYN-02",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 5653
+  },
+  {
+   "id": "syn02-13",
+   "matter": "SYN-02",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 7,
+   "context_chars": 6589
+  },
+  {
+   "id": "syn02-14",
+   "matter": "SYN-02",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 6216
+  },
+  {
+   "id": "syn02-15",
+   "matter": "SYN-02",
+   "kind": "amendment",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 24,
+     "found": 0.5
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 1.0,
+   "context_sources": 10,
+   "context_chars": 10029
+  },
+  {
+   "id": "syn02-16",
+   "matter": "SYN-02",
+   "kind": "amendment",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.20438239758848611,
+     "first": 6,
+     "found": 0.6666666666666666
+    },
+    "sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "keyword": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.23719771276929622,
+     "first": 4,
+     "found": 0.6666666666666666
+    },
+    "fused": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.18457569677956817,
+     "first": 8,
+     "found": 0.6666666666666666
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.18457569677956817,
+     "first": 8,
+     "found": 0.6666666666666666
+    },
+    "final": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.6666666666666666
+    },
+    "hybrid": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2640681225725909,
+     "first": 3,
+     "found": 0.6666666666666666
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 0.6666666666666666
+    }
+   },
+   "final_recall": 0.6666666666666666,
+   "context_recall": 0.6666666666666666,
+   "context_sources": 7,
+   "context_chars": 7046
+  },
+  {
+   "id": "syn02-17",
+   "matter": "SYN-02",
+   "kind": "version",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 14,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.39780880120575696,
+     "first": 6,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 16,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.5,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.20438239758848611,
+     "first": 6,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.39780880120575696,
+     "first": 6,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.39780880120575696,
+     "first": 6,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.23719771276929622,
+     "first": 4,
+     "found": 0.5
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.36181498356361597,
+     "first": 8,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.4415801103577823,
+     "first": 4,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 0.5,
+   "context_sources": 7,
+   "context_chars": 6912
+  },
+  {
+   "id": "syn02-18",
+   "matter": "SYN-02",
+   "kind": "version",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 20,
+     "found": 0.3333333333333333
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 15,
+     "found": 0.6666666666666666
+    },
+    "fused": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 0.3333333333333333
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 7,
+   "context_chars": 6815
+  },
+  {
+   "id": "syn02-19",
+   "matter": "SYN-02",
+   "kind": "conflict",
+   "segments": 4,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 16,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 12,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 13,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 13,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 16,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 5852
+  },
+  {
+   "id": "syn02-20",
+   "matter": "SYN-02",
+   "kind": "conflict",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.1,
+     "ndcg@10": 0.13565197343244778,
+     "first": 9,
+     "found": 0.6666666666666666
+    },
+    "sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 0.6666666666666666
+    },
+    "fused": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.49818925746641285,
+     "first": 1,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.617319681505689,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.617319681505689,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6257049680303419,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 8,
+   "context_chars": 8175
+  },
+  {
+   "id": "syn02-21",
+   "matter": "SYN-02",
+   "kind": "conflict",
+   "segments": 5,
+   "located": 5,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 28,
+     "found": 0.2
+    },
+    "sparse": {
+     "recall@5": 0.2,
+     "recall@10": 0.2,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.19519002499605084,
+     "first": 2,
+     "found": 0.6
+    },
+    "keyword": {
+     "recall@5": 0.6,
+     "recall@10": 0.6,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5855700749881525,
+     "first": 0,
+     "found": 0.8
+    },
+    "fused": {
+     "recall@5": 0.2,
+     "recall@10": 0.6,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.3080351663449861,
+     "first": 2,
+     "found": 0.6
+    },
+    "reranked": {
+     "recall@5": 0.2,
+     "recall@10": 0.6,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.2685357229842324,
+     "first": 4,
+     "found": 0.6
+    },
+    "floored": {
+     "recall@5": 0.2,
+     "recall@10": 0.6,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.2685357229842324,
+     "first": 4,
+     "found": 0.6
+    },
+    "final": {
+     "recall@5": 0.2,
+     "recall@10": 0.2,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.16812753627111746,
+     "first": 3,
+     "found": 0.2
+    },
+    "hybrid": {
+     "recall@5": 0.2,
+     "recall@10": 0.6,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2856436410275446,
+     "first": 3,
+     "found": 0.6
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.2,
+     "recall@10": 0.6,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.312706129752478,
+     "first": 2,
+     "found": 0.6
+    }
+   },
+   "final_recall": 0.2,
+   "context_recall": 0.6,
+   "context_sources": 8,
+   "context_chars": 6581
+  },
+  {
+   "id": "syn02-22",
+   "matter": "SYN-02",
+   "kind": "conflict",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "keyword": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "fused": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "reranked": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "floored": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "final": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "hybrid": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.6666666666666666
+    }
+   },
+   "final_recall": 0.6666666666666666,
+   "context_recall": 0.6666666666666666,
+   "context_sources": 6,
+   "context_chars": 4451
+  },
+  {
+   "id": "syn02-23",
+   "matter": "SYN-02",
+   "kind": "table",
+   "segments": 13,
+   "located": 13,
+   "stages": {
+    "dense": {
+     "recall@5": 0.46153846153846156,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.5802792108518124,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.5384615384615384,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.19342640361727081,
+     "first": 7,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 27,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.46153846153846156,
+     "recall@10": 0.46153846153846156,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.23719771276929622,
+     "first": 4,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.46153846153846156,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.45560514958746035,
+     "first": 4,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.46153846153846156,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.45560514958746035,
+     "first": 4,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.5384615384615384,
+     "recall@10": 0.5384615384615384,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.2640681225725909,
+     "first": 3,
+     "found": 0.5384615384615384
+    },
+    "hybrid": {
+     "recall@5": 0.46153846153846156,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.448643819352159,
+     "first": 3,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5384615384615384,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.46845052016107697,
+     "first": 3,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.9230769230769231,
+   "context_recall": 0.9230769230769231,
+   "context_sources": 6,
+   "context_chars": 4992
+  },
+  {
+   "id": "syn02-24",
+   "matter": "SYN-02",
+   "kind": "table",
+   "segments": 5,
+   "located": 5,
+   "stages": {
+    "dense": {
+     "recall@5": 0.4,
+     "recall@10": 0.4,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.15958907712489637,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.28606042850872493,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.4,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.0901000086523677,
+     "first": 5,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.2,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.2471117737964539,
+     "first": 4,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.2,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.2471117737964539,
+     "first": 4,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.2354078440015845,
+     "first": 2,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 0.4,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.18873103118020407,
+     "first": 3,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.31520238256403266,
+     "first": 2,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 5575
+  },
+  {
+   "id": "syn02-25",
+   "matter": "SYN-02",
+   "kind": "scan",
+   "segments": 3,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 7028
+  },
+  {
+   "id": "syn02-26",
+   "matter": "SYN-02",
+   "kind": "scan",
+   "segments": 3,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 31,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.3562071871080222,
+     "first": 5,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.31546487678572877,
+     "first": 7,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.3333333333333333,
+     "first": 6,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 5025
+  },
+  {
+   "id": "syn03-01",
+   "matter": "SYN-03",
+   "kind": "fact",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 38,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 19,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 19,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 29,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 15,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 8,
+   "context_chars": 7420
+  },
+  {
+   "id": "syn03-02",
+   "matter": "SYN-03",
+   "kind": "fact",
+   "segments": 1,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 3,
+   "context_chars": 3026
+  },
+  {
+   "id": "syn03-03",
+   "matter": "SYN-03",
+   "kind": "fact",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 3944
+  },
+  {
+   "id": "syn03-04",
+   "matter": "SYN-03",
+   "kind": "fact",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.23719771276929622,
+     "first": 4,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8315546295836225,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 0.6666666666666666
+    },
+    "fused": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5437713091520254,
+     "first": 2,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5437713091520254,
+     "first": 2,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6240505200038379,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8175295903539445,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6240505200038379,
+     "first": 1,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4518
+  },
+  {
+   "id": "syn03-05",
+   "matter": "SYN-03",
+   "kind": "role_party",
+   "segments": 5,
+   "located": 5,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 18,
+     "found": 0.6
+    },
+    "sparse": {
+     "recall@5": 0.6,
+     "recall@10": 0.6,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.3973220069685352,
+     "first": 1,
+     "found": 0.8
+    },
+    "keyword": {
+     "recall@5": 0.6,
+     "recall@10": 0.6,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.44149241373678083,
+     "first": 1,
+     "found": 0.8
+    },
+    "fused": {
+     "recall@5": 0.4,
+     "recall@10": 0.8,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.4864687556375333,
+     "first": 2,
+     "found": 0.8
+    },
+    "reranked": {
+     "recall@5": 0.4,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6525874238732423,
+     "first": 0,
+     "found": 0.8
+    },
+    "floored": {
+     "recall@5": 0.4,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6525874238732423,
+     "first": 0,
+     "found": 0.8
+    },
+    "final": {
+     "recall@5": 0.4,
+     "recall@10": 0.6,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5294362295028773,
+     "first": 0,
+     "found": 0.6
+    },
+    "hybrid": {
+     "recall@5": 0.6,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7087212693585175,
+     "first": 0,
+     "found": 0.8
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.4,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6469523342593044,
+     "first": 0,
+     "found": 0.8
+    }
+   },
+   "final_recall": 0.6,
+   "context_recall": 0.6,
+   "context_sources": 6,
+   "context_chars": 4929
+  },
+  {
+   "id": "syn03-06",
+   "matter": "SYN-03",
+   "kind": "role_party",
+   "segments": 5,
+   "located": 5,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 13,
+     "found": 0.8
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 29,
+     "found": 0.2
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 18,
+     "found": 0.2
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 13,
+     "found": 0.2
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 0.2
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 0.2
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 20,
+     "found": 0.2
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 28,
+     "found": 0.2
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 5803
+  },
+  {
+   "id": "syn03-07",
+   "matter": "SYN-03",
+   "kind": "list",
+   "segments": 7,
+   "located": 6,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.5,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.35853358850813305,
+     "first": 3,
+     "found": 0.5
+    },
+    "sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 0.5
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 0.5
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 0.5
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 0.5
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.20210734650054757,
+     "first": 3,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.20210734650054757,
+     "first": 3,
+     "found": 0.5
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.20210734650054757,
+     "first": 3,
+     "found": 0.5
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 11,
+   "context_chars": 8448
+  },
+  {
+   "id": "syn03-08",
+   "matter": "SYN-03",
+   "kind": "list",
+   "segments": 4,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.25,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.16716045496620227,
+     "first": 5,
+     "found": 0.75
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 12,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.75,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.2769189462922768,
+     "first": 8,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.75,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.2769189462922768,
+     "first": 8,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.25,
+     "mrr@10": 0.1,
+     "ndcg@10": 0.13565197343244778,
+     "first": 9,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 1.0,
+   "context_sources": 10,
+   "context_chars": 6760
+  },
+  {
+   "id": "syn03-09",
+   "matter": "SYN-03",
+   "kind": "date",
+   "segments": 2,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 32,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.3010299956639812,
+     "first": 8,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 5826
+  },
+  {
+   "id": "syn03-10",
+   "matter": "SYN-03",
+   "kind": "calculation",
+   "segments": 10,
+   "located": 10,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.8,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6113708024380936,
+     "first": 1,
+     "found": 0.8
+    },
+    "sparse": {
+     "recall@5": 0.6,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8357799744028238,
+     "first": 0,
+     "found": 0.8
+    },
+    "keyword": {
+     "recall@5": 0.7,
+     "recall@10": 0.7,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7227265726449519,
+     "first": 0,
+     "found": 0.7
+    },
+    "fused": {
+     "recall@5": 0.8,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8539316501572937,
+     "first": 0,
+     "found": 0.8
+    },
+    "reranked": {
+     "recall@5": 0.1,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.4599715079731103,
+     "first": 0,
+     "found": 0.8
+    },
+    "floored": {
+     "recall@5": 0.1,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.4599715079731103,
+     "first": 0,
+     "found": 0.8
+    },
+    "final": {
+     "recall@5": 0.6,
+     "recall@10": 0.6,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6992148198508501,
+     "first": 0,
+     "found": 0.6
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7622369974983191,
+     "first": 0,
+     "found": 0.8
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.6,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8062079522181139,
+     "first": 0,
+     "found": 0.8
+    }
+   },
+   "final_recall": 0.8,
+   "context_recall": 0.9,
+   "context_sources": 10,
+   "context_chars": 9956
+  },
+  {
+   "id": "syn03-11",
+   "matter": "SYN-03",
+   "kind": "calculation",
+   "segments": 5,
+   "located": 5,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4756
+  },
+  {
+   "id": "syn03-12",
+   "matter": "SYN-03",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 4460
+  },
+  {
+   "id": "syn03-13",
+   "matter": "SYN-03",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 5040
+  },
+  {
+   "id": "syn03-14",
+   "matter": "SYN-03",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 4851
+  },
+  {
+   "id": "syn03-15",
+   "matter": "SYN-03",
+   "kind": "amendment",
+   "segments": 2,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 14,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 28,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 12,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 12,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.31546487678572877,
+     "first": 7,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 11,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 7,
+   "context_chars": 6360
+  },
+  {
+   "id": "syn03-16",
+   "matter": "SYN-03",
+   "kind": "version",
+   "segments": 4,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 18,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 19,
+     "found": 0.5
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 28,
+     "found": 0.5
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 26,
+     "found": 0.5
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 26,
+     "found": 0.5
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 32,
+     "found": 0.5
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 36,
+     "found": 0.5
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 5759
+  },
+  {
+   "id": "syn03-17",
+   "matter": "SYN-03",
+   "kind": "amendment",
+   "segments": 7,
+   "located": 6,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5585075862632192,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.39233405721184117,
+     "first": 5,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.36331756126716835,
+     "first": 2,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5413996682199069,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5413996682199069,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.16666666666666666,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.16812753627111746,
+     "first": 3,
+     "found": 0.16666666666666666
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4144299250118475,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.298254219601818,
+     "first": 3,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.8333333333333334,
+   "context_recall": 0.8333333333333334,
+   "context_sources": 6,
+   "context_chars": 4539
+  },
+  {
+   "id": "syn03-18",
+   "matter": "SYN-03",
+   "kind": "conflict",
+   "segments": 5,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6760236910196462,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.5654495432396527,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.44149241373678083,
+     "first": 1,
+     "found": 0.5
+    },
+    "fused": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.787702056960637,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.75,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9052181617170639,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.75,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9052181617170639,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7095272044910244,
+     "first": 0,
+     "found": 0.75
+    },
+    "hybrid": {
+     "recall@5": 0.75,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9447176050778178,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7095272044910244,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.75,
+   "context_recall": 1.0,
+   "context_sources": 9,
+   "context_chars": 7280
+  },
+  {
+   "id": "syn03-19",
+   "matter": "SYN-03",
+   "kind": "conflict",
+   "segments": 4,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.24630238874073,
+     "first": 1,
+     "found": 0.75
+    },
+    "sparse": {
+     "recall@5": 0.25,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.3853585682515056,
+     "first": 1,
+     "found": 0.75
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 21,
+     "found": 0.25
+    },
+    "fused": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.24630238874073,
+     "first": 1,
+     "found": 0.75
+    },
+    "reranked": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.24630238874073,
+     "first": 1,
+     "found": 0.75
+    },
+    "floored": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.24630238874073,
+     "first": 1,
+     "found": 0.75
+    },
+    "final": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.24630238874073,
+     "first": 1,
+     "found": 0.25
+    },
+    "hybrid": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.24630238874073,
+     "first": 1,
+     "found": 0.75
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.24630238874073,
+     "first": 1,
+     "found": 0.75
+    }
+   },
+   "final_recall": 0.25,
+   "context_recall": 0.25,
+   "context_sources": 8,
+   "context_chars": 5424
+  },
+  {
+   "id": "syn03-20",
+   "matter": "SYN-03",
+   "kind": "conflict",
+   "segments": 9,
+   "located": 9,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5585075862632192,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.1111111111111111,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5078961547485289,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "keyword": {
+     "recall@5": 0.1111111111111111,
+     "recall@10": 0.1111111111111111,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.3903800499921017,
+     "first": 0,
+     "found": 0.1111111111111111
+    },
+    "fused": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6366824387328317,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5585075862632192,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5585075862632192,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5413996682199069,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6366824387328317,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5413996682199069,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.4444444444444444,
+   "context_recall": 0.4444444444444444,
+   "context_sources": 6,
+   "context_chars": 4736
+  },
+  {
+   "id": "syn03-21",
+   "matter": "SYN-03",
+   "kind": "cross_doc",
+   "segments": 6,
+   "located": 5,
+   "stages": {
+    "dense": {
+     "recall@5": 0.2,
+     "recall@10": 0.2,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.2
+    },
+    "sparse": {
+     "recall@5": 0.8,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6713860725233041,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.8,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7039180890341347,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.2,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.5881601264058984,
+     "first": 1,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.2,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6105456988825855,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.2,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6105456988825855,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.2,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6364391809889587,
+     "first": 0,
+     "found": 0.8
+    },
+    "hybrid": {
+     "recall@5": 0.2,
+     "recall@10": 0.8,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.4441228664487979,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.2,
+     "recall@10": 0.8,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6364391809889587,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.8,
+   "context_recall": 0.8,
+   "context_sources": 6,
+   "context_chars": 4174
+  },
+  {
+   "id": "syn03-22",
+   "matter": "SYN-03",
+   "kind": "conflict",
+   "segments": 6,
+   "located": 6,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7039180890341347,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6508205185601091,
+     "first": 0,
+     "found": 0.5
+    },
+    "keyword": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.431733884398313,
+     "first": 1,
+     "found": 0.5
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6713860725233041,
+     "first": 0,
+     "found": 0.5
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6713860725233041,
+     "first": 0,
+     "found": 0.5
+    },
+    "floored": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6713860725233041,
+     "first": 0,
+     "found": 0.5
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6508205185601091,
+     "first": 0,
+     "found": 0.5
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6713860725233041,
+     "first": 0,
+     "found": 0.5
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6508205185601091,
+     "first": 0,
+     "found": 0.5
+    }
+   },
+   "final_recall": 0.6666666666666666,
+   "context_recall": 0.6666666666666666,
+   "context_sources": 6,
+   "context_chars": 5391
+  },
+  {
+   "id": "syn03-23",
+   "matter": "SYN-03",
+   "kind": "table",
+   "segments": 6,
+   "located": 6,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6713860725233041,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "sparse": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6364391809889587,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.16666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.46927872602275644,
+     "first": 0,
+     "found": 0.16666666666666666
+    },
+    "fused": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5430667908374095,
+     "first": 2,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5430667908374095,
+     "first": 2,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6364391809889587,
+     "first": 0,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7039180890341347,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6364391809889587,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 0.5,
+   "context_sources": 6,
+   "context_chars": 5021
+  },
+  {
+   "id": "syn03-24",
+   "matter": "SYN-03",
+   "kind": "table",
+   "segments": 4,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.3333333333333333,
+     "first": 6,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.3333333333333333,
+     "first": 6,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4881
+  },
+  {
+   "id": "syn03-25",
+   "matter": "SYN-03",
+   "kind": "scan",
+   "segments": 6,
+   "located": 6,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 21,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.43067655807339306,
+     "first": 3,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4928
+  },
+  {
+   "id": "syn03-26",
+   "matter": "SYN-03",
+   "kind": "scan",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9197207891481876,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.3706656904013186,
+     "first": 7,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8065735963827293,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8065735963827293,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8315546295836225,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6509209298071326,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8315546295836225,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 7,
+   "context_chars": 7470
+  },
+  {
+   "id": "syn04-01",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "segments": 1,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 5562
+  },
+  {
+   "id": "syn04-02",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 18,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 4464
+  },
+  {
+   "id": "syn04-03",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "segments": 4,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.25,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.35914753008966527,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.25,
+     "mrr@10": 0.125,
+     "ndcg@10": 0.123151194370365,
+     "first": 7,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.25,
+     "recall@10": 0.5,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.298254219601818,
+     "first": 3,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.25,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.5078961547485289,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.25,
+     "recall@10": 0.5,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.2811463015585058,
+     "first": 4,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.25,
+     "recall@10": 0.5,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.2811463015585058,
+     "first": 4,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.25,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.3853585682515056,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.5,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.2429718246796358,
+     "first": 6,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 5065
+  },
+  {
+   "id": "syn04-04",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.38685280723454163,
+     "first": 1,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6240505200038379,
+     "first": 1,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9197207891481876,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9197207891481876,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8772153153380493,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 5427
+  },
+  {
+   "id": "syn04-05",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 0.6666666666666666
+    },
+    "sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 15,
+     "found": 0.6666666666666666
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.16716045496620227,
+     "first": 5,
+     "found": 0.6666666666666666
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 0.6666666666666666
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.18154179253735267,
+     "first": 4,
+     "found": 0.6666666666666666
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 0.6666666666666666
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.23463936301137822,
+     "first": 2,
+     "found": 0.6666666666666666
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 6,
+   "context_chars": 4661
+  },
+  {
+   "id": "syn04-06",
+   "matter": "SYN-04",
+   "kind": "role_party",
+   "segments": 1,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 4832
+  },
+  {
+   "id": "syn04-07",
+   "matter": "SYN-04",
+   "kind": "role_party",
+   "segments": 2,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 14,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.3010299956639812,
+     "first": 8,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 10,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 13,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 6,
+   "context_chars": 4123
+  },
+  {
+   "id": "syn04-08",
+   "matter": "SYN-04",
+   "kind": "list",
+   "segments": 4,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.3562071871080222,
+     "first": 5,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 26,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 25,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 27,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 34,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 1.0,
+   "context_sources": 11,
+   "context_chars": 9563
+  },
+  {
+   "id": "syn04-09",
+   "matter": "SYN-04",
+   "kind": "list",
+   "segments": 1,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4179
+  },
+  {
+   "id": "syn04-10",
+   "matter": "SYN-04",
+   "kind": "calculation",
+   "segments": 2,
+   "located": 2,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 0.5
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6131471927654584,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8503449055347546,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8503449055347546,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8503449055347546,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7977228895450266,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8503449055347546,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 3883
+  },
+  {
+   "id": "syn04-11",
+   "matter": "SYN-04",
+   "kind": "calculation",
+   "segments": 5,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.44149241373678083,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.34620964322385606,
+     "first": 2,
+     "found": 0.75
+    },
+    "keyword": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.19519002499605084,
+     "first": 2,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.36331756126716835,
+     "first": 2,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.25,
+     "mrr@10": 0.1,
+     "ndcg@10": 0.11284514134893527,
+     "first": 9,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.25,
+     "mrr@10": 0.1,
+     "ndcg@10": 0.11284514134893527,
+     "first": 9,
+     "found": 0.75
+    },
+    "final": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.15101961822780524,
+     "first": 4,
+     "found": 0.25
+    },
+    "hybrid": {
+     "recall@5": 0.25,
+     "recall@10": 0.25,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.16812753627111746,
+     "first": 3,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.25,
+     "recall@10": 0.5,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.2741708125981702,
+     "first": 4,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.25,
+   "context_recall": 0.25,
+   "context_sources": 6,
+   "context_chars": 4394
+  },
+  {
+   "id": "syn04-12",
+   "matter": "SYN-04",
+   "kind": "calculation",
+   "segments": 4,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6546154994739983,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7039180890341347,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 18,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.49818925746641285,
+     "first": 1,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9325210919548239,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9325210919548239,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.5
+    },
+    "hybrid": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6787622294601761,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9134015924715543,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 0.5,
+   "context_sources": 6,
+   "context_chars": 4976
+  },
+  {
+   "id": "syn04-13",
+   "matter": "SYN-04",
+   "kind": "version",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.6182885020492784,
+     "first": 2,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8710785440003369,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 16,
+     "found": 0.6666666666666666
+    },
+    "fused": {
+     "recall@5": 0.6666666666666666,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9066276098484507,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9060254355346823,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9060254355346823,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8854598815714874,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9674679834891693,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.8854598815714874,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4112
+  },
+  {
+   "id": "syn04-14",
+   "matter": "SYN-04",
+   "kind": "amendment",
+   "segments": 3,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.40179981797758046,
+     "first": 2,
+     "found": 0.6666666666666666
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 29,
+     "found": 0.6666666666666666
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.14126697285982898,
+     "first": 8,
+     "found": 0.6666666666666666
+    },
+    "reranked": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.35853358850813305,
+     "first": 3,
+     "found": 0.6666666666666666
+    },
+    "floored": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.35853358850813305,
+     "first": 3,
+     "found": 0.6666666666666666
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.30281242839865,
+     "first": 5,
+     "found": 0.6666666666666666
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.14126697285982898,
+     "first": 8,
+     "found": 0.6666666666666666
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 9,
+   "context_chars": 7617
+  },
+  {
+   "id": "syn04-15",
+   "matter": "SYN-04",
+   "kind": "version",
+   "segments": 3,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 23,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 16,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 12,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 18,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 14,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 0.0,
+   "context_sources": 7,
+   "context_chars": 5142
+  },
+  {
+   "id": "syn04-16",
+   "matter": "SYN-04",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 4317
+  },
+  {
+   "id": "syn04-17",
+   "matter": "SYN-04",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 4112
+  },
+  {
+   "id": "syn04-18",
+   "matter": "SYN-04",
+   "kind": "not_stated",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 4781
+  },
+  {
+   "id": "syn04-19",
+   "matter": "SYN-04",
+   "kind": "conflict",
+   "segments": 4,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.75,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9176551163528843,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4537
+  },
+  {
+   "id": "syn04-20",
+   "matter": "SYN-04",
+   "kind": "conflict",
+   "segments": 6,
+   "located": 6,
+   "stages": {
+    "dense": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.16666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.3391602052736161,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.5,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.6661998717660157,
+     "first": 0,
+     "found": 0.8333333333333334
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 0.16666666666666666
+    },
+    "fused": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.16666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.3391602052736161,
+     "first": 0,
+     "found": 0.8333333333333334
+    },
+    "reranked": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.5,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.26687965254220064,
+     "first": 3,
+     "found": 0.8333333333333334
+    },
+    "floored": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.5,
+     "mrr@10": 0.25,
+     "ndcg@10": 0.26687965254220064,
+     "first": 3,
+     "found": 0.8333333333333334
+    },
+    "final": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.36005461457723403,
+     "first": 1,
+     "found": 0.3333333333333333
+    },
+    "hybrid": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.26761938846816513,
+     "first": 2,
+     "found": 0.8333333333333334
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.36005461457723403,
+     "first": 1,
+     "found": 0.8333333333333334
+    }
+   },
+   "final_recall": 0.3333333333333333,
+   "context_recall": 0.3333333333333333,
+   "context_sources": 6,
+   "context_chars": 4704
+  },
+  {
+   "id": "syn04-21",
+   "matter": "SYN-04",
+   "kind": "conflict",
+   "segments": 5,
+   "located": 4,
+   "stages": {
+    "dense": {
+     "recall@5": 0.75,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.9325210919548239,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.75
+    },
+    "keyword": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 0.75
+    },
+    "hybrid": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.75,
+     "recall@10": 0.75,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.7653606369886217,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.75,
+   "context_recall": 0.75,
+   "context_sources": 6,
+   "context_chars": 5996
+  },
+  {
+   "id": "syn04-22",
+   "matter": "SYN-04",
+   "kind": "conflict",
+   "segments": 4,
+   "located": 3,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6934264036172708,
+     "first": 1,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4150
+  },
+  {
+   "id": "syn04-23",
+   "matter": "SYN-04",
+   "kind": "cross_doc",
+   "segments": 6,
+   "located": 6,
+   "stages": {
+    "dense": {
+     "recall@5": 0.3333333333333333,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.42969378702974964,
+     "first": 1,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.8333333333333334,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6458375023792304,
+     "first": 1,
+     "found": 0.8333333333333334
+    },
+    "keyword": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.16666666666666666,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.15130120674940675,
+     "first": 2,
+     "found": 0.5
+    },
+    "fused": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.3333333333333333,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.3900741276002217,
+     "first": 0,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.5,
+     "recall@10": 0.8333333333333334,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6415568128412471,
+     "first": 1,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.5,
+     "recall@10": 0.8333333333333334,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6415568128412471,
+     "first": 1,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.5,
+     "recall@10": 0.5,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.45928466606630497,
+     "first": 1,
+     "found": 0.5
+    },
+    "hybrid": {
+     "recall@5": 0.16666666666666666,
+     "recall@10": 0.6666666666666666,
+     "mrr@10": 1.0,
+     "ndcg@10": 0.59002272097801,
+     "first": 0,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.5,
+     "recall@10": 0.8333333333333334,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6512445404560342,
+     "first": 1,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.5,
+   "context_recall": 0.5,
+   "context_sources": 6,
+   "context_chars": 3992
+  },
+  {
+   "id": "syn04-24",
+   "matter": "SYN-04",
+   "kind": "table",
+   "segments": 1,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.1111111111111111,
+     "ndcg@10": 0.3010299956639812,
+     "first": 8,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.3333333333333333,
+     "first": 6,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.16666666666666666,
+     "ndcg@10": 0.3562071871080222,
+     "first": 5,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.14285714285714285,
+     "ndcg@10": 0.3333333333333333,
+     "first": 6,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 4493
+  },
+  {
+   "id": "syn04-25",
+   "matter": "SYN-04",
+   "kind": "scan",
+   "segments": 1,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.2,
+     "ndcg@10": 0.38685280723454163,
+     "first": 4,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "fused": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 37,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 17,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": null,
+     "found": 0.0
+    },
+    "hybrid": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 27,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 28,
+     "found": 1.0
+    }
+   },
+   "final_recall": 0.0,
+   "context_recall": 1.0,
+   "context_sources": 9,
+   "context_chars": 8379
+  },
+  {
+   "id": "syn04-26",
+   "matter": "SYN-04",
+   "kind": "scan",
+   "segments": 2,
+   "located": 1,
+   "stages": {
+    "dense": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 1.0,
+     "ndcg@10": 1.0,
+     "first": 0,
+     "found": 1.0
+    },
+    "sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "keyword": {
+     "recall@5": 0.0,
+     "recall@10": 0.0,
+     "mrr@10": 0.0,
+     "ndcg@10": 0.0,
+     "first": 27,
+     "found": 1.0
+    },
+    "fused": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.3333333333333333,
+     "ndcg@10": 0.5,
+     "first": 2,
+     "found": 1.0
+    },
+    "reranked": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "floored": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "final": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    },
+    "hybrid_sparse": {
+     "recall@5": 1.0,
+     "recall@10": 1.0,
+     "mrr@10": 0.5,
+     "ndcg@10": 0.6309297535714575,
+     "first": 1,
+     "found": 1.0
+    }
+   },
+   "final_recall": 1.0,
+   "context_recall": 1.0,
+   "context_sources": 6,
+   "context_chars": 5045
+  },
+  {
+   "id": "synx-01",
+   "matter": "SYN-01",
+   "kind": "other_matter",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 3,
+   "context_chars": 2527
+  },
+  {
+   "id": "synx-02",
+   "matter": "SYN-02",
+   "kind": "other_matter",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 0,
+   "context_chars": 0
+  },
+  {
+   "id": "synx-03",
+   "matter": "SYN-03",
+   "kind": "other_matter",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 6,
+   "context_chars": 4713
+  },
+  {
+   "id": "synx-04",
+   "matter": "SYN-04",
+   "kind": "other_matter",
+   "segments": 0,
+   "located": 0,
+   "stages": {
+    "dense": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "keyword": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "fused": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "reranked": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "floored": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "final": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    },
+    "hybrid_sparse": {
+     "recall@5": null,
+     "recall@10": null,
+     "mrr@10": null,
+     "ndcg@10": null,
+     "first": null,
+     "found": null
+    }
+   },
+   "final_recall": null,
+   "context_recall": null,
+   "context_sources": 0,
+   "context_chars": 0
+  }
+ ]
+}

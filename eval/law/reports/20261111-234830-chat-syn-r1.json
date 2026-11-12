@@ -1,0 +1,3788 @@
+{
+ "suite": "chat",
+ "label": "syn-r1",
+ "commit": "c30eab4",
+ "base": "http://127.0.0.1:8161/api",
+ "keys": [
+  "eval/fixtures/synthetic/answer_key_syn01.jsonl",
+  "eval/fixtures/synthetic/answer_key_syn02.jsonl",
+  "eval/fixtures/synthetic/answer_key_syn03.jsonl",
+  "eval/fixtures/synthetic/answer_key_syn04.jsonl",
+  "eval/fixtures/synthetic/answer_key_syn_cross.jsonl"
+ ],
+ "summary": {
+  "passed": 54,
+  "items": 116,
+  "by_kind": {
+   "amendment": "3/6",
+   "calculation": "1/9",
+   "conflict": "5/16",
+   "cross_doc": "1/3",
+   "date": "3/4",
+   "fact": "12/17",
+   "follow_up": "0/8",
+   "list": "7/8",
+   "not_stated": "9/12",
+   "other_matter": "4/4",
+   "role_party": "2/8",
+   "scan": "2/8",
+   "table": "3/6",
+   "version": "2/7"
+  },
+  "by_matter": {
+   "SYN-01": "14/29",
+   "SYN-02": "11/29",
+   "SYN-03": "18/29",
+   "SYN-04": "11/29"
+  },
+  "p50_s": 13.6,
+  "p95_s": 28.7
+ },
+ "items": [
+  {
+   "id": "syn01-01",
+   "matter": "SYN-01",
+   "kind": "fact",
+   "source": "Factory Acceptance Test Report - Cells 1 to 8 (QRL-VAR-FAT-001 rev C)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What went wrong with Cells 7 and 8 at their first FAT, and what was the root cause?",
+     "state": "answered",
+     "text": "The failure of Cells 7 and 8 at their first FAT was due to issues with positional accuracy. Cell 7 failed with a positional accuracy of 0.21 mm, and Cell 8 failed with 0.19 mm, both exceeding the required 0.15 mm [1].\n\nThe root cause of the failure was identified as the thermal compensation parameters of the robot controller not being re-set for the 14 m track, and the joint between the second and third new-generation track sections being out of alignment by 0.08 mm [3].",
+     "secs": 9.9,
+     "cards": [],
+     "cited": [
+      "Factory Acceptance Test Report - Cells 1 to 8 (QRL-VAR-FAT-001 rev C)",
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_3164b3e94fdc15d7123b7a5692a3ca6d"
+  },
+  {
+   "id": "syn01-02",
+   "matter": "SYN-01",
+   "kind": "fact",
+   "source": "Email chain - Bay 3 site readiness, March to June 2024 (printed 18 June 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "when was the Bay 3 slab poured, and how long before the Site Readiness Date did Sch 5 need it down?",
+     "state": "partial",
+     "text": "The Bay 3 slab was poured on 18 March 2024 [1].\n\nThe Site Readiness Date was 29 April 2024. The slab was poured 42 days before this date [1].\n\nSchedule 5 required the slab to be poured not less than 28 days before the Site Readiness Date. Therefore, Sch 5 required the slab to be poured at least 28 days before 29 April 2024, meaning it needed to be poured by 27 March 2024. The slab was poured 18 March 2024, which was 11 days before the 28-day requirement [3].",
+     "secs": 10.3,
+     "cards": [],
+     "cited": [
+      "Email chain - Bay 3 site readiness, March to June 2024 (printed 18 June 2024)",
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_9901d673954bad820b591f5be17764e2"
+  },
+  {
+   "id": "syn01-03",
+   "matter": "SYN-01",
+   "kind": "fact",
+   "source": "Varnholt board minutes, 26 September 2024 (extract - item 6, Quellcrest)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What budget did the board approve for the Quellcrest dispute?",
+     "state": "answered",
+     "text": "The board approved a litigation budget of £260,000 for the Quellcrest dispute [1].\n\nThe board also approved a contingency of up to £40,000 in addition to the litigation budget [1].\n\nThe total budget, including the contingency, would be £300,000 if the contingency is fully utilized [1].",
+     "secs": 14.0,
+     "cards": [],
+     "cited": [
+      "Varnholt board minutes, 26 September 2024 (extract - item 6, Quellcrest)"
+     ],
+     "notes": [
+      "“Quellcrest” could be Quellcrest Automation Inc. or Quellcrest Robotics Ltd. To ask about one of them, choose it below."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_2dd051e401312ed79eead6b6de6b18cb"
+  },
+  {
+   "id": "syn01-04",
+   "matter": "SYN-01",
+   "kind": "fact",
+   "source": "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Malcolm wants the £410k of subcontract drilling costs added to the claim. Can we recover that from QRL?",
+     "state": "partial",
+     "text": "The documents indicate that Malcolm wants to add the £410k of subcontract drilling costs to the claim. According to source [2], this amount is associated with subcontract drilling while Cell 4 was down.\n\nHowever, the documents also state that these costs are unlikely to be recoverable as damages for delay. Source [2] explains that clause 9.4 of the Agreement makes liquidated damages Varnholt's sole financial remedy for delay, and clause 18.5 excludes loss of production.\n\nTherefore, based on the information provided, it is unlikely that the £410k of subcontract drilling costs can be recovered from QRL.",
+     "secs": 14.2,
+     "cards": [],
+     "cited": [
+      "File note - call with client, 12 September 2024 (L. Brandt)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_5b9d3f43c2706d84aaac31a0997d50af"
+  },
+  {
+   "id": "syn01-05",
+   "matter": "SYN-01",
+   "kind": "role_party",
+   "source": "Variation Agreement No. 2 - signed copy (22 July 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Rhiannon signed VA2 for Varnholt and she isn't a director. Is VA2 still binding?",
+     "state": "partial",
+     "text": "The documents indicate that Rhiannon Thorne signed VA2 on behalf of Varnholt Aerostructures Limited. The source states: \"For and on behalf of VARNHOLT AEROSTRUCTURES LIMITED | Signature: re AN cer te a\" [2]. It also states that she was the Head of Manufacturing Engineering and a Contract Manager [2].\n\nThe source also states that Rhiannon Thorne signed VA2 on 22 July 2024 [3]. It further states that she was present when the amendment to clause 2.1 was made, and that she struck through \"four (4) weeks\" and Mr. Whitlow wrote in \"six (6) weeks\" [5].\n\nThe documents do not provide any information about whether Rhiannon Thorne was a director of Varnholt Aerostructures Limited. The sources only state that she was the Head of Manufacturing Engineering and a Contract Manager [2].\n\nThe documents do not provide any information about whether VA2 is still binding. The sources only state that VA2 was signed on 22 July 2024 [3]. They also state that the amendment to clause 2.1 was made and initialled by both signatories [3].\n\nThe documents do not provide any information about the binding nature of VA2. The sources only state that VA2 was signed on 22 July 2024 [3]. They also state that the amendment to clause 2.1 was made and initialled by both signatories [3].",
+     "secs": 35.4,
+     "cards": [],
+     "cited": [
+      "Brannock Steele LLP letter of response for Quellcrest (1 November 2024)",
+      "Variation Agreement No. 2 - signed copy (22 July 2024)",
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "12.3"
+      ],
+      [
+       "not increase",
+       "does not increase",
+       "doesn't increase",
+       "no increase",
+       "did not increase",
+       "without increasing"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_480ac3760875543f13fd08281314393f"
+  },
+  {
+   "id": "syn01-06",
+   "matter": "SYN-01",
+   "kind": "role_party",
+   "source": "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Is Varnholt's own liability to QRL capped, and if so at what?",
+     "state": "partial",
+     "text": "The documents do not explicitly state that Varnholt's own liability to QRL is capped. However, they do mention limitations on liability in the Supply and Installation Agreement.\n\nIn the executed version of the agreement, clause 18.2 states that the Supplier's total aggregate liability under or in connection with the Agreement shall not exceed an amount equal to 100% of the Contract Price [7].\n\nIn a draft version of the agreement, clause 19.2 states that the Supplier's total aggregate liability shall not exceed 150% of the Contract Price [8].\n\nTherefore, the documents indicate that there is a cap on the Supplier's liability, but they do not specify that Varnholt's own liability is capped, nor do they provide the exact figure for Varnholt's liability.",
+     "secs": 25.5,
+     "cards": [],
+     "cited": [
+      "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+      "Supply and Installation Agreement - draft v3 with Calder & Wynne comments (27.02.23)"
+     ],
+     "notes": [
+      "The source adds a condition to “In the executed version of the agreement, clause 18.2 states that the Supplier's total aggregate liability under or in connection with the…”: “Subject to clauses 18.1 and 18.3”. Found by rule.",
+      "The source adds a condition to “In a draft version of the agreement, clause 19.2 states that the Supplier's total aggregate liability shall not exceed 150% of the…”: “Subject to clauses 19.1 and 19.3”. Found by rule."
+     ],
+     "missing": [
+      [
+       "20%",
+       "twenty per cent",
+       "20 per cent",
+       "twenty percent",
+       "20 percent"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_f764903eedec7a15782b47029a1ac572"
+  },
+  {
+   "id": "syn01-07",
+   "matter": "SYN-01",
+   "kind": "list",
+   "source": "Supply and Installation Agreement - signed cover and execution pages (scan)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who signed the SIA, and on what date? The execution version has the date blank.",
+     "state": "partial",
+     "text": "The Supply and Installation Agreement (SIA) was signed by the following individuals:\n\n- Graham Petrakis, Managing Director, for and on behalf of Varnholt Aerostructures Limited.\n- Malcolm Ferris, Director (Chief Financial Officer), for and on behalf of Varnholt Aerostructures Limited.\n- Douglas Fenn, Managing Director, for and on behalf of Quellcrest Robotics Ltd.\n- Gary Whitlow, Director - Projects, for and on behalf of Quellcrest Robotics Ltd.\n\nThe date of signing is stated as 14 March 2023. The execution version has the date blank, but the signatories wrote the date by hand on the execution pages [1]. Additionally, the execution pages show the date as \"14/3/2023\" [5].",
+     "secs": 17.5,
+     "cards": [],
+     "cited": [
+      "Supply and Installation Agreement - signed cover and execution pages (scan)",
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_6a4bedafd891d0373edd5211c9ee52b0"
+  },
+  {
+   "id": "syn01-08",
+   "matter": "SYN-01",
+   "kind": "list",
+   "source": "Site Acceptance Test Certificate - Cell 4 (13 August 2024, failed)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What did Cell 4 fail on at its SAT?",
+     "state": "answered",
+     "text": "Cell 4 failed its SAT on 13 August 2024 due to a cycle time of 24.1 seconds, which was above the required 22.0 seconds, three defective swaged collars, and an end-effector fault that stopped the continuous run after 5 hours 12 minutes [1].",
+     "secs": 9.2,
+     "cards": [],
+     "cited": [
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_62b9016d4bfc541b6564b133a4777353"
+  },
+  {
+   "id": "syn01-09",
+   "matter": "SYN-01",
+   "kind": "calculation",
+   "source": "Quellcrest invoice QR-INV-2024-131 (Milestone 4, Cells 1-3)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Is QRL's invoice 131 for the right amount? If not, what should it be?",
+     "state": "partial",
+     "text": "The documents do not provide the exact amount of QRL's invoice 131. However, they mention that the invoice is for Milestone 4 on Cells 1, 2 and 3, in the sum of £729,000 including VAT [4].\n\nThe documents also mention that Varnholt withheld the invoice, and that the Liquidated Damages for Cell 4 were estimated at £196,325 [3].\n\nBased on the information provided, it is not clear if the invoice is for the right amount. However, it is mentioned that Varnholt withheld the entire £729,000 against Liquidated Damages which it put at £196,325 [4]. This suggests that the amount of the invoice may not be correct, as it is higher than the Liquidated Damages that Varnholt claims to be owed.",
+     "secs": 22.8,
+     "cards": [],
+     "cited": [
+      "Brannock Steele LLP letter of response for Quellcrest (1 November 2024)",
+      "Letter of claim and Dispute Notice to Quellcrest Robotics Ltd (4 October 2024)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "20%",
+       "twenty per cent",
+       "20 per cent",
+       "20 percent"
+      ],
+      [
+       "486,000",
+       "583,200"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_f92d5800caccc0c524616b75c12bfc03"
+  },
+  {
+   "id": "syn01-10",
+   "matter": "SYN-01",
+   "kind": "calculation",
+   "source": "Varnholt board minutes, 26 September 2024 (extract - item 6, Quellcrest)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "The board minutes put the LDs on Cells 4, 5 and 7 at £130,650. Can you check that?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 2.6,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "114,100"
+      ],
+      [
+       "six (6) weeks",
+       "six weeks",
+       "6 weeks"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_a06def8ad7f3f0efdad158486ffd7972"
+  },
+  {
+   "id": "syn01-11",
+   "matter": "SYN-01",
+   "kind": "date",
+   "source": "Factory Acceptance Test Report - Cells 1 to 8 (QRL-VAR-FAT-001 rev C)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When did Brenda Kowalczyk approve the FAT report rev C?",
+     "state": "partial",
+     "text": "The documents do not specify the exact date when Brenda Kowalczyk approved the FAT report rev C. However, they indicate that the report was approved by her on 08/02/2024. The source states: \"Approved by: Brenda Kowalczyk, VP Programs, Quellcrest Automation Inc. - 08/02/2024\" [1].",
+     "secs": 13.8,
+     "cards": [],
+     "cited": [
+      "Factory Acceptance Test Report - Cells 1 to 8 (QRL-VAR-FAT-001 rev C)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "2 august 2024",
+       "2 aug 2024",
+       "august 2, 2024",
+       "2nd august 2024",
+       "02/08/2024",
+       "2 august"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_e6f0e4643c9e3164ebd2777f60169856"
+  },
+  {
+   "id": "syn01-12",
+   "matter": "SYN-01",
+   "kind": "date",
+   "source": "Letter of claim and Dispute Notice to Quellcrest Robotics Ltd (4 October 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "When did QRL's 14 days under clause 11.3 run out for the Bay 3 delay notice?",
+     "state": "answered",
+     "text": "The documents state that QRL's 14-day period under clause 11.3 for the Bay 3 delay notice ran out on 14 May 2024. This is because Quellcrest was aware of the Buyer Delay by 30 April 2024, and the 14-day period expired 14 days later [6].\n\nAdditionally, the email sent on 15 May 2024 was deemed received on 16 May 2024, which is after the 14-day period had expired [6].",
+     "secs": 10.9,
+     "cards": [],
+     "cited": [
+      "Letter of claim and Dispute Notice to Quellcrest Robotics Ltd (4 October 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_17776f7108595f25d9f19d101efddf50"
+  },
+  {
+   "id": "syn01-13",
+   "matter": "SYN-01",
+   "kind": "not_stated",
+   "source": "Variation Agreement No. 2 - signed copy (22 July 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who was the sub-supplier that delivered the HSK-63 spindles late?",
+     "state": "partial",
+     "text": "The sub-supplier that delivered the HSK-63 spindles late is not named in the documents provided [1]. The documents do not specify the identity of the sub-supplier.",
+     "secs": 7.8,
+     "cards": [],
+     "cited": [
+      "Variation Agreement No. 2 - signed copy (22 July 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_c704d34388d2c9c1d31a20d4452f0146"
+  },
+  {
+   "id": "syn01-14",
+   "matter": "SYN-01",
+   "kind": "not_stated",
+   "source": "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How much did Pennick charge for the moisture primer works in Bay 3?",
+     "state": "abstained",
+     "text": "The documents do not specify how much Pennick charged for the moisture primer works in Bay 3.\n\n[5]  \n[3]",
+     "secs": 5.7,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_4faf2ac5de4d23e6a6862c6721355dc5"
+  },
+  {
+   "id": "syn01-15",
+   "matter": "SYN-01",
+   "kind": "not_stated",
+   "source": "Email chain - Bay 3 site readiness, March to June 2024 (printed 18 June 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What did the 7-day cubes on the Bay 3 slab come back at?",
+     "state": "partial",
+     "text": "The 7-day cubes on the Bay 3 slab came back at 41.5 N/mm2. This is stated in the source as: [1].",
+     "secs": 7.3,
+     "cards": [],
+     "cited": [
+      "Email chain - Bay 3 site readiness, March to June 2024 (printed 18 June 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_2b1549f5cccbf54fe1063f3bb6b935eb"
+  },
+  {
+   "id": "syn01-16",
+   "matter": "SYN-01",
+   "kind": "version",
+   "source": "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "whats the LD rate and cap per cell in the SIA? My notes say 1% a week",
+     "state": "answered",
+     "text": "The Liquidated Damages (LD) rate per cell in the SIA is 0.5% of the Cell Price for each full week of delay [4]. The cap for Liquidated Damages per cell is 10% of the Cell Price [2].\n\nThe user's note stating 1% a week is inconsistent with the documents, which specify 0.5% per week.",
+     "secs": 9.2,
+     "cards": [],
+     "cited": [
+      "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_119467fa77d1b5029aa5fcf2d57cd818"
+  },
+  {
+   "id": "syn01-17",
+   "matter": "SYN-01",
+   "kind": "version",
+   "source": "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Does the SIA give us step-in rights if Quellcrest stops progressing the works?",
+     "state": "partial",
+     "text": "The documents indicate that the SIA (Supply and Installation Agreement) includes step-in rights. According to Clause 15.1, the Buyer may take over the completion of the affected Cells if the Supplier abandons the Works, fails to proceed with due diligence, or suffers an Insolvency Event [1].\n\nThe step-in rights would apply if Quellcrest stops progressing the works, as per the conditions outlined in Clause 15.1. However, the documents do not specify whether Quellcrest has stopped progressing the works or if a Step-in Event has occurred. [1].\n\nThe documents also mention that the Buyer may recover from the Supplier the reasonable costs of step-in in excess of the Milestone Payments which would have been payable for the affected Cells [1]. However, there is no information provided about whether the Buyer has exercised these rights or if such costs have been incurred.",
+     "secs": 23.4,
+     "cards": [],
+     "cited": [
+      "Supply and Installation Agreement - draft v3 with Calder & Wynne comments (27.02.23)"
+     ],
+     "notes": [
+      "“Quellcrest” could be Quellcrest Automation or Quellcrest Robotics Ltd. To ask about one of them, choose it below."
+     ],
+     "missing": [
+      [
+       "no step-in",
+       "no step in",
+       "no right of step-in",
+       "no right to step in",
+       "does not contain",
+       "doesn't contain",
+       "does not include",
+       "doesn't include",
+       "not included",
+       "does not give",
+       "doesn't give",
+       "does not provide",
+       "doesn't provide",
+       "no provision",
+       "no such right",
+       "no such clause",
+       "not in the executed",
+       "only in the draft",
+       "not in the signed",
+       "was dropped",
+       "was removed",
+       "was deleted",
+       "did not make it",
+       "not carried"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_f6364c3a2faccc7191e260bc6eb87d1e"
+  },
+  {
+   "id": "syn01-18",
+   "matter": "SYN-01",
+   "kind": "amendment",
+   "source": "Variation Agreement No. 2 - signed copy (22 July 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How long is the warrenty on Cell 7?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 2.2,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "30 months",
+       "thirty (30) months",
+       "thirty months"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_14e8b5a3dcdc595f36fa892d12b8887f"
+  },
+  {
+   "id": "syn01-19",
+   "matter": "SYN-01",
+   "kind": "conflict",
+   "source": "Brannock Steele LLP letter of response for Quellcrest (1 November 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Brannock Steele say our letter of claim overstates the LDs. Are they right, and what should the figure have been at 4 October?",
+     "state": "partial",
+     "text": "Brannock Steele LLP says that the letter of claim overstates the Liquidated Damages (LDs). According to their letter, the Letter of Claim misstates the effect of VA2 and so overstates the Liquidated Damages even on your client's own case [4].\n\nThe figure should have been £163,225 as at 4 October 2024, not £196,325, according to Brannock Steele LLP. They state that the Liquidated Damages as at 4 October 2024 would be £163,225, not £196,325: your figures for Cells 5 to 8 are overstated by £33,100 [3].",
+     "secs": 16.7,
+     "cards": [],
+     "cited": [
+      "Brannock Steele LLP letter of response for Quellcrest (1 November 2024)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "six (6) weeks",
+       "six weeks",
+       "6 weeks"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_dfc7a479751009e40e4af2b68bb08c2d"
+  },
+  {
+   "id": "syn01-20",
+   "matter": "SYN-01",
+   "kind": "conflict",
+   "source": "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "When was invoice QR-INV-2024-131 actually due for payment? QRL say 1 September.",
+     "state": "partial",
+     "text": "The documents state that invoice QR-INV-2024-131 was due for payment on 1 September 2024, according to Brannock Steele LLP's letter of response for Quellcrest [1].\n\nHowever, in an internal email, Dev Anand from Varnholt states that the invoice was due on 4 September 2024, as it was 30 days from the date it was received on 5 August 2024 [2].\n\nAdditionally, the payments ledger shows that the invoice was placed on hold on 30 August 2024, with a note stating \"set-off LDs per MF 30/08\" [5].",
+     "secs": 16.9,
+     "cards": [],
+     "cited": [
+      "Brannock Steele LLP letter of response for Quellcrest (1 November 2024)",
+      "Payments ledger - Quellcrest Robotics Ltd (printed from Excel, 3 October 2024)",
+      "RE: Milestone 4 payment - hold (Varnholt internal emails, Aug-Sep 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_698d814f7e4b6585ea7d25d94337c435"
+  },
+  {
+   "id": "syn01-21",
+   "matter": "SYN-01",
+   "kind": "cross_doc",
+   "source": "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Malcolm's email says we can hold the M4 payment under clause 7.6. Is that the right clause, and do we need to send QRL anything?",
+     "state": "partial",
+     "text": "The documents indicate that Malcolm's reference to clause 7.6 is correct. Clause 7.6 provides that if a party fails to pay an undisputed sum by its due date, it shall pay interest at three per cent (3%) per annum above the Bank of England's base rate from time to time, accruing daily [1].\n\nHowever, the documents do not explicitly state whether Varnholt needs to send anything to QRL. The email from Malcolm to Harper Quinn asks for confirmation on whether they are \"OK to do that under clause 7.6, and what if anything we need to send them\" [4]. This suggests that there may be a requirement to notify QRL, but the documents do not provide a definitive answer on this point.",
+     "secs": 16.7,
+     "cards": [],
+     "cited": [
+      "RE: Milestone 4 payment - hold (Varnholt internal emails, Aug-Sep 2024)",
+      "Supply and Installation Agreement - draft v3 with Calder & Wynne comments (27.02.23)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "7.5"
+      ],
+      [
+       "written notice",
+       "notice in writing",
+       "notify in writing",
+       "notice of the amount",
+       "notice of set-off",
+       "set-off notice",
+       "notify quellcrest in writing",
+       "notify qrl in writing"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_c3f61a3fa8a0bad72ce1de80aa5d3dd8"
+  },
+  {
+   "id": "syn01-22",
+   "matter": "SYN-01",
+   "kind": "conflict",
+   "source": "Email chain - Bay 3 site readiness, March to June 2024 (printed 18 June 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Rhiannon's draft statement says QRL didn't raise any Bay 3 non-compliance within three business days of handover. Is that accurate?",
+     "state": "partial",
+     "text": "The draft statement by Rhiannon Thorne states that Quellcrest did not raise any Bay 3 non-compliance within three business days of handover. According to the source, it says: \"Quellcrest did not notify any non-compliance with Schedule 5 within three Business Days of the handover\" [1].\n\nThe source also mentions that nothing about humidity was raised at the walk-down on 26 April 2024 other than item 7: \"Nothing about humidity was raised at the walk-down on 26 April 2024 other than item 7\" [1].\n\nThe statement appears to be accurate based on the information provided in the source.",
+     "secs": 14.6,
+     "cards": [],
+     "cited": [
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "2 may"
+      ],
+      [
+       "3.2"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_0910033a9017fbb1b0b03ab99dbf9f7d"
+  },
+  {
+   "id": "syn01-23",
+   "matter": "SYN-01",
+   "kind": "conflict",
+   "source": "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "BS are claiming interest at 13.25% under the Late Payment Act on the unpaid invoice. Is that the right rate?",
+     "state": "partial",
+     "text": "The documents indicate that BS is claiming interest at 13.25% under the Late Payment Act on the unpaid invoice. According to the Brannock Steele LLP letter, the claim is for statutory interest under the Late Payment of Commercial Debts (Interest) Act 1998 at 8% above the reference rate of 5.25%, resulting in 13.25% per annum [1].\n\nHowever, the Supply and Installation Agreement specifies that interest should be charged at 3% per annum above the Bank of England's base rate [3]. This rate is different from the 13.25% claimed by BS.\n\nThe documents do not clarify whether the 13.25% rate is legally permissible or if the 3% rate in the agreement is the correct rate to apply. Therefore,",
+     "secs": 21.0,
+     "cards": [],
+     "cited": [
+      "Brannock Steele LLP letter of response for Quellcrest (1 November 2024)",
+      "Supply and Installation Agreement - draft v3 with Calder & Wynne comments (27.02.23)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "7.6"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_24c92e2049a2075141503e78d5c1fa0c"
+  },
+  {
+   "id": "syn01-24",
+   "matter": "SYN-01",
+   "kind": "table",
+   "source": "Factory Acceptance Test Report - Cells 1 to 8 (QRL-VAR-FAT-001 rev C)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What cycle time did Cell 4 get at FAT, and how does that compare with its SAT?",
+     "state": "partial",
+     "text": "Cell 4 had a cycle time of 19.9 seconds at FAT, according to source [3].\n\nAt SAT, Cell 4 had a cycle time of 24.1 seconds, as stated in source [1].\n\nTherefore, the cycle time at FAT was 19.9 seconds, which is lower than the cycle time at SAT, which was 24.1 seconds.",
+     "secs": 13.6,
+     "cards": [],
+     "cited": [
+      "Factory Acceptance Test Report - Cells 1 to 8 (QRL-VAR-FAT-001 rev C)",
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_cbafa0889d10d72225da6ccdd3885e2a"
+  },
+  {
+   "id": "syn01-25",
+   "matter": "SYN-01",
+   "kind": "scan",
+   "source": "Variation Agreement No. 2 - signed copy (22 July 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How long was the extension for Cells 5-8 in the signed VA2?",
+     "state": "partial",
+     "text": "The extension for Cells 5-8 in the signed VA2 was six weeks. This is stated in source 1, which mentions that Mr Whitlow asked for six weeks rather than four, and the change was made in clause 2.1 of VA2 [1].\n\nAdditionally, source 4 confirms that the typed reference in clause 2.1 to \"four (4) weeks\" was struck through and replaced with \"six (6) weeks\" [4].",
+     "secs": 10.1,
+     "cards": [],
+     "cited": [
+      "Brannock Steele LLP letter of response for Quellcrest (1 November 2024)",
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_d2a386bbd0632400c1e2208dfa2ea0bf"
+  },
+  {
+   "id": "syn01-26",
+   "matter": "SYN-01",
+   "kind": "scan",
+   "source": "Site Acceptance Test Certificate - Cell 4 (13 August 2024, failed)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Is there anything handwritten on the Cell 4 SAT certificate?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 4.7,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "not accepted"
+      ],
+      [
+       "vibration"
+      ],
+      [
+       "coventry",
+       "rework"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_78d203cefffffffbd75a367ded3a73f4"
+  },
+  {
+   "id": "syn01-27",
+   "matter": "SYN-01",
+   "kind": "follow_up",
+   "source": "Variation Agreement No. 1 to the Supply and Installation Agreement (9 January 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What was the contract price when the SIA was signed?",
+     "state": "partial",
+     "text": "The contract price when the SIA was signed was £4,860,000 [1]. This amount is also confirmed in another source, which states that the Cell Price for each Cell is £810,000 and the Contract Price is £4,860,000 (exclusive of VAT) [4].\n\nA later variation agreement increased the contract price to £6,550,000, but this change was made after the SIA was signed [3].",
+     "secs": 16.2,
+     "cards": [],
+     "cited": [
+      "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+      "Variation Agreement No. 1 to the Supply and Installation Agreement (9 January 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Is that still the figure?",
+     "state": "answered",
+     "text": "The contract price is no longer £4,860,000. According to Variation Agreement No. 1, the Contract Price was increased to six million five hundred and fifty thousand pounds sterling (£6,550,000) [3].\n\nAdditionally, the contract price is described as £6,550,000 in a letter of claim and dispute notice, stating that it includes £810,000 for each of Cells 1 to 6 and £845,000 for each of Cells 7 and 8 [7].\n\nThe original contract price of £4,860,000 was for six Cells at £810,000 each [1]. However, this was amended by Variation Agreement No. 1, which added two additional Cells, increasing the total contract price [6].",
+     "secs": 22.8,
+     "cards": [],
+     "cited": [
+      "Letter of claim and Dispute Notice to Quellcrest Robotics Ltd (4 October 2024)",
+      "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+      "Variation Agreement No. 1 to the Supply and Installation Agreement (9 January 2024)",
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "So what's QRL's overall liability cap?",
+     "state": "partial",
+     "text": "QRL's overall liability cap is 100% of the Contract Price. This is stated in the document as: [2].\n\nThere is also a reference to a different liability cap in another clause, which states that the Buyer's total aggregate liability shall not exceed 20% of the Contract Price. However, this is not relevant to QRL's liability. [1].\n\nAnother document mentions a different liability cap of 150% of the Contract Price, but this appears to be from a different version of the agreement. [6]. However, the version of the agreement that is in force is the one that states the liability cap as 100% of the Contract Price.",
+     "secs": 20.2,
+     "cards": [],
+     "cited": [
+      "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+      "Supply and Installation Agreement - draft v3 with Calder & Wynne comments (27.02.23)"
+     ],
+     "notes": [
+      "The source adds a condition to “This is stated in the document as: .”: “Subject to clauses 18.1 and 18.3”. Found by rule.",
+      "The source adds a condition to “.”: “Subject to clause 18.1”. Found by rule.",
+      "The source adds a condition to “.”: “Subject to clauses 19.1 and 19.3”. Found by rule."
+     ],
+     "missing": [
+      [
+       "6,550,000",
+       "6.55 million",
+       "£6.55m",
+       "6.55m"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "Do the LDs count towards it?",
+     "state": "partial",
+     "text": "The documents do not explicitly state whether the Liquidated Damages (LDs) count towards the 100% of the Contract Price. However, they do provide relevant information about the Contract Price and the limitation of liability.\n\nThe Contract Price is stated as £4,860,000 in the executed version of the agreement [2]. Later, a Variation Agreement No. 1 increases the Contract Price to £6,550,000 [5].\n\nClause 18.2 limits the Supplier's total aggregate liability to 100% of the Contract Price [1]. Clause 18.3 states that Liquidated Damages paid or payable under clause 9 are subject to the limit in clause 9.5 and shall not count towards, or be included in, the limit in clause 18.2 [1].\n\nBased on this, the Liquidated Damages do not count towards the 100% limit in clause 18.2. However, the documents do not explicitly state whether they count towards the 100% of the Contract Price in any other context.",
+     "secs": 29.6,
+     "cards": [],
+     "cited": [
+      "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+      "Variation Agreement No. 1 to the Supply and Installation Agreement (9 January 2024)"
+     ],
+     "notes": [
+      "The source adds a condition to “Clause 18.2 limits the Supplier's total aggregate liability to 100% of the Contract Price .”: “Subject to clauses 18.1 and 18.3”. Found by rule."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_fb45c998c41130ac8c7920c599d2e724"
+  },
+  {
+   "id": "syn01-28",
+   "matter": "SYN-01",
+   "kind": "follow_up",
+   "source": "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When did Cell 4 fail its SAT?",
+     "state": "partial",
+     "text": "The documents state that Cell 4 failed its SAT on 13 August 2024 [1]. The documents also state that Cell 4 failed its SAT on 13 August 2024 [4].",
+     "secs": 10.2,
+     "cards": [],
+     "cited": [
+      "Letter of claim and Dispute Notice to Quellcrest Robotics Ltd (4 October 2024)",
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Has it passed since?",
+     "state": "partial",
+     "text": "The documents do not explicitly state whether \"Cell 4 passed\" since 13 August 2024. However, they indicate that Cell 4 failed its first SAT on 13 August 2024 [2]. It later passed its repeat SAT on 8 November 2024 [1]. There is no mention of Cell 4 passing after 13 August 2024 other than the repeat SAT on 8 November 2024.",
+     "secs": 15.3,
+     "cards": [],
+     "cited": [
+      "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "What was its planned acceptance date?",
+     "state": "partial",
+     "text": "The planned acceptance date for Cell 4 was 24 May 2024, as stated in Schedule 3 of the Supply and Installation Agreement [4].\n\nThe planned acceptance dates for Cells 5, 6, and 7 were originally 7 June 2024, 21 June 2024, and 28 June 2024, respectively, but were extended by four weeks by Variation Agreement No. 2 [3].\n\nThe planned acceptance date for Cell 8 was 28 June 2024, as originally set out in Schedule 3, but was extended by four weeks by Variation Agreement No. 2 [6].",
+     "secs": 13.3,
+     "cards": [],
+     "cited": [
+      "Letter of claim and Dispute Notice to Quellcrest Robotics Ltd (4 October 2024)",
+      "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+      "Variation Agreement No. 2 - signed copy (22 July 2024)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "31 may 2024",
+       "31 may",
+       "31/05/2024"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "So how much in LDs can we claim on it?",
+     "state": "answered",
+     "text": "The documents state that Liquidated Damages for Cell 4 continue to accrue at £4,050 for each further full week until Acceptance, up to a maximum of £81,000, which will be reached after 20 full weeks [1].\n\nThe documents also state that as of the date of the letter, Quellcrest is liable to pay Liquidated Damages of £196,325 on Cell 4 [1].",
+     "secs": 14.0,
+     "cards": [],
+     "cited": [
+      "Letter of claim and Dispute Notice to Quellcrest Robotics Ltd (4 October 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_3a0b9fddffcd70853de9ea609075e255"
+  },
+  {
+   "id": "syn02-01",
+   "matter": "SYN-02",
+   "kind": "fact",
+   "source": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How much of Larkspur's data was actually taken - volume and number of files?",
+     "state": "partial",
+     "text": "The documents state that approximately 41 GB of data was exfiltrated from the Ostrander environment between 5 March and 7 March 2025 [1]. However, it is noted that the amount of Larkspur data within this volume has not been determined [1].\n\nThe preliminary estimate of the number of unique individuals represented in the Larkspur files was approximately 18,400 [1]. However, the final report from Cobaltline states that after parsing all eight archives and both exfiltration channels, de-duplicating across file types and reconciling with the Larkspur master patient index, Cobaltline has identified 23,912 unique individuals whose information was contained in the exfiltrated Larkspur files [4].",
+     "secs": 17.1,
+     "cards": [],
+     "cited": [
+      "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+      "Cobaltline Forensics - Preliminary Report (DRAFT v0.3, 4 April 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "17.2"
+      ],
+      [
+       "1,284"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_f55c934dab9cafc3f3ef19eafc914cee"
+  },
+  {
+   "id": "syn02-02",
+   "matter": "SYN-02",
+   "kind": "fact",
+   "source": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "was FS-BILL-03 encrypted at rest?",
+     "state": "partial",
+     "text": "The documents state that FS-BILL-03 was not encrypted at rest. According to the final forensic report, \"The FS-BILL-03 file server, which held Larkspur claim, statement and eligibility export files... did not have encryption at rest enabled\" [3]. Additionally, it is noted that \"No encryption at rest on FS-BILL-03 (section 7)\" [4]. Furthermore, the report states, \"Encryption at rest, FS-BILL-03: Not enabled. Larkspur billing exports were stored in plain text\" [5].",
+     "secs": 9.7,
+     "cards": [],
+     "cited": [
+      "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ef340808da1a0ee5e2975a564211cd67"
+  },
+  {
+   "id": "syn02-03",
+   "matter": "SYN-02",
+   "kind": "fact",
+   "source": "Business Associate Agreement - Larkspur / Ostrander (executed)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Under the BAA, how long did Ostrander have to report a breach of unsecured PHI to us?",
+     "state": "partial",
+     "text": "Under the BAA, Ostrander had to report a breach of unsecured PHI to Larkspur without unreasonable delay and in no case later than ten (10) business days after discovery of the breach [1].\n\nThe documents do not specify any additional time limits beyond the ten business days mentioned in Section 2.4 of the BAA.",
+     "secs": 6.6,
+     "cards": [],
+     "cited": [
+      "Business Associate Agreement - Larkspur / Ostrander (executed)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_f85f2be903d7e05bd4056ee566bd048e"
+  },
+  {
+   "id": "syn02-04",
+   "matter": "SYN-02",
+   "kind": "fact",
+   "source": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How long was Ostrander allowed to keep our export files on its file server, and how long did it actually keep them?",
+     "state": "answered",
+     "text": "Ostrander was allowed to keep the export files on its file server for a period of 30 days, as specified in Exhibit C, item 2.9 [5]. However, the documents indicate that Ostrander actually kept the files for up to 17 months, which is significantly longer than the 30-day retention requirement [5].",
+     "secs": 11.4,
+     "cards": [],
+     "cited": [
+      "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_257b7c0a5ba6c88f1ccc98f407d58e58"
+  },
+  {
+   "id": "syn02-05",
+   "matter": "SYN-02",
+   "kind": "role_party",
+   "source": "Master Services Agreement - Larkspur / Ostrander (fully executed)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How long does Larkspur have to pay Ostrander's invoices?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 3.3,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "45 days",
+       "forty-five (45) days",
+       "forty-five days"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_50d2ea71ac1193d4f380731cf26b0a2b"
+  },
+  {
+   "id": "syn02-06",
+   "matter": "SYN-02",
+   "kind": "role_party",
+   "source": "Business Associate Agreement - Larkspur / Ostrander (executed)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Can Ostrander send breach letters to our patients itself?",
+     "state": "partial",
+     "text": "The documents do not explicitly state whether Ostrander can send breach letters to Larkspur's patients themselves. However, Ostrander's letter mentions that if the investigation determines a breach of unsecured protected health information has occurred, Ostrander will supplement the notice with the information described in Section 2.4 of the BAA, including the identification of affected individuals to the extent available [7].\n\nAdditionally, the BAA requires that a breach be reported no later than 10 business days after discovery [4]. However, the documents do not specify whether Ostrander has the authority to send breach letters directly to patients or if this responsibility falls solely on Larkspur.",
+     "secs": 14.3,
+     "cards": [],
+     "cited": [
+      "FW RE Ostrander incident - internal (Larkspur email chain, forwarded May 29, 2025)",
+      "Ostrander Security Incident Notice (March 14, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "prior written approval",
+       "written approval",
+       "approval",
+       "consent"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_a799eb8697f379e2935960d68df6ce9c"
+  },
+  {
+   "id": "syn02-07",
+   "matter": "SYN-02",
+   "kind": "list",
+   "source": "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "who's on the special commitee the board set up?",
+     "state": "answered",
+     "text": "The special committee established by the board consists of Sunita Varadarajan (Chair), Leon Abernathy, and Harold Nakamura [4].",
+     "secs": 6.2,
+     "cards": [],
+     "cited": [
+      "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_182254e7703333b3fe41dcaf071f37ba"
+  },
+  {
+   "id": "syn02-08",
+   "matter": "SYN-02",
+   "kind": "list",
+   "source": "Master Services Agreement - Larkspur / Ostrander (fully executed)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What costs can we recover from Ostrander under the indemnity even if no patient ever sues?",
+     "state": "partial",
+     "text": "Under the indemnity provisions in the Business Associate Agreement, the costs that can be recovered from Ostrander even if no patient sues include the reasonable costs incurred by Larkspur in providing notifications required by 45 C.F.R. §§ 164.404 through 164.408 and by applicable state law [2]. These costs include printing, postage, substitute notice, media notice, and a call center for responding to individuals' inquiries [2]. Additionally, Larkspur may recover costs related to incident response and regulatory notifications, including directing a forensic investigation, advising on obligations under HIPAA, preparing notification letters, and advising the board [5].",
+     "secs": 18.8,
+     "cards": [],
+     "cited": [
+      "Business Associate Agreement - Larkspur / Ostrander (executed)",
+      "Engagement letter - Calder & Wynne LLP (countersigned March 17, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "credit monitoring"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_486880cde0079e2d155dd53fab9374f8"
+  },
+  {
+   "id": "syn02-09",
+   "matter": "SYN-02",
+   "kind": "calculation",
+   "source": "First Amendment to Master Services Agreement (effective July 1, 2023)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What's the most Ostrander can owe us in service credits in a single month at the current fees?",
+     "state": "answered",
+     "text": "The maximum service credit Ostrander can owe in a single month is based on the 5% rate for the Service Level Target of 98% in SL-1, which is 5% of the monthly Platform Fee.\n\nThe monthly Platform Fee is USD 38,750, as stated in the First Amendment to the Master Services Agreement [7].\n\nThe service credit rate for missing the 98% target is 5% of the monthly Platform Fee [6].\n\nCalculating this, 5% of USD 38,750 is USD 1,937.50.\n\nThe 15% cap on service credits does not apply here because the 5% rate is lower than the 15% cap [2].\n\nTherefore, the most Ostrander can owe in service credits in a single month at the current fees is USD 1,937.50.",
+     "secs": 26.7,
+     "cards": [],
+     "cited": [
+      "First Amendment to Master Services Agreement (effective July 1, 2023)",
+      "Master Services Agreement - Larkspur / Ostrander (fully executed)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "5,812.50",
+       "5812.5"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_059a1763d3046acc0698092cc4bd3383"
+  },
+  {
+   "id": "syn02-10",
+   "matter": "SYN-02",
+   "kind": "date",
+   "source": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "When did the fix for the VPN flaw come out, and by when should Ostrander have patched under the contract?",
+     "state": "answered",
+     "text": "The fix for the VPN flaw was published on 10/12/2024 [1]. Under the contract, Ostrander should have patched the vulnerability by 24/12/2024, as critical vulnerabilities were required to be patched within fourteen (14) days of patch availability [1].",
+     "secs": 27.5,
+     "cards": [],
+     "cited": [
+      "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_a4866f7f0f5560413e0f556f0f4f6cb3"
+  },
+  {
+   "id": "syn02-11",
+   "matter": "SYN-02",
+   "kind": "calculation",
+   "source": "Halvard Mutual Cyber Risk and Privacy Liability Policy HMC-CY-2024-08817 (2024-2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Untill what date could we run up incident response costs without needing Halvard's prior consent?",
+     "state": "partial",
+     "text": "The documents indicate that incident response costs can be incurred without Halvard's prior consent for the first thirty (30) days after the incident was first discovered. After this period, prior written consent from Halvard is required.\n\nThe sources state:  \n[2]  \n[1]\n\nThe incident was first discovered on March 14, 2025, as stated in the document:  \n[6]\n\nTherefore, incident response costs could be run up until April 13, 2025, without needing Halvard's prior consent.",
+     "secs": 17.0,
+     "cards": [],
+     "cited": [
+      "Halvard Mutual Cyber Risk and Privacy Liability Policy HMC-CY-2024-08817 (2024-2025)",
+      "Halvard Mutual reservation of rights letter (May 27, 2025)"
+     ],
+     "notes": [
+      "The source adds a condition to “”: “provided that Incident Response Costs incurred within thirty (30) days after the Incident is first Discovered shall not”. Found by rule."
+     ],
+     "missing": [
+      [
+       "april 9, 2025",
+       "april 9",
+       "9 april",
+       "4/9/2025",
+       "09/04/2025"
+      ]
+     ],
+     "leaked": [
+      "april 13"
+     ],
+     "ok": false
+    }
+   ],
+   "conv": "conv_c39849450f1c4becab9b7af056339e31"
+  },
+  {
+   "id": "syn02-12",
+   "matter": "SYN-02",
+   "kind": "not_stated",
+   "source": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who made the VPN appliance that got exploited?",
+     "state": "abstained",
+     "text": "The documents do not explicitly state who made the VPN appliance that was exploited. However, they mention that the appliance was named \"OBS-VPN-EDGE-01\" and that it was exploited on 17 February 2025 [2].\n\nNo information is provided about the manufacturer of the appliance.",
+     "secs": 6.8,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_77782bc5ca30cf677a860b5684f670f5"
+  },
+  {
+   "id": "syn02-13",
+   "matter": "SYN-02",
+   "kind": "not_stated",
+   "source": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How much ransom did the attackers demand, and did Ostrander pay it?",
+     "state": "abstained",
+     "text": "The documents do not specify how much ransom the attackers demanded, nor do they state whether Ostrander paid it. [7] [6] [2] [3] [1] [4] [7] [3] [2] [6] [1] [4] [7] [3] [2] [6] [1] [4] [7] [3] [2] [6: \"Mr. Wierzbicki reported that on ‘ote: March 10, 2025, at approximately-4:15 p.m., he had received a telephone call from Nadia Okafor, Director of Information",
+     "secs": 45.5,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_bf7159db29d199bf61b124239fd97034"
+  },
+  {
+   "id": "syn02-14",
+   "matter": "SYN-02",
+   "kind": "not_stated",
+   "source": "Patient notification letter - template v4 (draft with tracked changes)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "When did the patient notification letters actually go out?",
+     "state": "partial",
+     "text": "The documents do not specify when the patient notification letters actually went out. The sources mention that Ostrander notified Larkspur on March 14, 2025, about the ransomware attack and that patient notification letters were being prepared, but they do not provide a specific date for when these letters were sent. [3] [5] [6].",
+     "secs": 8.7,
+     "cards": [],
+     "cited": [
+      "Halvard Mutual reservation of rights letter (May 27, 2025)",
+      "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)",
+      "Patient notification letter - template v4 (draft with tracked changes)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_cfd2d65faa4aa3f7bb41f4ff21e13ca7"
+  },
+  {
+   "id": "syn02-15",
+   "matter": "SYN-02",
+   "kind": "amendment",
+   "source": "First Amendment to Master Services Agreement (effective July 1, 2023)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Under the MSA as amended, how much cyber cover does Ostrander have to carry?",
+     "state": "answered",
+     "text": "Under the MSA as amended, the cyber cover that Ostrander has to carry is USD 5,000,000 per claim and in the aggregate. This is stated in the First Amendment to the Master Services Agreement, which amends Section 13.1(c) of the original MSA [10].\n\nThe original MSA specified a cyber liability and privacy insurance coverage of USD 3,000,000 per claim and in the aggregate [2]. This was amended to increase the coverage to USD 5,000,000 per claim and in the aggregate.",
+     "secs": 13.5,
+     "cards": [],
+     "cited": [
+      "First Amendment to Master Services Agreement (effective July 1, 2023)",
+      "Master Services Agreement - Larkspur / Ostrander (fully executed)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_8687012068e92afd34d6b1ba06f6ee81"
+  },
+  {
+   "id": "syn02-16",
+   "matter": "SYN-02",
+   "kind": "amendment",
+   "source": "First Amendment to Master Services Agreement (effective July 1, 2023)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Is Ostrander's liability for this breach capped? how much?",
+     "state": "answered",
+     "text": "Yes, Ostrander's liability for this breach is capped. The cap is USD 2,000,000. The relevant text is: [2]",
+     "secs": 9.3,
+     "cards": [],
+     "cited": [
+      "First Amendment to Master Services Agreement (effective July 1, 2023)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "12.4",
+       "data breach cap"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_c72aaca0317135a5d1f9d39c64ae1201"
+  },
+  {
+   "id": "syn02-17",
+   "matter": "SYN-02",
+   "kind": "version",
+   "source": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How many patients were affected in total?",
+     "state": "partial",
+     "text": "The documents mention different figures for the number of patients affected.\n\nAccording to source 1, the estimated number of patients in scope is about 14,000, based on the nightly SFTP volumes: [1].\n\nSource 3 states that approximately 18,400 individuals may be affected, although this figure is an estimate and is expected to change: [3].\n\nSource 5 also estimates that approximately 18,400 unique individuals are represented in the Larkspur files identified so far: [5].\n\nTherefore, the affected patients are estimated to be 14,000 according to source 1, and 18,400 according to sources 3 and 5. The documents do not provide a definitive total figure.",
+     "secs": 18.9,
+     "cards": [],
+     "cited": [
+      "Cobaltline Forensics - Preliminary Report (DRAFT v0.3, 4 April 2025)",
+      "FW RE Ostrander incident - internal (Larkspur email chain, forwarded May 29, 2025)",
+      "Notice of Incident and Circumstances to Halvard Mutual (May 12, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "23,912"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_2bb71c4bebd38e84f6339057536af606"
+  },
+  {
+   "id": "syn02-18",
+   "matter": "SYN-02",
+   "kind": "version",
+   "source": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When did the hacker first get into Ostrander's network?",
+     "state": "answered",
+     "text": "The hacker first got into Ostrander's network on or about February 21, 2025, according to the preliminary report by Cobaltline Forensics [2]. This is also supported by the Cobaltline Forensics preliminary report, which states that \"A threat actor first accessed the Ostrander environment on 21 February 2025 at 14:22 UTC\" [3].",
+     "secs": 11.1,
+     "cards": [],
+     "cited": [
+      "Cobaltline Forensics - Preliminary Report (DRAFT v0.3, 4 April 2025)",
+      "Notice of Incident and Circumstances to Halvard Mutual (May 12, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "17 february 2025",
+       "february 17, 2025",
+       "17/02/2025",
+       "feb 17",
+       "17 feb",
+       "february 17",
+       "2/17/2025"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_b14ee61d5874cb910e0b2525ad91f744"
+  },
+  {
+   "id": "syn02-19",
+   "matter": "SYN-02",
+   "kind": "conflict",
+   "source": "Halvard Mutual Cyber Risk and Privacy Liability Policy HMC-CY-2024-08817 (2024-2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Halvard's letter says everything, incident response costs included, is capped at $500k under Endorsement No. 2. Is that right?",
+     "state": "unverified",
+     "text": "The documents state that under Endorsement No. 2, the Limit of Liability for Insuring Agreement E was reduced to USD 500,000. The source states, \"The Incident occurred on the Computer System of Ostrander, a Service Provider, and therefore constitutes a Dependent Business Incident. Pursuant to Endorsement No. 2 (Dependent Business Incident Sublimit Amendment), the Limit of Liability for Insuring Agreement E was reduced from USD 1,500,000 to USD 500,000\" [1].\n\nThe documents also state that Halvard claims all Loss arising from the Ostrander incident, including Incident Response Costs, is subject to this USD 500,000 sublimit. The source states, \"Halvard's position that all Loss arising from the Ostrander incident, including Incident Response Costs, is subject to this USD 500,000 sublimit; which is part of and not in addition to the Policy Aggregate Limit of Liability\" [1].\n\nTherefore, according to the documents, Halvard's letter says that everything, including incident response costs, is capped at $500k under Endorsement No. 2.",
+     "secs": 18.0,
+     "cards": [],
+     "cited": [
+      "Halvard Mutual reservation of rights letter (May 27, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "endorsement no. 3",
+       "endorsement 3",
+       "endorsement no 3",
+       "hmc-cy 330",
+       "third endorsement"
+      ],
+      [
+       "insuring agreement a",
+       "agreement a",
+       "coverage a",
+       "iv.e",
+       "paragraph 3"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_91dccc3f52b730c17e0f0cf52a21814f"
+  },
+  {
+   "id": "syn02-20",
+   "matter": "SYN-02",
+   "kind": "conflict",
+   "source": "Halvard Mutual Cyber Risk and Privacy Liability Policy HMC-CY-2024-08817 (2024-2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Can Halvard rely on the failure-to-patch exclusion, given Ostrander never patched the VPN?",
+     "state": "partial",
+     "text": "Halvard may rely on the failure-to-patch exclusion, as stated in Exclusion III.D, which excludes Loss arising from the failure to apply a critical security patch within forty-five (45) days after it was made available. The source states, \"Exclusion III.D excludes Loss arising out of the failure to apply a critical security patch within forty-five (45) days after it was made available\" [1].\n\nHowever, the documents do not confirm whether Ostrander actually failed to apply the critical patch. The source mentions that \"the attack may have exploited a vulnerability in a VPN appliance for which a critical patch had been available for some time,\" [1] but it does not explicitly state that Ostrander failed to apply the patch. Therefore,",
+     "secs": 13.7,
+     "cards": [],
+     "cited": [
+      "Halvard Mutual reservation of rights letter (May 27, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "not apply",
+       "doesn't apply",
+       "inapplicable",
+       "does not extend",
+       "carve-out",
+       "carved out"
+      ],
+      [
+       "insured's computer system",
+       "service provider's computer system",
+       "larkspur's own"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_fc8824914e71853806695b9def727a8f"
+  },
+  {
+   "id": "syn02-21",
+   "matter": "SYN-02",
+   "kind": "conflict",
+   "source": "First Amendment to Master Services Agreement (effective July 1, 2023)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Ostrander's letter says it gave written notice within 48 hours, as 9.4 requires. Did it?",
+     "state": "partial",
+     "text": "The documents indicate that Ostrander's written notice was sent on March 14, 2025, as stated in the Ostrander Security Incident Notice [4]. According to the MSA 9.4, as amended by the First Amendment, Ostrander was required to give written notice within 48 hours after discovery. The source states that Ostrander's formal letter was sent on March 14, 2025, claiming it was within 48 hours of the determination that Larkspur's systems were affected, which they stated was on March 12, 2025 [4]. However, the source also notes that Ostrander claimed the notice was within 48 hours of \"that\" determination, not of the initial discovery of the ransomware on March 9, 2025 [3].\n\nThe source also states that Ostrander's written notice was received by email on March 14, 2025, as noted in the Minutes of the Special Meeting of the Board of Directors [1].\n\nTherefore, based on the information provided, Ostrander's letter was sent on March 14, 2025, and it claims to have given written notice within 48 hours of the determination that Larkspur's systems were affected, which was March 12, 2025. However, the documents do not explicitly confirm whether this timeline meets the requirements of MSA 9.4. [3][4].",
+     "secs": 25.9,
+     "cards": [],
+     "cited": [
+      "FW RE Ostrander incident - internal (Larkspur email chain, forwarded May 29, 2025)",
+      "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)",
+      "Ostrander Security Incident Notice (March 14, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "march 11",
+       "11 march",
+       "3/11",
+       "11/03/2025"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_a6536c630da98df600fd4eb4df10f6d1"
+  },
+  {
+   "id": "syn02-22",
+   "matter": "SYN-02",
+   "kind": "conflict",
+   "source": "FW RE Ostrander incident - internal (Larkspur email chain, forwarded May 29, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Annette's email from March 14 says about 14,000 patients are in scope - is that still the number?",
+     "state": "answered",
+     "text": "The documents indicate that Annette's email from March 14 mentioned \"about 14,000 patients are in scope,\" but this number was later noted as a back-of-envelope guess based on SFTP volumes [1].\n\nHowever, Lionel later stated that this estimate should be disregarded, as the final number from Cobaltline was expected to be 18,400 [2].\n\nTherefore, the number mentioned in Annette's email is not the final number, and the updated estimate is 18,400 patients.",
+     "secs": 8.3,
+     "cards": [],
+     "cited": [
+      "FW RE Ostrander incident - internal (Larkspur email chain, forwarded May 29, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "23,912"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_b1aa33ca8b5734d7d33d22f63526ab53"
+  },
+  {
+   "id": "syn02-23",
+   "matter": "SYN-02",
+   "kind": "table",
+   "source": "Affected individuals by clinic (print)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "how many Astoria patients had SSNs in the stolen files?",
+     "state": "partial",
+     "text": "The documents state that approximately 18,400 unique individuals are represented in the Larkspur files identified so far [3].\n\nAdditionally, the document titled \"Affected individuals by clinic (print)\" lists the number of individuals affected at the Larkspur Astoria Clinic as 3,671 [4]. However, the documents do not specifically state how many of these individuals had Social Security Numbers (SSNs) in the stolen files.\n\nThe documents mention that for a subset of patients, Social Security numbers were found in the files [2]. However, they do not provide an exact number of patients with SSNs in the stolen files.\n\nTherefore,",
+     "secs": 11.8,
+     "cards": [],
+     "cited": [
+      "Affected individuals by clinic (print)",
+      "Cobaltline Forensics - Preliminary Report (DRAFT v0.3, 4 April 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "1,733"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_21d396905f5d4ba0268edcea2866a216"
+  },
+  {
+   "id": "syn02-24",
+   "matter": "SYN-02",
+   "kind": "table",
+   "source": "Engagement letter - Calder & Wynne LLP (countersigned March 17, 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What did Calder & Wynne budget for the claims against Ostrander?",
+     "state": "unverified",
+     "text": "The documents indicate that Calder & Wynne LLP budgeted for vendor claims against Ostrander. Specifically, the initial budget for \"Vendor claims against Ostrander\" was estimated at USD 90,500.00 [4].",
+     "secs": 5.2,
+     "cards": [],
+     "cited": [
+      "Engagement letter - Calder & Wynne LLP (countersigned March 17, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_cd399c8faba15acb18e00843ba5be623"
+  },
+  {
+   "id": "syn02-25",
+   "matter": "SYN-02",
+   "kind": "scan",
+   "source": "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Did Pomeroy and Ibsen actually attend the March 20 board meeting?",
+     "state": "abstained",
+     "text": "The documents do not provide information about whether Pomeroy and Ibsen actually attended the March 20 board meeting.\n\n[1]\n\n[1]\n\n[1]",
+     "secs": 9.0,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "pomeroy did not",
+       "pomeroy was not",
+       "pomeroy didn't",
+       "pomeroy wasn't",
+       "pomeroy was absent",
+       "excused",
+       "travelling",
+       "traveling"
+      ],
+      [
+       "by telephone",
+       "by phone",
+       "4:20"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_41ccd08872d42f29dd59b20862fac279"
+  },
+  {
+   "id": "syn02-26",
+   "matter": "SYN-02",
+   "kind": "scan",
+   "source": "Halvard Mutual reservation of rights letter (May 27, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What's the claim number on Halvard's reservation of rights letter, and what date is on our received stamp?",
+     "state": "abstained",
+     "text": "The claim number on Halvard's reservation of rights letter is mentioned in the document as \"the claim number above,\" [1] but the document does not explicitly state the claim number. The date on the received stamp is not mentioned in the sources provided.\n\nThe documents in this matter do not answer that.",
+     "secs": 4.6,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "hmc-cl-2025-03391"
+      ],
+      [
+       "may 29",
+       "29 may",
+       "5/29"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_9b060969222fb87b5975000cf14887b7"
+  },
+  {
+   "id": "syn02-27",
+   "matter": "SYN-02",
+   "kind": "follow_up",
+   "source": "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Which forensic firm is investigating this for us?",
+     "state": "partial",
+     "text": "The forensic firm investigating the incident for Larkspur is Cobaltline Forensics LLC. This is stated in the Engagement letter, which mentions that Larkspur retained Cobaltline Forensics LLC to investigate the Incident [2]. Additionally, the Notice of Incident and Circumstances to Halvard Mutual confirms that Cobaltline Forensics LLC was retained on March 17, 2025 [2].",
+     "secs": 7.4,
+     "cards": [],
+     "cited": [
+      "Notice of Incident and Circumstances to Halvard Mutual (May 12, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Who retained them, and when?",
+     "state": "partial",
+     "text": "The documents state that Larkspur retained Cobaltline Forensics LLC. The date of retention is specified as March 17, 2025 [1]. Additionally, the engagement of Cobaltline Forensics LLC is ratified and confirmed in the minutes of the Special Meeting of the Board of Directors [6].",
+     "secs": 14.9,
+     "cards": [],
+     "cited": [
+      "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)",
+      "Notice of Incident and Circumstances to Halvard Mutual (May 12, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "calder"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "Did the board sign off on that?",
+     "state": "partial",
+     "text": "The documents indicate that the board did sign off on the retention of Cobaltline Forensics LLC on March 17, 2025. The source states: [3].\n\nAdditionally, another source confirms that Cobaltline Forensics LLC was retained on March 17, 2025, stating: [4].",
+     "secs": 15.7,
+     "cards": [],
+     "cited": [
+      "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "ratified",
+       "ratification",
+       "confirmed and approved",
+       "approved"
+      ],
+      [
+       "march 20",
+       "20 march",
+       "3/20"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "And what does their final report say the root cause was?",
+     "state": "answered",
+     "text": "The final report of Cobaltline Forensics LLC states that the root cause of the incident was Ostrander's failure to apply the fixed firmware for advisory SA-2024-117 to its internet-facing VPN appliance OBS-VPN-EDGE-01 [5].",
+     "secs": 7.7,
+     "cards": [],
+     "cited": [
+      "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_09022fad67397b9a1c255795b40d3503"
+  },
+  {
+   "id": "syn02-28",
+   "matter": "SYN-02",
+   "kind": "follow_up",
+   "source": "Halvard Mutual reservation of rights letter (May 27, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Who's the cyber carrier on this one?",
+     "state": "partial",
+     "text": "The cyber carrier in this matter is Halvard Mutual Insurance Company. This is indicated by the reference to the \"Halvard Mutual Cyber Risk and Privacy Liability Policy\" in source [4]. Additionally, there is a reservation of rights letter from Halvard Mutual Insurance Company dated May 27, 2025, as noted in source [6].",
+     "secs": 6.6,
+     "cards": [],
+     "cited": [
+      "Halvard Mutual Cyber Risk and Privacy Liability Policy HMC-CY-2024-08817 (2024-2025)",
+      "Halvard Mutual reservation of rights letter (May 27, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "When did we put them on notice?",
+     "state": "partial",
+     "text": "The documents do not specify when Halvard Mutual Insurance Company put on notice. The sources mention that notice was given by Calder & Wynne LLP on May 12, 2025, but they do not state when Halvard Mutual Insurance Company itself put on notice. [6] [8].",
+     "secs": 10.8,
+     "cards": [],
+     "cited": [
+      "Halvard Mutual reservation of rights letter (May 27, 2025)",
+      "Notice of Incident and Circumstances to Halvard Mutual (May 12, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Was that in time?",
+     "state": "partial",
+     "text": "The notice was given on May 12, 2025. [1]\n\nLarkspur's Chief Information Security Officer became aware of the Incident on March 10, 2025. [4]\n\nSixty days from March 10, 2025, expired on May 9, 2025. [4]\n\nThe notice was given on May 12, 2025, which was sixty-three (63) days after March 10, 2025. [4]\n\nHalvard reserves its right to decline coverage, in whole or in part, on the ground of late notice. [4]",
+     "secs": 18.5,
+     "cards": [],
+     "cited": [
+      "Halvard Mutual reservation of rights letter (May 27, 2025)",
+      "Notice of Incident and Circumstances to Halvard Mutual (May 12, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "So can they deny cover because of it?",
+     "state": "partial",
+     "text": "Halvard Mutual Insurance Company may deny coverage because of the late notice. According to the reservation of rights letter, Larkspur's Chief Information Security Officer became aware of the incident on March 10, 2025, and notice was given on May 12, 2025, which was 63 days after the CISO became aware of the incident. The Policy requires notice \"as soon as practicable, and in no event later than sixty (60) days after the Insured's Chief Information Security Officer or General Counsel first becomes aware of such Claim or Incident\" [4].\n\nHalvard reserves the right to decline coverage, in whole or in part, on the ground of late notice, to the extent permitted by New York Insurance Law § 3420 and Endorsement No. 1 [4].",
+     "secs": 18.9,
+     "cards": [],
+     "cited": [
+      "Halvard Mutual reservation of rights letter (May 27, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "prejudice",
+       "prejudiced"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_1a159c4e367832917c1973bafd31f516"
+  },
+  {
+   "id": "syn03-01",
+   "matter": "SYN-03",
+   "kind": "fact",
+   "source": "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What's the default interest rate under the lease if rent is paid late?",
+     "state": "partial",
+     "text": "The default interest rate under the lease for late payment of rent is not explicitly stated in the sources provided. However, the lease mentions that interest at the Default Rate is payable on sums not paid on time [1].\n\nNo specific figure for the Default Rate is given in the sources.",
+     "secs": 13.6,
+     "cards": [],
+     "cited": [
+      "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "4%",
+       "four per cent",
+       "4 per cent",
+       "4 percent",
+       "four percent"
+      ],
+      [
+       "base rate"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_cde784569fc9c1da2ef80e20bff99b4b"
+  },
+  {
+   "id": "syn03-02",
+   "matter": "SYN-03",
+   "kind": "fact",
+   "source": "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "can A&P run a cafe in the shop?",
+     "state": "abstained",
+     "text": "The documents do not provide information about whether A&P can run a cafe in the shop.\n\nThe relevant clause regarding the permitted use of the premises is found in Schedule 5 of the lease. It states: \"the Permitted Use\" means use as a shop for the retail sale of homewares, furniture, kitchenware, textiles and gifts, together with an ancillary café occupying not more than ten per cent (10%) of the floor area of the Premises, within Class A1 of the Schedule to the Town and Country Planning (Use Classes) Order 1987 as at the date of this Lease [2: \"the Permitted Use\" means use as a shop for the retail sale of homewares, furniture, kitchenware, textiles and gifts, together with an ancillary café occupying not more than ten per cent (10%) of the floor area of the Premises, within Class A1 of the Schedule to the Town and Country Planning (Use Classes) Order 1987 as at the date of this Lease].\n\nThis indicates that an ancillary café is permitted, provided it occupies no more than 10% of the floor area. However, the documents do not specify whether A&P is allowed to operate such a café or whether there are any additional restrictions or conditions.\n\nThe documents in this matter do not answer that.",
+     "secs": 14.3,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_7757bcf4edad66a4afc084044e8905ac"
+  },
+  {
+   "id": "syn03-03",
+   "matter": "SYN-03",
+   "kind": "fact",
+   "source": "Carrow Hill - change of name and address for notices (3 May 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "When did Carrow Hill Estates change its name, and what is it called now?",
+     "state": "answered",
+     "text": "The documents state that Carrow Hill Estates Limited changed its name to Carrow Hill Property Holdings Limited. The change of name occurred on 6 November 2023 [1]. The company is now called Carrow Hill Property Holdings Limited [1].",
+     "secs": 10.3,
+     "cards": [],
+     "cited": [
+      "Carrow Hill - change of name and address for notices (3 May 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_1d0eb8c589490f29a675dc61cfc69d4a"
+  },
+  {
+   "id": "syn03-04",
+   "matter": "SYN-03",
+   "kind": "fact",
+   "source": "Service charge statement - year ended 24 March 2025 (Unit 4)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Why is the 2024/25 service charge so far over budget?",
+     "state": "answered",
+     "text": "The 2024/25 service charge is over budget due to unexpected and significant expenses, particularly the atrium roof glazing emergency works. According to the Service Charge Certificate and Statement, the atrium roof glazing - emergency works cost £86,415.00, which was not included in the original budget of £0.00 [2]. Additionally, the Surveyor and CDM fees for the atrium works amounted to £7,926.00, which was also not budgeted [2]. These unexpected costs contributed to the overall variance in the service charge.\n\nOther expenses also exceeded their budgets, such as Repairs and maintenance (general) which was budgeted at £44,000.00 but actual costs were £51,368.92 [2]. These variances, especially the large unanticipated costs for the atrium works, caused the service charge to go over budget.",
+     "secs": 18.8,
+     "cards": [],
+     "cited": [
+      "Service charge statement - year ended 24 March 2025 (Unit 4)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_b34da0a2c195c4799779c1e281755a7a"
+  },
+  {
+   "id": "syn03-05",
+   "matter": "SYN-03",
+   "kind": "role_party",
+   "source": "Email chain - dilapidations and reinstatement (Unit 4 Merrow Arcade)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who is Rupert Ashcombe and which side is he on?",
+     "state": "partial",
+     "text": "Rupert Ashcombe is a surveyor and director at Hartwell Vane Surveyors, as stated in the sources. He is associated with Ashdown & Pryce, as mentioned in source [6], and is involved in the dilapidations and reinstatement process for Unit 4 Merrow Arcade.\n\nThe sources indicate that Rupert Ashcombe is acting on behalf of Ashdown & Pryce, who are the tenants seeking to exit Unit 4 at the June 2026 break. This is evident from the email in source [6], where he states, \"I have been instructed by Ashdown &amp; Pryce in connection with their exit from Unit 4 at the June 2026 break.\"\n\nIn the context of the dispute over the lease and the interim schedule of dilapidations, Rupert Ashcombe is on the side of the tenant, as he is seeking information about reinstatement requirements and planning for the tenant's exit. This is supported by the statement in source [6], where he asks, \"Could you let me know (1) whether your client will require reinstatement of the shopfront and/or the mezzanine installed under the 2022 licence, and (2) whether your client intends to prepare an interim schedule of dilapidations before the break date.\"",
+     "secs": 15.6,
+     "cards": [],
+     "cited": [
+      "Email chain - dilapidations and reinstatement (Unit 4 Merrow Arcade)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_80f0688ec597e4f8d007a402b8d4fbd8"
+  },
+  {
+   "id": "syn03-06",
+   "matter": "SYN-03",
+   "kind": "role_party",
+   "source": "Pellow Grange letter 17 October 2025 - break disputed",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Who's acting for the landlord in the break dispute - solicitors and surveyors?",
+     "state": "partial",
+     "text": "The documents do not explicitly state who is acting for the landlord in the break dispute. However, they mention that the Landlord's Surveyor is defined as any surveyor or managing agent appointed by the Landlord [2: \"the Landlord's Surveyor\" means any surveyor or managing agent appointed by the Landlord (who may be an employee of the Landlord or of a company in the same group)].\n\nAdditionally, the documents indicate that the Landlord's Surveyor or managing agent can act on behalf of the Landlord [6].\n\nThe break notice was issued by Calder & Wynne LLP, who are described as solicitors and agents for the Tenant [4]. The documents do not specify who is acting for the Landlord in the dispute.",
+     "secs": 17.6,
+     "cards": [],
+     "cited": [
+      "Break notice dated 28 August 2025 and covering letter",
+      "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "Pellow Grange"
+      ],
+      [
+       "Brannock Moss"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_32043f577dd4d27bdb90243b007b4a0c"
+  },
+  {
+   "id": "syn03-07",
+   "matter": "SYN-03",
+   "kind": "list",
+   "source": "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What conditions does A&P have to meet on the break date for the break to work?",
+     "state": "partial",
+     "text": "The conditions that A&P must meet on the break date for the break to work are as follows:\n\n1. The Tenant must have paid the Annual Rent due under the Lease up to the Break Date. This is specified in clause 9.2(a) of the Lease [4].\n\n2. The Tenant must give vacant possession of the whole of the Premises to the Landlord. This is specified in clause 9.2(b) of the Lease [4].\n\n3. The Tenant must have paid all \"the Rents\" due under the Lease up to the Break Date. The definition of \"the Rents\" includes the Annual Rent, Service Charge, Insurance Rent, and all other sums reserved as rent [2].\n\n4. The Tenant must have paid the service charge balancing charge of £7,342.18 for the service charge year ended 24 March 2025 and the insurance rent of £1,906.40 [5].\n\n5. The Tenant must have paid all interest at the Default Rate under clause 3.4 of the Lease [2].\n\n6. The Tenant must have paid the deferred rent as per the Deferred Offer (DoV) agreement, which was amended to extend the break period to 9 months [3].\n\n7. The Tenant must ensure that the break notice is served in time, with at least six months' prior written notice. The break notice was served on 28 August 2025, which was within the required six-month period [8].\n\n8. The Tenant must ensure that the break notice is served at the correct address and to the correct name [7].",
+     "secs": 44.9,
+     "cards": [],
+     "cited": [
+      "Advice note - break clause, Unit 4 Merrow Arcade (LB draft)",
+      "Attendance note - client meeting 15 July 2025",
+      "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+      "Pellow Grange letter 17 October 2025 - break disputed"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_3b1195e920a43f5f915cd565260cde8c"
+  },
+  {
+   "id": "syn03-08",
+   "matter": "SYN-03",
+   "kind": "list",
+   "source": "Pellow Grange letter 17 October 2025 - break disputed",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Pellow Grange's letter - what are all the reasons they give for saying our break notice doesn't work?",
+     "state": "partial",
+     "text": "The reasons Pellow Grange gives for saying the break notice does not work are as follows:\n\n1. The Purported Notice was not served at a permitted address. Pellow Grange states that the notice was not served at the correct address, which is a requirement under the lease [2].\n\n2. The Purported Notice was addressed to a company of a different name. Pellow Grange explains that the notice was addressed to \"Carrow Hill Estates Limited,\" a name that had been superseded by their client's new name, \"Carrow Hill Property Holdings Limited,\" since November 2023 [9].\n\n3. The original of the Purported Notice was handed to their client by the current occupier of Carrow House on 6 October 2025, which was after the period for service of a break notice had expired. Pellow Grange claims that the period for service of a break notice under clause 9.1 of the Lease, as varied, had already expired [8].\n\n4. A copy of the Purported Notice was sent by email to their client's managing agent, but Pellow Grange states that the lease makes it clear that a notice sent by email is not validly given or served. They also point out that the email was sent for the managing agent's information, not as a valid service of the notice [8].\n\n5. Pellow Grange asserts that the break conditions have not been and will not be satisfied. They mention that the tenant has not paid the required sums, including a total of £9,248.58, and that interest is accruing on these sums at the default rate [10].\n\n6. Pellow Grange also points out that the tenant has a history of late payments under the lease, including the rent due on the June 2023 quarter day, and that they reserve the right to rely on this payment record in any proceedings [10].",
+     "secs": 47.0,
+     "cards": [],
+     "cited": [
+      "Pellow Grange letter 17 October 2025 - break disputed"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ac6a440f9991130b08062e80e8acef57"
+  },
+  {
+   "id": "syn03-09",
+   "matter": "SYN-03",
+   "kind": "date",
+   "source": "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Until when could the client have formally disputed the 2024/25 service charge certificate?",
+     "state": "partial",
+     "text": "The client could have formally disputed the 2024/25 service charge certificate within three months after service of the Certificate, as stated in source [2].\n\nThe service charge certificate was dated 30 June 2025 [4], so the client had until 30 September 2025 to formally dispute it.\n\nThe certificate was served on the tenant, and the three-month period for dispute begins from the date of service. The documents do not specify the exact date the certificate was served, only the date it was issued. Therefore, the exact end date of the three-month period cannot be determined without knowing the service date.",
+     "secs": 15.3,
+     "cards": [],
+     "cited": [
+      "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+      "Service charge statement - year ended 24 March 2025 (Unit 4)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_dcb5d432682637d20d29e9871e01bcd3"
+  },
+  {
+   "id": "syn03-10",
+   "matter": "SYN-03",
+   "kind": "calculation",
+   "source": "Interim schedule of dilapidations rev 1 (3 November 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Is the arithmetic in the interim dilaps schedule right? What should the sub-total and total be?",
+     "state": "partial",
+     "text": "The arithmetic in the interim dilapidations schedule appears to be incorrect. The document states that items 1-17 add to £85,350.00, but the sub-total is listed as £82,400.00, with item 12 left out [1].\n\nThe sub-total should be £85,350.00, and the total, excluding VAT, should be £101,516.80, as stated in the document [1]. However, the document also mentions a revised total of £105,151.20, which may be based on the corrected sub-total of £85,350.00 [1].\n\nThe sub-total and total figures provided in the document are inconsistent, with the sub-total being £82,400.00 and the total being £101,516.80, but the correct figures should be £85,350.00 for the sub-total and £105,151.20 for the total.",
+     "secs": 47.0,
+     "cards": [],
+     "cited": [
+      "Interim schedule of dilapidations rev 1 (3 November 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_85089da45b39acdb2548198fdbb6c802"
+  },
+  {
+   "id": "syn03-11",
+   "matter": "SYN-03",
+   "kind": "calculation",
+   "source": "Service charge statement - year ended 24 March 2025 (Unit 4)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How much of our £7,342.18 balancing charge comes from the atrium works, counting the surveyor and CDM fees on them?",
+     "state": "partial",
+     "text": "The balancing charge of £7,342.18 includes the atrium works. The atrium roof glazing works accounted for £86,415.00, and the surveyor and CDM fees for the atrium works were £7,926.00 [4][4]. These costs are part of the balancing charge.",
+     "secs": 12.2,
+     "cards": [],
+     "cited": [
+      "Service charge statement - year ended 24 March 2025 (Unit 4)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "6,462.36",
+       "6,462"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_093ad47f552a3c2df26023b1f831f2d3"
+  },
+  {
+   "id": "syn03-12",
+   "matter": "SYN-03",
+   "kind": "not_stated",
+   "source": "Pellow Grange letter 17 October 2025 - break disputed",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Which business is now in Carrow House - the one that handed our notice to the landlord?",
+     "state": "partial",
+     "text": "The documents state that the building at Carrow House, 11 Ashgrove Terrace, Bath, which was previously occupied by the client, is now occupied by a business that has no connection with the client [1].\n\nThe business that handed over the notice to the landlord is not explicitly named in the documents. However, it is mentioned that the original of the Purported Notice was handed to the client by the current occupier of Carrow House [2].",
+     "secs": 11.8,
+     "cards": [],
+     "cited": [
+      "Pellow Grange letter 17 October 2025 - break disputed"
+     ],
+     "notes": [
+      "“Carrow” could be Carrow Hill Estates Limited or Carrow Hill Property Holdings Limited. To ask about one of them, choose it below."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_6e90456f2c927d633943685b03f3b2b1"
+  },
+  {
+   "id": "syn03-13",
+   "matter": "SYN-03",
+   "kind": "not_stated",
+   "source": "Rent review memorandum - 24 June 2021 review (signed)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What will the rent be after the June 2026 review?",
+     "state": "abstained",
+     "text": "The documents do not provide the rent amount after the June 2026 review.\n\nThe documents mention that the next Review Date under the Lease is 24 June 2026 [2], but they do not specify what the rent will be after that date.\n\nAdditionally, the documents state that the Open Market Rent agreed for the Review Date does not bind either party on the next Review Date [2], which indicates that the rent after 24 June 2026 is not determined by prior agreements.\n\nNo further details about the rent after 24 June 2026 are provided in the sources.",
+     "secs": 9.5,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_3ca51f57e15b3337c5e3a355cf47fd51"
+  },
+  {
+   "id": "syn03-14",
+   "matter": "SYN-03",
+   "kind": "not_stated",
+   "source": "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How much rent deposit is the landlord holding for Unit 4?",
+     "state": "abstained",
+     "text": "The documents do not mention the amount of the rent deposit held by the landlord for Unit 4. [The documents in this matter do not answer that.]",
+     "secs": 4.6,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_51ab0f5bd97b1641fc455d6783db06de"
+  },
+  {
+   "id": "syn03-15",
+   "matter": "SYN-03",
+   "kind": "amendment",
+   "source": "Deed of Variation - Unit 4 Merrow Arcade (15 October 2020)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "The lease says six months' notice to break - is that still right?",
+     "state": "partial",
+     "text": "The lease states that the Tenant may determine the Lease on the 24th day of June 2026 by giving to the Landlord not less than six (6) months' prior written notice [1].\n\nHowever, a secondary document states that a variation (DoV 15.10.20) changed the notice period from six months to nine months, making the last day for service 24 September 2025 [6].\n\nThe documents differ on the notice period: one states six months, while another states nine months. The lease itself does not mention this change, and the variation is not signed, as the document is marked unsigned [6].\n\nTherefore, the lease's original term of six months' notice to break is not confirmed as still being in force, as there is a conflicting, unsigned variation.",
+     "secs": 17.1,
+     "cards": [],
+     "cited": [
+      "Attendance note - client meeting 15 July 2025",
+      "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_2a2ad5b5e3d8e041f620414ce2da3622"
+  },
+  {
+   "id": "syn03-16",
+   "matter": "SYN-03",
+   "kind": "version",
+   "source": "Rent review memorandum - 24 June 2021 review (signed)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "whats the current passing rent on Unit 4?",
+     "state": "partial",
+     "text": "The current passing rent on Unit 4 is £94,250 a year, as stated in the Lease following the 2021 rent review [1]. Another source also confirms the passing rent as £94.5k pa after the 2021 review [2].",
+     "secs": 8.3,
+     "cards": [],
+     "cited": [
+      "Advice note - break clause, Unit 4 Merrow Arcade (LB draft)",
+      "Attendance note - client meeting 15 July 2025"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_9f784d3411706bd2bbef3d1faf7c8959"
+  },
+  {
+   "id": "syn03-17",
+   "matter": "SYN-03",
+   "kind": "amendment",
+   "source": "Carrow Hill - change of name and address for notices (3 May 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Where do notices to the landlord have to be sent now?",
+     "state": "answered",
+     "text": "The documents state that notices to the landlord must be sent to the landlord's registered office or to any other address in England and Wales that the landlord has notified the tenant in writing for the service of notices [4].\n\nAs of 1 June 2024, the landlord's registered office is 9 Tolcarne Place, Bristol BS1 6QE [4].\n\nThe previous address, Carrow House, 11 Ashgrove Terrace, Bath BA2 6LP, is no longer the landlord's registered office or an address notified for the service of notices [5].",
+     "secs": 11.2,
+     "cards": [],
+     "cited": [
+      "Pellow Grange letter 17 October 2025 - break disputed"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_c352d976559b88a32483f9c37faa6a50"
+  },
+  {
+   "id": "syn03-18",
+   "matter": "SYN-03",
+   "kind": "conflict",
+   "source": "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Pellow Grange say the unpaid service charge and insurance rent mean the break conditions aren't met. Is that what clause 9.2(a) actually says?",
+     "state": "partial",
+     "text": "The documents state that clause 9.2(a) of the Lease requires the Tenant to have paid the Annual Rent due under the Lease up to the Break Date. This is explicitly stated in the source:\n\n[1]\n\nHowever, the documents also indicate that the term \"the Rents\" in the Lease includes more than just the Annual Rent. This is confirmed in another source:\n\n[5]\n\nPellow Grange argues that the unpaid service charge and insurance rent mean the break conditions are not met. This is based on the claim that \"the Rents\" include these additional charges, as defined in the Lease. This is supported by the source:\n\n[6]\n\nTherefore, according to the documents, clause 9.2(a) does not only require payment of the Annual Rent, but also other sums defined as \"the Rents,\" including the Service Charge and Insurance Rent.",
+     "secs": 24.6,
+     "cards": [],
+     "cited": [
+      "Advice note - break clause, Unit 4 Merrow Arcade (LB draft)",
+      "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+      "Pellow Grange letter 17 October 2025 - break disputed"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "misquot",
+       "not \"the rents\"",
+       "not the rents",
+       "not 'the rents'",
+       "rather than",
+       "only the annual rent",
+       "annual rent only",
+       "only to the annual rent",
+       "only requires",
+       "only refers",
+       "principal rent",
+       "not a break condition",
+       "not break conditions",
+       "not a condition",
+       "aren't break conditions",
+       "are not break conditions",
+       "isn't a break condition",
+       "is not a break condition",
+       "not include the service charge",
+       "doesn't include the service charge",
+       "excludes the service charge"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_b77cda38a1fbf46b2e8f9865ef18ae2b"
+  },
+  {
+   "id": "syn03-19",
+   "matter": "SYN-03",
+   "kind": "conflict",
+   "source": "Deed of Variation - Unit 4 Merrow Arcade (15 October 2020)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Lena's draft advice says we can still serve a fresh break notice at the Bristol address up to 24 December 2025. Is that right?",
+     "state": "partial",
+     "text": "The documents state that the break notice dated 28 August 2025 and covering letter provides that the Tenant determines the Lease on 24 June 2026, which is the Break Date as defined in the Lease. [1] It also states that the notice relates to the whole of the Premises. [2]\n\nThe advice note states that a fresh break notice should be served on the landlord in its new name at its Bristol address before 24 December 2025. [3]\n\nThe advice note also states that the last date for serving a fresh break notice is 24 December 2025, which would satisfy the six-month notice period in clause 9.1. [4]\n\nThe advice note further confirms that the last date for service of a break notice is 24 December 2025. [7]",
+     "secs": 24.2,
+     "cards": [],
+     "cited": [
+      "Advice note - break clause, Unit 4 Merrow Arcade (LB draft)",
+      "Break notice dated 28 August 2025 and covering letter"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "nine month",
+       "9 month",
+       "nine (9) month",
+       "9-month",
+       "nine-month"
+      ],
+      [
+       "24 September 2025",
+       "24/09/2025",
+       "24.9.25",
+       "24 Sept 2025",
+       "24 Sep 2025",
+       "24/9/25",
+       "24/9/2025",
+       "24th September 2025"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_570a5b1b7d64d7f50be8d8e0373dfd49"
+  },
+  {
+   "id": "syn03-20",
+   "matter": "SYN-03",
+   "kind": "conflict",
+   "source": "Service charge statement - year ended 24 March 2025 (Unit 4)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Karen Pilcher's email puts the balancing charge at £7,432.18 - is that the right figure?",
+     "state": "partial",
+     "text": "The documents state that Karen Pilcher's email refers to a service charge balancing charge of £7,432.18 [1]. However, another source states that the balancing charge is £7,342.18 [3]. Another source also confirms the balancing charge as £7,342.18 [5].\n\nTherefore, the figure mentioned in Karen Pilcher's email, £7,432.18, does not match the figures provided in the other documents, which consistently state the balancing charge as £7,342.18.",
+     "secs": 12.9,
+     "cards": [],
+     "cited": [
+      "Advice note - break clause, Unit 4 Merrow Arcade (LB draft)",
+      "Email chain - dilapidations and reinstatement (Unit 4 Merrow Arcade)",
+      "Service charge statement - year ended 24 March 2025 (Unit 4)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_3899a1fcb014db8dc5b96c808f80a0dd"
+  },
+  {
+   "id": "syn03-21",
+   "matter": "SYN-03",
+   "kind": "cross_doc",
+   "source": "Carrow Hill - change of name and address for notices (3 May 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Lena's note suggests the May 2024 change of address letter was never properly notified to the tenant because it went to the store. Did the tenant actually receive it?",
+     "state": "answered",
+     "text": "The documents do not confirm whether the tenant actually received the May 2024 change of address letter. The letter was addressed to the store rather than to the client's registered office, and Daniel Okafor has no record of it reaching the property team [1]. It is arguable that the new address was not \"notified to the Tenant\" for the purposes of clause 21.3 [1].",
+     "secs": 11.4,
+     "cards": [],
+     "cited": [
+      "Advice note - break clause, Unit 4 Merrow Arcade (LB draft)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "8 May 2024",
+       "08 May 2024",
+       "8/5/2024",
+       "08/05/2024",
+       "8/5/24",
+       "8.5.24",
+       "8th May 2024"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_f6a1f73919225c3856115f1478be3359"
+  },
+  {
+   "id": "syn03-22",
+   "matter": "SYN-03",
+   "kind": "conflict",
+   "source": "Deed of Variation - Unit 4 Merrow Arcade (15 October 2020)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Which quarters did the Covid rent concession in the deed cover?",
+     "state": "partial",
+     "text": "The Covid rent concession in the deed covered four quarters.\n\nThe specific quarters are described as follows:\n\n- The first quarter begins on 24 June 2020.  \n- The second quarter begins on 29 September 2020.  \n- The third quarter begins on 25 December 2020.  \n- The fourth quarter begins on 25 March 2021.\n\nThese quarters are referred to as the \"Concession Quarters\" in the deed [1: \"Concession Quarters\" means the four quarters of the Term beginning on 24 June 2020, 29 September 2020, 25 December 2020 and 25 March 2021 respectively, and \"Concession Quarter\" means any one of them].\n\nThe concession applies to these four quarters, from 24 June 2020 to 24 March 2021 inclusive [1].",
+     "secs": 15.8,
+     "cards": [],
+     "cited": [
+      "Deed of Variation - Unit 4 Merrow Arcade (15 October 2020)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_1d26c91b6295971c9880e584dc76be97"
+  },
+  {
+   "id": "syn03-23",
+   "matter": "SYN-03",
+   "kind": "table",
+   "source": "Tenant rent ledger 2021-2025 (Unit 4 Merrow Arcade)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When exactly did A&P pay the deferred rent? Check the ledger.",
+     "state": "partial",
+     "text": "The documents do not specify the exact date when A&P paid the deferred rent.\n\nThe Deed of Variation states that the Deferred Rent Payment Date was 24 December 2021 [6].\n\nThe Attendance note mentions that LB should confirm from the ledger whether the Deferred Rent was paid by 24 December 2021 [1].\n\nHowever, the documents do not provide the exact date of payment, only that it was paid by 24 December 2021.",
+     "secs": 14.0,
+     "cards": [],
+     "cited": [
+      "Attendance note - client meeting 15 July 2025",
+      "Deed of Variation - Unit 4 Merrow Arcade (15 October 2020)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "20/12/2021",
+       "20 December 2021",
+       "20 Dec 2021",
+       "20.12.21",
+       "20/12/21",
+       "20th December 2021"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_f9a204dca6b0f6e28f5ea5e315d683ec"
+  },
+  {
+   "id": "syn03-24",
+   "matter": "SYN-03",
+   "kind": "table",
+   "source": "Interim schedule of dilapidations rev 1 (3 November 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What's Brannock Moss's figure for the sales floor vinyl, and what does HV say it should be?",
+     "state": "answered",
+     "text": "The figure for the sales floor vinyl according to Brannock Moss is £12,720.00, as stated in the document: \"Uplift and replace floor covering throughout sales floor 12,720.00\" [4].\n\nHV states that the sales floor vinyl should be repaired locally, and they propose an allowance of £2,500. This is noted in the document: \"Local repairs only at entrance and tills - allow £2,500\" [4].",
+     "secs": 8.7,
+     "cards": [],
+     "cited": [
+      "Interim schedule of dilapidations rev 1 (3 November 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_00999154a5d0f5ffc7d0683a8e9b341c"
+  },
+  {
+   "id": "syn03-25",
+   "matter": "SYN-03",
+   "kind": "scan",
+   "source": "Proof of posting - recorded delivery 28 August 2025",
+   "ok": true,
+   "turns": [
+    {
+     "question": "what's the tracking ref on the recorded delivery of the break notcie, and what time did it go in?",
+     "state": "answered",
+     "text": "The tracking reference for the recorded delivery of the break notice is \"RD 7713 4802 6GB\" [5]. The break notice was posted at 15:47 on 28 August 2025 [5].",
+     "secs": 6.7,
+     "cards": [],
+     "cited": [
+      "Proof of posting - recorded delivery 28 August 2025"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_f2100a29749f6db6efe1634e8153b85e"
+  },
+  {
+   "id": "syn03-26",
+   "matter": "SYN-03",
+   "kind": "scan",
+   "source": "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Do we have the lease plans on our copy? I need Plan 2.",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 6.3,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "box 14",
+       "not copied"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_c70a4145042f3d770ed44ffb88debe17"
+  },
+  {
+   "id": "syn03-27",
+   "matter": "SYN-03",
+   "kind": "follow_up",
+   "source": "Pellow Grange letter 17 October 2025 - break disputed",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When do Pellow Grange want our response by?",
+     "state": "answered",
+     "text": "The documents state that Pellow Grange wants a response by 31 October 2025.\n\nThe relevant quote is: \"Please confirm within 14 days of the date of this letter, that is by 31 October 2025, that your client accepts that the Purported Notice is of no effect and that the Lease will continue after 24 June 2026\" [1].",
+     "secs": 11.6,
+     "cards": [],
+     "cited": [
+      "Pellow Grange letter 17 October 2025 - break disputed"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "What exactly are they asking for?",
+     "state": "partial",
+     "text": "The requirement stated in the document is that the Tenant must have paid the Rents due under the Lease up to the Break Date. This is specified in clause 8.1 of the Lease, which states: \"In any event, the conditions in clause 9.2 of the Lease have not been satisfied. Clause 9.2(a) requires that, on the Break Date, the Tenant 'has paid the Rents due under this Lease up to the Break Date'.\" [1]\n\nThe Rents are defined in clause 1.1 of the Lease to include the Service Charge and the Insurance Rent. [1]\n\nThe Tenant has failed to pay the balancing charge of £7,342.18 for the service charge year ended 24 March 2025, and the Insurance Rent of £1,906.40. [1]",
+     "secs": 19.5,
+     "cards": [],
+     "cited": [
+      "Pellow Grange letter 17 October 2025 - break disputed"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "no effect",
+       "lease will continue",
+       "lease continues",
+       "continue after",
+       "has not been determined"
+      ],
+      [
+       "9,248.58"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "And if we don't?",
+     "state": "partial",
+     "text": "If the Tenant does not pay the balancing charge of £7,342.18 for the service charge year ended 24 March, the Tenant has failed to meet the conditions for exercising the break clause. The Tenant's failure to pay this amount is specifically mentioned in the documents, stating that \"the Tenant has failed to pay: (a) the balancing charge of £7,342.18 for the service charge year ended 24 March 2025\" [1].\n\nAdditionally, the documents indicate that the Tenant must pay the certified sum pending the resolution of any dispute, as required by paragraph 7.2 of Part 1 of Schedule 4 to the Lease. The documents state, \"paragraph 7.2 of Part 1 of Schedule 4 to the Lease requires the Tenant to pay the sum certified pending the resolution of any dispute\" [2].\n\nThe failure to pay the balancing charge also means that the Tenant has not satisfied the conditions in clause 9.2 of the Lease, which requires that \"the Tenant has paid the Rents due under this Lease up to the Break Date\" [1].",
+     "secs": 20.4,
+     "cards": [],
+     "cited": [
+      "Pellow Grange letter 17 October 2025 - break disputed"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "declaration",
+       "court"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "How is that £9,248.58 made up?",
+     "state": "partial",
+     "text": "The balancing charge of £7,342.18 is made up of the service charge for the year ended 24 March 2025 [1]. This charge was certified and demanded on 30 June 2025 and was payable within 21 days after service of the Certificate [1].\n\nThe balancing charge relates to the service charge for the year ended 24 March 2025, which is stated as £7,342.18 in the service charge statement [5].\n\nThe balancing charge is connected to the atrium roof works, which were damaged in a December storm, and the cost of these works is approximately £86,000 [3]. However, the balancing charge itself is specifically £7,342.18.",
+     "secs": 17.9,
+     "cards": [],
+     "cited": [
+      "Attendance note - client meeting 15 July 2025",
+      "Pellow Grange letter 17 October 2025 - break disputed",
+      "Service charge statement - year ended 24 March 2025 (Unit 4)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "1,906.40",
+       "1,906.4"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_3994209cacfaf83dc13365defd44a86d"
+  },
+  {
+   "id": "syn03-28",
+   "matter": "SYN-03",
+   "kind": "follow_up",
+   "source": "Licence for Alterations - shopfront and mezzanine (7 March 2022)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Has the landlord served notice requiring the licence works to be taken out?",
+     "state": "answered",
+     "text": "The documents do not explicitly state whether the landlord has served notice requiring the licence works to be taken out. However, they do mention that the obligation to reinstate the 2022 works arises only if the landlord serves notice under clause 6.1 of the licence for alterations dated 7 March 2022 [1]. It is also stated that no such notice has been served [1].\n\nFurthermore, clause 6.1 of the licence states that the landlord may require the tenant to remove the works and reinstate the premises if a written notice is given not less than six months before the end of the term [2].\n\nTherefore, based on the information provided, the documents do not confirm that the landlord has served such a notice.",
+     "secs": 18.0,
+     "cards": [],
+     "cited": [
+      "Email chain - dilapidations and reinstatement (Unit 4 Merrow Arcade)",
+      "Licence for Alterations - shopfront and mezzanine (7 March 2022)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "What's their deadline for that if the break is effective?",
+     "state": "partial",
+     "text": "The deadline for the landlord to serve notice if the break is effective is 24 December 2025. This is derived from the statement that the last date for service of a break notice is 24 December 2025 [7].\n\nThe Break Date is 24 June 2026 [8]. The requirement is that the break notice must be given not less than six months prior to the Break Date. Subtracting six months from 24 June 2026 results in 24 December 2025.\n\nThe documents also state that a fresh break notice must be served on or before 24 December 2025 to satisfy the six-month notice period [8].\n\nTherefore, the deadline for the landlord to serve notice if the break is effective is 24 December 2025.",
+     "secs": 22.7,
+     "cards": [],
+     "cited": [
+      "Advice note - break clause, Unit 4 Merrow Arcade (LB draft)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "In total, how much is Brannock Moss's schedule putting on those reinstatement items?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 16.4,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "47,000",
+       "47k"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "And is the licence clause the schedule cites for them right?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 4.3,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "6.1"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_e131d4af66c9aaab29573fd843bc01b3"
+  },
+  {
+   "id": "syn04-01",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "source": "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What's her side asking for to settle, and how long do we have to respond?",
+     "state": "partial",
+     "text": "The plaintiff's side is asking for a total payment of $475,000, inclusive of attorneys’ fees and costs, in exchange for a mutually acceptable separation and release agreement [5]. The offer will remain open for twenty-one (21) days from the date of the letter, which is until February 24, 2025 [5].",
+     "secs": 9.1,
+     "cards": [],
+     "cited": [
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_4a1fa3d82abad8b9e777ec5674fa13e1"
+  },
+  {
+   "id": "syn04-02",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "source": "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How did the HR investigation into her complaint come out?",
+     "state": "partial",
+     "text": "The HR investigation into her complaint concluded that it was \"unsubstantiated,\" as stated in the demand letter from Ostrowski & Lam LLP [1]. The investigation was conducted by the People team, as outlined in the Employee Handbook, which states that the People team will acknowledge a complaint within two business days and explain the next steps [2]. The investigation was expected to be completed within thirty calendar days, as per the Employee Handbook [5]. However, the investigation was not completed within this timeframe, as the termination occurred eighty-one days after the complaint was made [1]. The investigation's outcome was that the complaint was deemed \"unsubstantiated,\" but this does not imply that the complaint was made in bad faith [3].",
+     "secs": 16.4,
+     "cards": [],
+     "cited": [
+      "Brackenridge Analytics Employee Handbook 2024 (rev. 2024-01)",
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "december 6, 2024",
+       "december 6",
+       "dec 6",
+       "12/06/24",
+       "12/6/24",
+       "12/06/2024",
+       "12/6/2024",
+       "6 december"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_d8a82aa0bff22f298dd103ecea8b4fdd"
+  },
+  {
+   "id": "syn04-03",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "source": "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "when did she actually get Atlas staging acces, and how long had she been waiting for it?",
+     "state": "partial",
+     "text": "The documents indicate that Ms. Okafor-Reyes requested Atlas staging access in August 2024 and still did not have it as of November 4, 2024. She stated, \"I asked for Atlas staging access in August and still do not have it\" [5].\n\nShe was placed on a 60-day Performance Improvement Plan (PIP) on November 4, 2024, and was terminated 81 days later, on January 10, 2025. This means she had been waiting for Atlas staging access for approximately 2 months and 6 days.",
+     "secs": 10.8,
+     "cards": [],
+     "cited": [
+      "Performance Improvement Plan - D. Okafor-Reyes (November 4, 2024)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "december 17",
+       "dec 17",
+       "12/17",
+       "17 december"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_deb270d83a5de500a6300d55ee3a088a"
+  },
+  {
+   "id": "syn04-04",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "source": "Employment Agreement - Brackenridge Analytics / D. Okafor-Reyes (signed)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "If this ends up in arbitration under her employment agreement, where is it heard and who pays the arbitrator?",
+     "state": "partial",
+     "text": "The employment agreement states that arbitration will be conducted before a single neutral arbitrator who is a retired state or federal judge or an attorney with at least ten (10) years of experience in employment law. The parties shall select the arbitrator by mutual agreement within thirty (30) days after a written demand for arbitration is served. If they cannot agree, the arbitrator shall be selected by alternately striking names from a list of seven (7) qualified neutrals provided by a neutral arbitration service agreed by the parties, or, failing such agreement, appointed by the Superior Court of California, County of Santa Clara, under California Code of Civil Procedure Section 1281.6. The arbitration hearing shall take place in Santa Clara County, California, unless the parties agree otherwise in writing [2].\n\nThe employment agreement also states that the Company shall pay all fees and costs unique to arbitration, including the arbitrator's compensation, any arbitration filing or administrative fees, and the cost of the hearing room, and shall pay them within the time required by California Code of Civil Procedure Sections 1281.97 and 1281.98. If Employee initiates arbitration, Employee shall not be required to pay more than the amount Employee would have paid to file a complaint in the Superior Court of California. Each party shall bear its own attorneys' fees and costs, except that the arbitrator shall award attorneys' fees and costs to the prevailing party to the extent a court could do so under applicable law [1].\n\nThe Separation Agreement and General Release states that any dispute arising out of or relating to this Agreement will be resolved by final and binding arbitration in accordance with Section 9 of the Employment Agreement, including its provisions on the location of the arbitration in Santa Clara County and the Company's payment of arbitration fees [4].",
+     "secs": 24.5,
+     "cards": [],
+     "cited": [
+      "Employment Agreement - Brackenridge Analytics / D. Okafor-Reyes (signed)",
+      "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_04d6c38f547423081a599d0fe821bc40"
+  },
+  {
+   "id": "syn04-05",
+   "matter": "SYN-04",
+   "kind": "fact",
+   "source": "Termination letter - D. Okafor-Reyes (January 10, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What reason does the termination letter give for firing her?",
+     "state": "abstained",
+     "text": "The termination letter states that the reason for firing her was that she failed the PIP (Performance Improvement Plan). The document states: [6].",
+     "secs": 4.9,
+     "cards": [],
+     "cited": [],
+     "notes": [
+      "The passages found are from other documents than the one asked about, so they are not given as its answer: that document does not say this."
+     ],
+     "missing": [
+      [
+       "1, 2 and 4",
+       "1, 2, and 4",
+       "1, 2 & 4",
+       "1, 2, 4",
+       "one, two and four"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_2c8992aead124f365a295b094ca56430"
+  },
+  {
+   "id": "syn04-06",
+   "matter": "SYN-04",
+   "kind": "role_party",
+   "source": "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who's representing Daniela, and can Trevor still reach out to her directly?",
+     "state": "answered",
+     "text": "The documents indicate that Daniela Okafor-Reyes is represented by Ostrowski & Lam LLP, as stated in the demand letter from February 3, 2025. The letter says, \"This firm represents Daniela Okafor-Reyes in connection with her employment with, and termination by, Brackenridge Analytics, Inc.\" [1].\n\nRegarding whether Trevor can still reach out to Daniela directly, the demand letter explicitly states, \"ensure that no one at the Company, including her former manager Trevor Albright, contacts her directly.\" [1]. Therefore, according to the documents, Trevor should not contact Daniela directly.",
+     "secs": 10.8,
+     "cards": [],
+     "cited": [
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_bd25d1fd8b920fc75b2dfa806e13417d"
+  },
+  {
+   "id": "syn04-07",
+   "matter": "SYN-04",
+   "kind": "role_party",
+   "source": "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "who is HQ in the redline comments and which side is she on?",
+     "state": "abstained",
+     "text": "The documents do not explicitly state who \"HQ\" is in the redline comments. However, there is a reference to \"HQ/ AM (CerW) - pls call me today\" in the document titled \"Separation Agreement and General Release - v2 redline (O&amp;L comments 2/21/2025)\" [2]. This suggests that \"HQ\" may be a person or a department within the company, possibly an individual with the initials \"HQ\" who is associated with the \"AM\" (possibly \"Account Manager\" or \"Administrative Manager\") role. The document does not clarify which side \"HQ\" is on.\n\nThe documents do not provide any further information about \"HQ\" or her position in the matter. [2].",
+     "secs": 8.4,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "harper quinn"
+      ],
+      [
+       "calder & wynne",
+       "calder and wynne",
+       "calder"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_b71641f508df3adff43c064b4c1101dd"
+  },
+  {
+   "id": "syn04-08",
+   "matter": "SYN-04",
+   "kind": "list",
+   "source": "Complaint to HR - D. Okafor-Reyes (October 21, 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "List the age-related comments Daniela says Trevor made, with dates.",
+     "state": "partial",
+     "text": "The age-related comments Daniela says Trevor made, with dates, are as follows:\n\n1. On August 14, 2024, in their 1:1 meeting, Trevor said, \"you're not exactly a digital native, are you\" [7].\n\n2. On September 5, 2024, at the DS team meeting, Trevor introduced Daniela as \"our resident veteran - she remembers when we ran everything on spreadsheets\" [7].\n\n3. On September 19, 2024, in their 1:1 meeting, Trevor asked if Daniela had \"thought about a glide path\" and what she saw \"for the next few years\" [7].\n\n4. On September 20, 2024, Trevor sent a direct message on team chat: \"re: our chat yesterday - just think about what the next chapter looks like for you. no pressure :)\" [7].",
+     "secs": 28.0,
+     "cards": [],
+     "cited": [
+      "Complaint to HR - D. Okafor-Reyes (October 21, 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ecac13848735dd160b84afbfd16b8a65"
+  },
+  {
+   "id": "syn04-09",
+   "matter": "SYN-04",
+   "kind": "list",
+   "source": "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Under the redline's non-disparagement clause, who does the company have to instruct not to disparage her?",
+     "state": "answered",
+     "text": "Under the redline's non-disparagement clause, the company has to instruct Graham Fennimore, Priyanka Venkataraman, Trevor Albright, Marisol Gutierrez-Vance, and Owen Thackeray not to disparage her [1].",
+     "secs": 6.8,
+     "cards": [],
+     "cited": [
+      "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_2e53bcd5a84906b0d34077e241b58134"
+  },
+  {
+   "id": "syn04-10",
+   "matter": "SYN-04",
+   "kind": "calculation",
+   "source": "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Can you check the severance figure in the redline? It's supposed to be 16 weeks at her final salary.",
+     "state": "answered",
+     "text": "The severance figure in the redline states that the Company will pay Employee severance equal to sixteen (16) weeks of Employee's base salary at the rate in effect on the Separation Date ($181,000.00 per year), that is, $51,692.31 [1]. This confirms the severance figure is 16 weeks at her final salary.",
+     "secs": 9.4,
+     "cards": [],
+     "cited": [
+      "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)"
+     ],
+     "notes": [
+      "The source adds a condition to “The severance figure in the redline states that the Company will pay Employee severance equal to sixteen (16) weeks of Employee's base…”: “Provided that Employee signs this Agreement”. Found by rule."
+     ],
+     "missing": [
+      [
+       "55,692.31",
+       "55,692"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_14b132d5770a2ea8136b4bdbf0ef03bf"
+  },
+  {
+   "id": "syn04-11",
+   "matter": "SYN-04",
+   "kind": "calculation",
+   "source": "Brackenridge Analytics 2024 Annual Bonus Plan",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Her lawyers put her 2024 bonus at $27,150. What does the bonus plan formula actually give at target, with a 1.0 multiplier?",
+     "state": "partial",
+     "text": "The bonus plan formula, at target with a 1.0 multiplier, gives a bonus of 15% of the employee's base salary. This is stated in the Brackenridge Analytics 2024 Annual Bonus Plan [5][5].\n\nThe target bonus is calculated as 15% of the base salary, as shown in the example provided in the plan [4].\n\nThe target bonus percentage for IC4 is 15%, and the multiplier is 1.0, which means the bonus is calculated as 15% of the base salary. This is confirmed in the Brackenridge Analytics 2024 Annual Bonus Plan [5].\n\nThe documents also state that the target bonus is 15% of the salary, which in this case is $181,000, resulting in a target bonus of $27,150. This is mentioned in the demand letter [2].\n\nTherefore, the bonus plan formula at target with a 1.0 multiplier gives a bonus of $27,150.",
+     "secs": 27.1,
+     "cards": [],
+     "cited": [
+      "Brackenridge Analytics 2024 Annual Bonus Plan",
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "24,435"
+      ],
+      [
+       "0.90",
+       "0.9",
+       "90%"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_4d09ab839fc7724304ba1f17a6dcc75f"
+  },
+  {
+   "id": "syn04-12",
+   "matter": "SYN-04",
+   "kind": "calculation",
+   "source": "Payroll register extract (print) - D. Okafor-Reyes (03/2023 - 01/2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "If we reverse the Nov 25-26 PTO correction, how many hours should have been paid out at termination, and how much extra does she get?",
+     "state": "partial",
+     "text": "The documents state that the company deducted 16 hours of PTO for November 25 and 26, 2024, when Ms. Okafor-Reyes actually worked those days. This means that 16 hours should have been paid out at termination, as she had already worked those days [1].\n\nThe separation agreement states that the company paid her 92.00 hours (11.5 days) of accrued PTO, but the PTO correction for November 25 and 26, 2024, involved a deduction of 16.00 hours. Therefore, if the PTO correction is reversed, she should have been paid for 16.00 additional hours [2].\n\nThe separation agreement also states that the company will pay her $1,392.31 for the PTO correction, which is based on 16.00 hours at her final hourly rate of $87.0192 [2]. This amount would be the extra she should receive if the PTO correction is reversed.",
+     "secs": 22.0,
+     "cards": [],
+     "cited": [
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)",
+      "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "108",
+       "13.5"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_479293f3dafc573112870f1e8b20fc66"
+  },
+  {
+   "id": "syn04-13",
+   "matter": "SYN-04",
+   "kind": "version",
+   "source": "Stock Option Grant Notice - D. Okafor-Reyes (Grant No. 2021-0417, October 1, 2021)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Has her option exercise window been extended? I saw something about 12 months.",
+     "state": "partial",
+     "text": "The documents state that the employee may exercise the vested options until January 10, 2026, and the Company will take action to extend the post-termination exercise period to twelve (12) months after the Separation Date [1].\n\nHowever, the Stock Option Grant Notice states that if the Optionholder's Continuous Service terminates for any reason other than Cause, death, or Disability, the Optionholder may exercise the vested portion of the Option for ninety (90) days after the date of termination [3].\n\nAdditionally, the Termination letter states that the employee may exercise the vested options during the ninety (90) day period following the Separation Date, that is, until April 10, 2025 [5].\n\nThe documents do not provide a clear indication of whether the option exercise window has been extended beyond the standard 90-day period. The Separation Agreement mentions the extension to 12 months, but the Stock Option Grant Notice and Termination letter refer to a 90-day period. The documents do not clarify if the 12-month extension overrides the 90-day period or if the 90-day period remains in effect.",
+     "secs": 21.0,
+     "cards": [],
+     "cited": [
+      "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+      "Stock Option Grant Notice - D. Okafor-Reyes (Grant No. 2021-0417, October 1, 2021)",
+      "Termination letter - D. Okafor-Reyes (January 10, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "draft",
+       "propos",
+       "not signed",
+       "unsigned",
+       "not agreed",
+       "not been agreed",
+       "not executed",
+       "not yet",
+       "board approval"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_8991cd13b0c81b38c2450f38531c0d75"
+  },
+  {
+   "id": "syn04-14",
+   "matter": "SYN-04",
+   "kind": "amendment",
+   "source": "Payroll register extract (print) - D. Okafor-Reyes (03/2023 - 01/2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "The offer letter says $168k. Was that still her base salary when she left, and if not, when did it change?",
+     "state": "partial",
+     "text": "The offer letter states that Daniela Okafor-Reyes's base salary was $168,000.00 annually [1]. The documents do not provide information about whether this base salary changed before she left the company. There is no mention of any adjustment to her base salary in the sources provided.",
+     "secs": 11.6,
+     "cards": [],
+     "cited": [
+      "Offer letter - Daniela Okafor-Reyes (August 16, 2021)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "181,000"
+      ],
+      [
+       "april 1, 2023",
+       "04/01/2023",
+       "4/1/2023",
+       "april 2023",
+       "1 april 2023",
+       "apr 1, 2023"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_e2f35b7e888bf50c5cb44cdd2dea0665"
+  },
+  {
+   "id": "syn04-15",
+   "matter": "SYN-04",
+   "kind": "version",
+   "source": "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What did her lawyers strike out of the separation agreement in v2?",
+     "state": "abstained",
+     "text": "The documents do not specify what her lawyers struck out of the separation agreement in v2. The sources provided do not mention any changes or deletions made by her lawyers to the separation agreement.",
+     "secs": 7.4,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "rehire"
+      ],
+      [
+       "section 5",
+       "non-solicit"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_8901122520ea5746ff8413f8a4c1a4d7"
+  },
+  {
+   "id": "syn04-16",
+   "matter": "SYN-04",
+   "kind": "not_stated",
+   "source": "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What was Daniela's 2024 year-end performance rating?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 3.5,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_815e6a552648414369414d60797160f7"
+  },
+  {
+   "id": "syn04-17",
+   "matter": "SYN-04",
+   "kind": "not_stated",
+   "source": "Termination letter - D. Okafor-Reyes (January 10, 2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Did she ever exercise her vested options?",
+     "state": "abstained",
+     "text": "The documents do not state whether she exercised her vested options.\n\nThe documents indicate that she held vested options, but they do not confirm whether she exercised them. Source 1 states: \"Employee may exercise the Vested Options in accordance with the 2019 Equity Incentive Plan and her Stock Option Grant Notice until January 10, 2026\" [1]. Source 2 states: \"you may exercise your vested options during the ninety (90) day period following the Separation Date, that is, until April 10, 2025\" [2].\n\nThe documents in this matter do not answer that.",
+     "secs": 15.3,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_e1299664d7f8d5223a612460daad9561"
+  },
+  {
+   "id": "syn04-18",
+   "matter": "SYN-04",
+   "kind": "not_stated",
+   "source": "Email chain - DS team restructure - Q1 headcount (Oct 28, 2024 - Jan 13, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What salary was budgeted for the ML Ops engineer req Trevor wanted to open?",
+     "state": "partial",
+     "text": "The documents indicate that the ML Ops engineer role was considered to be cost-neutral. Specifically, it mentions that \"if it lands in Q1 before the March payout it also frees her 2024 bonus accrual (~$27k at target) and the ML Ops req comes in roughly cost-neutral.\" This suggests that the budget for the ML Ops engineer was not expected to add additional costs, as it would be offset by the freed-up 2024 bonus accrual of approximately $27,000 [1].",
+     "secs": 11.5,
+     "cards": [],
+     "cited": [
+      "Email chain - DS team restructure - Q1 headcount (Oct 28, 2024 - Jan 13, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_786147e0c1709b3afd9e7a86f2874e43"
+  },
+  {
+   "id": "syn04-19",
+   "matter": "SYN-04",
+   "kind": "conflict",
+   "source": "Stock Option Grant Notice - D. Okafor-Reyes (Grant No. 2021-0417, October 1, 2021)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How many of her options were vested on her termination date?",
+     "state": "partial",
+     "text": "The documents indicate that on the termination date, 19,500 of the 24,000 options granted to Daniela Okafor-Reyes under Grant No. 2021-0417 were vested. This is stated in the source as: [2]\n\nAnother source states that the Employee held 20,000 vested options as of the Separation Date. This is stated in the source as: [1]\n\nThese two sources provide conflicting information regarding the number of vested options on the termination date. One states 19,500 vested options, while the other states 20,000 vested options.",
+     "secs": 15.9,
+     "cards": [],
+     "cited": [
+      "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+      "Termination letter - D. Okafor-Reyes (January 10, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_6de7e1f045ecb0b2d7f32433bcb11711"
+  },
+  {
+   "id": "syn04-20",
+   "matter": "SYN-04",
+   "kind": "conflict",
+   "source": "Email chain - DS team restructure - Q1 headcount (Oct 28, 2024 - Jan 13, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Trevor told HR the PIP had nothing to do with her complaint and that he had no plans to change her role. Do his emails bear that out?",
+     "state": "partial",
+     "text": "The documents show that Trevor Albright's emails address the PIP and its connection to his actions. In an email chain, Trevor states, \"For the record the restructure has nothing to do with the HR thing,\" indicating that the PIP was not related to the HR complaint [2]. However, he also suggests that a performance improvement plan (PIP) could be used if a role change was not possible, stating, \"If we can't do the role change then it's a performance conversation anyway\" [2].\n\nIn another email, Trevor mentions that the PIP was not met on certain objectives and that he wanted to finalize the PIP review and have a decision call, aiming for the employee's last day to be before the Q1 kickoff [5]. This suggests that the PIP was part of a planned process, not directly tied to the HR complaint.\n\nAdditionally, in the PIP itself, the employee comments state, \"I do not agree with this PIP. I believe it is retaliation for my complaint of October 21, 2024 about Trevor, which HR is still investigating\" [3]. This indicates the employee's belief that the PIP was retaliatory, but Trevor's emails do not confirm or deny this. Instead, he states that the restructure had nothing to do with the HR issue [2].",
+     "secs": 27.0,
+     "cards": [],
+     "cited": [
+      "Email chain - DS team restructure - Q1 headcount (Oct 28, 2024 - Jan 13, 2025)",
+      "Performance Improvement Plan - D. Okafor-Reyes (November 4, 2024)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "october 28",
+       "10/28",
+       "oct 28",
+       "28 october"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_2f2c587ed46106f1ddf67abc09359c48"
+  },
+  {
+   "id": "syn04-21",
+   "matter": "SYN-04",
+   "kind": "conflict",
+   "source": "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Her lawyers' letter claims $1,292.31 for the PTO and $19,384.62 in waiting-time penalties. Are those numbers right?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 6.0,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "1,392.31",
+       "1,392"
+      ],
+      [
+       "20,884.62",
+       "20,884"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_db2ed446f51708a3a908d9d9e38b4789"
+  },
+  {
+   "id": "syn04-22",
+   "matter": "SYN-04",
+   "kind": "conflict",
+   "source": "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How long does she get to consider the separation agreement before she signs?",
+     "state": "partial",
+     "text": "The Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025) states that the employee has twenty-one (21) days from the date she receives the Agreement to consider it before signing. The source states: \"Employee has twenty-one (21) days from the date she receives this Agreement to consider it before signing\" [1].\n\nAdditionally, the document states that the employee has at least forty-five (45) days to consider the Agreement. The source states: \"she has been given at least forty-five (45) days to consider this Agreement\" [2].\n\nThe document also states that the employee has five (5) business days to consider the Agreement. The source states: \"she has been given at least five (5) business days to consider this Agreement\" [2].",
+     "secs": 19.7,
+     "cards": [],
+     "cited": [
+      "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_a9039b44230b6ddc4f6eaf28876d6e6c"
+  },
+  {
+   "id": "syn04-23",
+   "matter": "SYN-04",
+   "kind": "cross_doc",
+   "source": "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "The PIP refers to a verbal warning on Sept 12. Is there any record of that warning?",
+     "state": "partial",
+     "text": "The PIP refers to a \"verbal warning\" on September 12, 2024, but the documents indicate that there is no record of this warning. The HR investigation notes state, \"remove ref to 'verbal warning 9/12' - no record in file\" [2]. Additionally, the employee explicitly states, \"I have never received a verbal or written warning, including on September 12\" [4].\n\nThere is no indication that the verbal warning was recorded in BrackNet, as the employee's comments and HR notes suggest that the warning was not documented. According to the Employee Handbook, a verbal warning that is not recorded in BrackNet is treated as coaching and not as a disciplinary step [3].\n\nThe PIP still contains the reference to the \"verbal warning\" even after the employee raised concerns, and the TA stated, \"it's accurate\" [5]. However, there is no evidence in the documents that the warning actually occurred.",
+     "secs": 16.4,
+     "cards": [],
+     "cited": [
+      "Brackenridge Analytics Employee Handbook 2024 (rev. 2024-01)",
+      "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+      "Performance Improvement Plan - D. Okafor-Reyes (November 4, 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_3e3291bbce344c24d88c96bbcd55827a"
+  },
+  {
+   "id": "syn04-24",
+   "matter": "SYN-04",
+   "kind": "table",
+   "source": "Payroll register extract (print) - D. Okafor-Reyes (03/2023 - 01/2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "how much was her 2023 bonus, and when did it get paid?",
+     "state": "abstained",
+     "text": "The documents do not specify the amount of her 2023 bonus. However, they do state that she received a \"full annual bonus\" for 2023 [3].\n\nThe documents do not specify when her 2023 bonus was paid.",
+     "secs": 7.2,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "26,625.01",
+       "26,625"
+      ],
+      [
+       "march 8, 2024",
+       "march 8",
+       "03/08/2024",
+       "3/8/2024",
+       "8 march 2024",
+       "mar 8"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_794f221998c4e45a003335c9d5c2ce66"
+  },
+  {
+   "id": "syn04-25",
+   "matter": "SYN-04",
+   "kind": "scan",
+   "source": "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When did Brackenridge Legal recieve the demand letter?",
+     "state": "abstained",
+     "text": "The documents do not specify when Brackenridge Legal received the demand letter.",
+     "secs": 7.8,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "february 4, 2025",
+       "february 4",
+       "feb 4",
+       "feb 04",
+       "02/04/2025",
+       "2/4/2025",
+       "4 february 2025"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_8bf4cb834e702e9250cbc10961ecad76"
+  },
+  {
+   "id": "syn04-26",
+   "matter": "SYN-04",
+   "kind": "scan",
+   "source": "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What did Owen jot on the demand letter?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 4.8,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "lucas"
+      ],
+      [
+       "3/14",
+       "march 14",
+       "payment date"
+      ],
+      [
+       "hold notice",
+       "litigation hold",
+       "legal hold",
+       "1/13",
+       "january 13"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_51bea3537d0065c04f931d14f2f51d6d"
+  },
+  {
+   "id": "syn04-27",
+   "matter": "SYN-04",
+   "kind": "follow_up",
+   "source": "Termination letter - D. Okafor-Reyes (January 10, 2025)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How much PTO did she get paid out when she was let go?",
+     "state": "partial",
+     "text": "The documents indicate that Ms. Okafor-Reyes was paid 11.5 days of accrued, unused PTO when she was terminated [1].\n\nAdditionally, the payroll register extract shows that she was paid $92.00 for PTO on January 10, 2025, which was the date of her termination [5].\n\nThe demand letter also states that she was owed 16 hours of PTO at her hourly rate of $80.77, which equals $1,292.31 [2].",
+     "secs": 17.7,
+     "cards": [],
+     "cited": [
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)",
+      "Payroll register extract (print) - D. Okafor-Reyes (03/2023 - 01/2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "8,005.77",
+       "8,005"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "Her lawyer says she was shorted. What's that about?",
+     "state": "answered",
+     "text": "The documents mention that the individual was shorted in terms of her accrued, unused PTO. Specifically, the Company paid her only 11.5 days of accrued, unused PTO, when she had 13.5 days accrued. The documents state: \"It paid her only 11.5 days of accrued, unused PTO, when she had 13.5 days accrued.\" [6]. Additionally, the Company deducted two days (16 hours) of PTO in December 2024 for November 25 and 26, 2024, days on which she worked. The documents state: \"without telling her, the Company deducted two days (16 hours) of PTO in December 2024 for November 25 and 26, 2024, days on which she worked.\" [6].",
+     "secs": 15.9,
+     "cards": [],
+     "cited": [
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Was she told about that correction before it went through?",
+     "state": "partial",
+     "text": "The documents do not explicitly state whether she was informed about the deduction of two days (16 hours) of PTO in December 2024 for November 25 and 26, 2024, before it occurred. However, they do indicate that the Company deducted two days (16 hours) of PTO in December 2024 for November 25 and 26, 2024, days on which she worked [1].\n\nAdditionally, the HR investigation notes mention that she said her PTO was wrong: she worked on November 25 and 26, and nobody told her about a correction [5].\n\nThe documents do not provide any information about whether she was informed of the deduction prior to it being processed.",
+     "secs": 20.9,
+     "cards": [],
+     "cited": [
+      "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "pending",
+       "no written notice",
+       "no notice",
+       "not notified",
+       "not told",
+       "never told",
+       "wasn't told",
+       "without telling",
+       "without notice",
+       "not given notice",
+       "never given",
+       "did not receive",
+       "didn't receive",
+       "not informed",
+       "never informed"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "What does the handbook say has to happen before a PTO correction like that?",
+     "state": "partial",
+     "text": "The documents do not provide specific information about what must happen before a PTO correction like the deduction of two days (16 hours) of PTO in December 2024 for November 25 and 26, 2024, days on which she worked.\n\nHowever, the handbook states that if Payroll or a manager identifies an error that has resulted in an overpayment or an overstatement of PTO balance, Payroll will correct it in the next available pay run. Any correction that reduces an employee's PTO balance requires (i) documentation supporting the correction, such as an approved PTO request or timesheet, and (ii) written notice to the employee before or at the time the correction is processed, stating the dates and hours affected [7].\n\nAdditionally, the HR investigation notes mention that the employee was not given written notice before the PTO correction was processed [4].",
+     "secs": 28.7,
+     "cards": [],
+     "cited": [
+      "Brackenridge Analytics Employee Handbook 2024 (rev. 2024-01)",
+      "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "14 days",
+       "fourteen (14) days",
+       "fourteen days"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_4d0c63f6f58183ec28c00a51d96b1e4b"
+  },
+  {
+   "id": "syn04-28",
+   "matter": "SYN-04",
+   "kind": "follow_up",
+   "source": "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When did Daniela go to HR, and who was the complaint about?",
+     "state": "partial",
+     "text": "Daniela went to HR on October 21, 2024 [1]. The complaint was about her manager, Trevor Albright [1].",
+     "secs": 6.9,
+     "cards": [],
+     "cited": [
+      "Complaint to HR - D. Okafor-Reyes (October 21, 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "When did Trevor find out about it?",
+     "state": "partial",
+     "text": "Trevor Albright found out about the complaint on October 21, 2024, when Daniela Okafor-Reyes submitted her formal complaint to HR. The complaint was dated October 21, 2024, and was sent to Marisol Gutierrez-Vance [1].\n\nAdditionally, in an email chain on November 4, 2024, Trevor Albright mentioned that Marisol \"didn't take it well - said straight out its payback for the HR complaint\" [4]. This indicates that he was aware of the complaint by that date.",
+     "secs": 12.1,
+     "cards": [],
+     "cited": [
+      "Complaint to HR - D. Okafor-Reyes (October 21, 2024)",
+      "Email chain - DS team restructure - Q1 headcount (Oct 28, 2024 - Jan 13, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "october 24",
+       "oct 24",
+       "10/24",
+       "24 october"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "and how soon after that was she put on the PIP?",
+     "state": "partial",
+     "text": "Daniela Okafor-Reyes was put on the PIP on November 4, 2024, which is the same day the PIP was issued [6]. The PIP period was 60 days, ending on January 3, 2025 [6].\n\nThe documents do not specify how soon after November 4, 2024 she was put on the PIP, only that the PIP was issued on that date.",
+     "secs": 11.1,
+     "cards": [],
+     "cited": [
+      "Performance Improvement Plan - D. Okafor-Reyes (November 4, 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Did Legal sign off on the PIP first, like the handbook requires?",
+     "state": "partial",
+     "text": "The documents do not explicitly state whether Legal signed off on the PIP. However, they do indicate that the PIP was delivered on November 4, 2024, and that the employee added written comments to the PIP and declined to sign it [3]. Additionally, the PIP refers to a \"verbal warning\" on September 12, 2024, which the employee claims never happened [4]. The handbook states that where the employee has a complaint open under Policy 4.3 concerning the manager proposing the PIP or that manager's reporting line, the PIP must also be approved in advance by the Legal Department [1]. However, there is no direct evidence in the documents that Legal signed off on the PIP.",
+     "secs": 11.1,
+     "cards": [],
+     "cited": [
+      "Brackenridge Analytics Employee Handbook 2024 (rev. 2024-01)",
+      "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+      "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "not confirm",
+       "unconfirmed",
+       "priyanka",
+       "venkataraman"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_67772271e7d85841df4179ef92a2f55f"
+  },
+  {
+   "id": "synx-01",
+   "matter": "SYN-01",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What is the Data Breach Cap under the First Amendment with Ostrander?",
+     "state": "abstained",
+     "text": "The documents in this matter do not mention anything about the First Amendment or Ostrander. Therefore, the documents in this matter do not answer that.",
+     "secs": 2.1,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_a9e32c9fa77e7c5563ff62e373d9e9f4"
+  },
+  {
+   "id": "synx-02",
+   "matter": "SYN-02",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What is the tenant's break date at Merrow Arcade?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.0,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ee118c567b5b074ec62aa88661332b8d"
+  },
+  {
+   "id": "synx-03",
+   "matter": "SYN-03",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How many of Daniela Okafor-Reyes's options had vested when she was terminated?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.8,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_872019ce800c645679be39fa9beeaf70"
+  },
+  {
+   "id": "synx-04",
+   "matter": "SYN-04",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What liquidated damages rate applies to the delayed robotic cells?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.2,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ae79028cfa6c1756236567f852ed0e78"
+  }
+ ]
+}
