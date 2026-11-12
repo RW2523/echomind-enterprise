@@ -46,6 +46,9 @@ case "${1:-}" in
       echo "demo data restored from the snapshot of $(cat "$SNAP/.taken_at" 2>/dev/null || echo 'an unknown time')"
     fi
     restart_api "$URL"
+    # a snapshot taken before 2026-11-12 has no display names: set them (only where empty); migrations run on start
+    [[ "$1" == restore ]] && docker exec -e ECHOMIND_EDITION=law -e ECHOMIND_DATA_DIR=/data -e HOME=/tmp -w /repo/backend "$API" \
+      python -m app.legal.cli demo-names 2>/dev/null | tail -1 || true
     ;;
   status)
     [[ -f "$SNAP/.taken_at" ]] && echo "snapshot taken $(cat "$SNAP/.taken_at") in $SNAP ($(du -sh "$SNAP" | cut -f1))" || echo "no snapshot yet"
