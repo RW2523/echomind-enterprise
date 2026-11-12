@@ -1,0 +1,25 @@
+{
+ "title": "Larkspur Health - Ostrander vendor incident",
+ "client": {
+  "name": "Larkspur Health Partners, Inc.",
+  "code": "LHP"
+ },
+ "practice_area": "Privacy and regulatory",
+ "jurisdiction": "New York",
+ "lead": "kenji",
+ "members": {
+  "alice": "attorney",
+  "omar": "paralegal"
+ },
+ "parties": [
+  [
+   "Ostrander Billing Solutions LLC",
+   "adverse"
+  ],
+  [
+   "Halvard Mutual Insurance Company",
+   "adverse"
+  ]
+ ],
+ "paper": "letter"
+}

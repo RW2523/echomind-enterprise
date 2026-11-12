@@ -1,0 +1,75 @@
+From: Malcolm Ferris <malcolm.ferris@varnholt-aero.example>
+Sent: 02 September 2024 08:14
+To: Harper Quinn <hquinn@calderwynne.example>
+Cc: Rhiannon Thorne <rhiannon.thorne@varnholt-aero.example>; Dev Anand <dev.anand@varnholt-aero.example>
+Subject: FW: RE: Milestone 4 payment - hold
+
+Harper,
+
+As discussed on the phone on Friday - see the chain below. We are holding the Milestone 4 payment to Quellcrest (Cells 1-3, inv QR-INV-2024-131) against the liquidated damages that are running on Cell 4 and will run on 5-8. Can you confirm we are OK to do that under clause 7.6, and what if anything we need to send them? I would rather not show our hand until we know where we are on Cell 4.
+
+Rhiannon can give you the technical background. Happy to set up a call next week - Dev will send some times.
+
+Malcolm
+
+Malcolm Ferris FCCA | Chief Financial Officer
+Varnholt Aerostructures Ltd | Sinfin Lane Works, Calloway Road, Derby DE24 9GN | T 01632 960214 ext 2001
+Varnholt Aerostructures Limited is registered in England and Wales, company no. 07731846. This email and any attachments are confidential and intended solely for the addressee. If you have received it in error please delete it and notify the sender.
+
+-----Original Message-----
+From: Dev Anand <dev.anand@varnholt-aero.example>
+Sent: 30 August 2024 16:20
+To: Malcolm Ferris <malcolm.ferris@varnholt-aero.example>
+Cc: Rhiannon Thorne <rhiannon.thorne@varnholt-aero.example>
+Subject: RE: Milestone 4 payment - hold
+
+Done - pulled from Tuesday's run and marked on the ledger "ON HOLD - set-off LDs per MF 30/08". AP know not to release without your OK. Nothing sent to QRL.
+
+Dev
+
+-----Original Message-----
+From: Malcolm Ferris <malcolm.ferris@varnholt-aero.example>
+Sent: 30 August 2024 11:47
+To: Dev Anand <dev.anand@varnholt-aero.example>; Rhiannon Thorne <rhiannon.thorne@varnholt-aero.example>
+Subject: RE: Milestone 4 payment - hold
+
+Agreed. Hold the full amount.
+
+Under clause 7.6 of the contract we can set off the LDs against anything we owe them, so we don't need to pay this while they owe us LDs on the late cells. On my numbers Cell 4 alone is already at 13 full weeks since the 31 May date = £52,650, and it goes up £4,050 every week until they get it through SAT. 5-8 will add to that once they're accepted, and they're all late.
+
+Dev - please take it off the 3 Sept payment run and mark it on hold on the ledger. Don't tell QRL yet - I'd like to speak to Calder & Wynne first and I don't want Gary using it as an excuse to slow down on Cell 4.
+
+Malcolm
+
+-----Original Message-----
+From: Rhiannon Thorne <rhiannon.thorne@varnholt-aero.example>
+Sent: 29 August 2024 09:31
+To: Dev Anand <dev.anand@varnholt-aero.example>; Malcolm Ferris <malcolm.ferris@varnholt-aero.example>
+Subject: RE: Milestone 4 payment - hold
+
+Malcolm, Dev - I'd hold it. Cell 4 failed SAT on the 13th (cycle time and swaging) and the end effector has gone back to Coventry - QRL still can't give me a re-test date. Cells 5 and 6 are installed but not through SAT, 7 and 8 have only just been delivered. Every one of them is past its date.
+
+On the VA2 dates - VA2 (signed 22 July) pushed 5-8 back, so they're later than the VA1 dates, but they're still all going to be late. I'll send round the dates.
+
+R
+
+Rhiannon Thorne | Head of Manufacturing Engineering | Varnholt Aerostructures Ltd | T 01632 960214 ext 2207
+
+-----Original Message-----
+From: Dev Anand <dev.anand@varnholt-aero.example>
+Sent: 28 August 2024 14:02
+To: Malcolm Ferris <malcolm.ferris@varnholt-aero.example>
+Cc: Rhiannon Thorne <rhiannon.thorne@varnholt-aero.example>
+Subject: Milestone 4 payment - hold?
+
+Malcolm,
+
+Quellcrest's invoice QR-INV-2024-131 for Milestone 4 (Acceptance) on Cells 1, 2 and 3 - £607,500 + VAT = £729,000 - came in by post on 5 August. On our terms it falls due on 4 September (30 days from receipt) and AP have it on the payment run for Tuesday 3 Sept.
+
+Given where we are with Cell 4, do you want this paid? Rhiannon may have a view.
+
+FYI QRL's credit control (Lynne Barraclough) has already rung to check it's on a run - she says it's due on the 1st, as their invoice says 30 days from invoice date.
+
+Dev
+
+Dev Anand | Procurement Manager | Varnholt Aerostructures Ltd | T 01632 960214 ext 2140

@@ -1,0 +1,28 @@
+---
+file: PTO payout calculation.xlsx
+title: PTO payout calculation - D. Okafor-Reyes (final pay 01/10/2025)
+kind: other
+status: final
+render: xlsx
+style: table
+import: no
+---
+| Line | Item | Hours | Days (8 h) | Rate | Amount (USD) | Source / note |
+|---|---|---|---|---|---|---|
+| 1 | Employee: OKAFOR-REYES, DANIELA (ID 10487) - term eff 01/10/2025 | | | | | Prepared L. Ferreira 01/09/2025 |
+| 2 | Annual base salary | | | | 181,000.00 | Payroll master, rate eff 04/01/2023 |
+| 3 | Hourly rate (181,000 / 2,080) | | | 87.0192 | | |
+| 4 | Daily rate (8 hrs) | 8.00 | 1.00 | 87.0192 | 696.15 | |
+| 5 | PTO balance after 12/13/2024 run | 112.45 | 14.06 | | | Register |
+| 6 | Accrual 12/27/2024 run | 4.62 | 0.58 | | | Register REG |
+| 7 | PTO correction 12/27/2024 (11/25-11/26/2024) | -16.00 | -2.00 | | | Register ADJ; per T. Albright email 12/16/24 |
+| 8 | Accrual 01/10/2025 run (period 12/22/24-01/04/25) | 4.62 | 0.58 | | | Register REG |
+| 9 | PTO used 12/26-12/27/2024 | -16.00 | -2.00 | | | Timesheet |
+| 10 | Final period accrual 01/05-01/10/2025 (5 of 10 days) | 2.31 | 0.29 | | | 4.62 x 5/10 |
+| 11 | Balance for payout (lines 5 to 10) | 92.00 | 11.50 | 87.0192 | 8,005.77 | FINAL run 01/10/2025 |
+| 12 | Final salary 01/06-01/10/2025 (5 days) | 40.00 | 5.00 | 87.0192 | 3,480.77 | FINAL run 01/10/2025 |
+| 13 | Total final gross (lines 11 + 12) | | | | 11,486.54 | Paid 01/10/2025 (Lab. Code 201) |
+| 14 | Regular run 01/10/2025 (not part of final pay) | | | | 6,961.54 | Period 12/22/24-01/04/25 |
+| 15 | SCENARIO (added 01/14/2025 per MGV): line 7 reversed | 108.00 | 13.50 | 87.0192 | 9,398.08 | If 11/25-26 were worked |
+| 16 | Difference vs. amount paid (line 15 - line 11) | 16.00 | 2.00 | 87.0192 | 1,392.31 | |
+| 17 | Lab. Code 203 maximum (30 days x daily rate) | | 30.00 | 696.15 | 20,884.62 | Only if failure is willful; daily rate unrounded 696.1538 |

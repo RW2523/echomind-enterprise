@@ -3,6 +3,7 @@
 
     python3 eval/law/run_chat_keys.py --base http://127.0.0.1:8131/api --label baseline        # a private copy of the demo
     python3 eval/law/run_chat_keys.py --rescore eval/law/reports/<time>-chat-<label>.json       # grade stored answers again
+    python3 eval/law/run_chat_keys.py --keys 'eval/fixtures/synthetic/answer_key_*.jsonl' ...    # another set (2026-11-12)
 
 Each item of eval/fixtures/demo/answer_key_*.jsonl is asked in a new conversation of its matter (a follow-up item asks its
 turns in one conversation). An item passes when every `expect` group has one alternative in the answer and no `must_not`
@@ -176,7 +177,14 @@ def main() -> int:
     ap.add_argument("--label", default="run")
     ap.add_argument("--only", default="", help="comma-separated matter numbers or item ids")
     ap.add_argument("--rescore", default="", help="grade the answers stored in an earlier report (or run_keys.py output) again")
+    ap.add_argument("--keys", default="", help="other answer keys: comma-separated globs from the repository root "
+                                                "(e.g. eval/fixtures/synthetic/answer_key_*.jsonl); default the demo's")
     args = ap.parse_args()
+    if args.keys:
+        KEYS[:] = sorted({p for g in args.keys.split(",") if g for p in ROOT.glob(g)})
+        if not KEYS:
+            print(f"no answer keys match {args.keys}", file=sys.stderr)
+            return 2
     if args.rescore:
         raw = json.loads(Path(args.rescore).read_text())
         results = rescore(raw["items"] if isinstance(raw, dict) else raw)
@@ -186,7 +194,7 @@ def main() -> int:
             print("refusing: run the chat set against a local private copy only", file=sys.stderr)
             return 2
         results = ask_all(args.base, items_of([x for x in args.only.split(",") if x] or None))
-        out = write(results, args.label, {"base": args.base})
+        out = write(results, args.label, {"base": args.base, "keys": [str(k.relative_to(ROOT)) for k in KEYS]})
     s = summary(results)
     print(f"SUMMARY {s['passed']}/{s['items']} by kind {json.dumps(s['by_kind'])} -> {out.with_suffix('.md').relative_to(ROOT)}")
     return 0

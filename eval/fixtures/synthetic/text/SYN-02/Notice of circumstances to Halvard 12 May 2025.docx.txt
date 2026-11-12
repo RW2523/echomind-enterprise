@@ -1,0 +1,87 @@
+Notice of Incident and Circumstances to Halvard Mutual (May 12, 2025)
+(file: Notice of circumstances to Halvard 12 May 2025.docx; docx; correspondence, final)
+
+Kenji Arai
+Direct: (212) 555-0148
+karai@calderwynne.example
+
+May 12, 2025
+
+VIA EMAIL (cyberclaims@halvardmutual.example) AND OVERNIGHT COURIER
+
+Halvard Mutual Insurance Company
+Cyber & Technology Claims
+600 Larchmont Wharf
+Boston, MA 02210
+
+Re: Notice of Incident and Notice of Circumstances
+Named Insured: Larkspur Health Partners, Inc.
+Policy No.: HMC-CY-2024-08817
+Policy Period: October 1, 2024 to October 1, 2025
+Matter: Security incident at Ostrander Billing Solutions LLC (revenue-cycle vendor)
+
+Dear Sir or Madam:
+
+We are counsel to Larkspur Health Partners, Inc. ("Larkspur"), the Named Insured under the above policy (the "Policy"). On behalf of Larkspur, we give notice under Section V.A of the Policy of an Incident, and notice of circumstances under Section V.B of the Policy that may give rise to Claims and Regulatory Proceedings, as described below.
+
+1. The Incident
+
+Larkspur operates eight outpatient clinics in New York City and Westchester County. Its revenue-cycle and billing services are provided by Ostrander Billing Solutions LLC ("Ostrander"), a Service Provider within the meaning of the Policy, under a Master Services Agreement dated as of February 1, 2022, as amended, and a Business Associate Agreement of the same date.
+
+Ostrander has informed Larkspur that on March 9, 2025 it identified a ransomware attack on its hosted environment that encrypted servers used to provide services to Larkspur and other clients and interrupted Ostrander's revenue-cycle platform until March 13, 2025. Larkspur first became aware of the Incident on March 14, 2025, when it received Ostrander's written notice of that date, a copy of which is enclosed. This notice is therefore given within the period required by Section V.A of the Policy.
+
+2. Investigation to date
+
+Larkspur, through this firm, retained Cobaltline Forensics LLC on March 17, 2025 to investigate the Incident. Cobaltline's work is ongoing and its findings to date are preliminary and privileged; we do not enclose them. On a preliminary basis:
+
+(a) the threat actor appears to have first accessed Ostrander's environment on or about February 21, 2025;
+
+(b) data was exfiltrated from Ostrander's environment before the ransomware was deployed, and billing export files relating to Larkspur patients were among the files taken;
+
+(c) approximately 18,400 individuals may be affected, although this figure is an estimate and is expected to change; and
+
+(d) the data involved includes names, addresses, dates of birth, health insurance information, diagnosis and procedure codes and, for some individuals, Social Security numbers and payment information.
+
+There is no indication that Larkspur's own Computer Systems were compromised.
+
+3. Coverage
+
+Larkspur seeks coverage under the Policy, including under:
+
+(a) Insuring Agreement A (Incident Response), for breach counsel, forensic, Notification Costs and Credit Monitoring Costs;
+
+(b) Insuring Agreement B (Network Security and Privacy Liability) and Section V.B, in respect of Claims that may be made by affected individuals;
+
+(c) Insuring Agreement C (Regulatory Proceedings), in respect of any inquiry by the Office for Civil Rights of the U.S. Department of Health and Human Services, the New York Attorney General or other Regulatory authority; and
+
+(d) Insuring Agreement E (Dependent Business Incident), for Dependent Business Loss arising from the interruption of Ostrander's platform between March 9 and March 13, 2025, including the delay in claim submissions and Extra Expense.
+
+Larkspur reserves the right to seek coverage under any other provision of the Policy as further facts become known.
+
+4. Providers; consent
+
+In accordance with Section V.C of the Policy, Larkspur requests the Insurer's consent to the retention of (a) this firm as breach counsel; (b) Cobaltline Forensics LLC as forensic firm; (c) Vantorra Identity Services, LLC for credit monitoring and identity restoration; (d) Brightwater Mailing Services for notification mailing; and (e) Harborline Contact Services for call center services. We would be grateful for confirmation of the Insurer's consent, and of the rates the Insurer will reimburse, at your earliest convenience. Copies of engagement terms are available on request.
+
+5. Rights against Ostrander
+
+Larkspur has reserved all of its rights against Ostrander, including its rights to indemnification under Section 11 of the Master Services Agreement, by letter dated March 21, 2025. Larkspur will not release or compromise those rights without the Insurer's consent as required by Section VII.A of the Policy.
+
+6. Further information
+
+Please acknowledge receipt of this notice and provide a claim number. Please direct all communications concerning this matter to the undersigned, with a copy to Lionel Marchbanks, General Counsel of Larkspur, at lmarchbanks@larkspurhealth.example.
+
+This letter is provided for the purpose of giving notice under the Policy. It is not a waiver of the attorney-client privilege or work product protection attaching to the investigation, and nothing in it is an admission by Larkspur of any fact or liability.
+
+Very truly yours,
+
+CALDER & WYNNE LLP
+
+[signature: Kenji Arai]
+
+Kenji Arai
+
+Enclosure: Letter from Ostrander Billing Solutions, LLC to Larkspur Health Partners, Inc. dated March 14, 2025
+
+cc: Lionel Marchbanks, General Counsel, Larkspur Health Partners, Inc.
+Alice Moreno, Calder & Wynne LLP
+Graham Tolliver, Pinecrest Risk Advisors, LLC

@@ -1,0 +1,165 @@
+FW RE Ostrander incident - internal (Larkspur email chain, forwarded May 29, 2025)
+(file: FW_ RE_ Ostrander incident - internal.txt; txt; correspondence, received)
+
+From: Marchbanks, Lionel <lmarchbanks@larkspurhealth.example>
+Sent: Thursday, May 29, 2025 9:07 AM
+To: Kenji Arai <karai@calderwynne.example>
+Cc: Alice Moreno <amoreno@calderwynne.example>; Omar Haddad <ohaddad@calderwynne.example>
+Subject: FW: RE: Ostrander incident - internal
+
+PRIVILEGED & CONFIDENTIAL - ATTORNEY-CLIENT COMMUNICATION
+
+Kenji,
+
+As requested on yesterday's call after the Halvard letter came in, here is the internal chain from the first week. Bottom email first.
+
+Two things you will see that I should have flagged before the 5/12 notice went out:
+
+1. Tomasz got the heads-up call from Nadia Okafor on Monday 3/10, around 4:15 pm, not on 3/14. I had been counting our 60 days from the date of Ostrander's letter. That was my mistake, not yours.
+
+2. Annette's "about 14,000" further down was a back-of-envelope guess from our SFTP volumes before anyone had looked at their file server. Please disregard it -- the final Cobaltline number (due tomorrow per Imogen) will be the one to use. Prelim was 18,400.
+
+Happy to get on with you and Alice this afternoon to work out how we handle the timing point in our response to Halvard.
+
+Lionel
+
+Lionel Marchbanks | General Counsel
+Larkspur Health Partners, Inc. | 400 Tillary Court, Brooklyn, NY 11201
+T (718) 555-0115 | lmarchbanks@larkspurhealth.example
+
+-----Original Message-----
+From: Marchbanks, Lionel
+Sent: Friday, March 14, 2025 6:21 PM
+To: Rhee, Annette; Wierzbicki, Tomasz
+Cc: Fontaine, Celia
+Subject: RE: Ostrander incident - internal
+
+Thanks Annette.
+
+Please -- no estimates of numbers in email from here on. Everything on this goes through me so we keep privilege; Calder Wynne is now formally engaged (letter dated yesterday, I'll countersign Monday).
+
+Special board meeting is set for Thursday 3/20 at 4:00 pm. Alice Moreno and Kenji Arai will join by video. Celia, Beatrice is sending the notice to directors tonight.
+
+On insurance: I'll get the cyber policy from Paul and speak to Pinecrest next week once we know whether our data was actually touched. Nothing goes to the carrier until I've looked at it.
+
+L.
+
+-----Original Message-----
+From: Rhee, Annette
+Sent: Friday, March 14, 2025 4:58 PM
+To: Marchbanks, Lionel; Wierzbicki, Tomasz
+Cc: Fontaine, Celia
+Subject: RE: Ostrander incident - internal
+
+All,
+
+Ostrander's formal letter finally landed at 3:12 pm today, by email to privacy@, security@ and legalnotices@ (attached: OBS_Incident_Notice_2025-03-14.pdf). Hard copy is supposedly coming by courier.
+
+Highlights:
+- They say they "identified" the ransomware on Sunday 3/9 but only "determined" on 3/12 that our systems were affected, and they claim the letter is within 48 hrs of THAT. That's not how the MSA defines discovery.
+- "No evidence that Larkspur data was exfiltrated." Too early for them to know that, imo.
+- They cite MSA 9.4 and BAA 2.4.
+- Contact is Nadia Okafor.
+
+My working assumption until proven otherwise is that this is a reportable breach for us. If the billing exports on their side were hit, then based on our nightly SFTP volumes I'd guess about 14,000 patients are in scope. I've opened privacy incident file PRIV-2025-007 and started the 164.402 risk assessment.
+
+Annette
+
+Annette Rhee | Privacy Officer
+Larkspur Health Partners, Inc.
+T (718) 555-0124 | arhee@larkspurhealth.example
+
+-----Original Message-----
+From: Wierzbicki, Tomasz
+Sent: Thursday, March 13, 2025 7:36 PM
+To: Marchbanks, Lionel; Rhee, Annette
+Cc: Fontaine, Celia
+Subject: RE: Ostrander incident - internal
+
+Update: OBS platform came back for us around 2 pm. Billing team confirms they can log in and the queue is moving again.
+
+Still NOTHING in writing from Ostrander. Nadia keeps saying "formal notice by end of week".
+
+Things I'm worried about:
+- We push nightly 837 claim files, 835 remits and statement files to them via SFTP. I don't know how long OBS keeps those on their side. Contract says 30 days (Exhibit C), I would not bet on it.
+- Asked again for IOCs and for the name of their IR firm. Got the IR firm (Ironvale), no IOCs yet.
+- I have disabled our SFTP service account, rotated all creds to their platform and forced MFA re-enrollment for our 41 users on it. Our own EHR and network show no sign of compromise - nothing in our EDR, nothing on the firewall.
+
+Tomasz
+
+-----Original Message-----
+From: Fontaine, Celia
+Sent: Wednesday, March 12, 2025 6:40 PM
+To: Marchbanks, Lionel; Wierzbicki, Tomasz; Rhee, Annette
+Subject: RE: Ostrander incident - internal
+
+Fordham and Jamaica clinic directors both called me today asking when claims will go out. Paul says there are about 6,200 claims sitting in the queue since Sunday and cash will feel it by next week.
+
+Lionel - what are we allowed to tell the clinic directors? I'd like a two-line script by tomorow morning. And please make sure the board isn't hearing about this from someone else first.
+
+Celia
+
+Dr. Celia Fontaine
+Chief Executive Officer, Larkspur Health Partners
+Sent from my phone
+
+-----Original Message-----
+From: Marchbanks, Lionel
+Sent: Tuesday, March 11, 2025 9:32 AM
+To: Rhee, Annette; Wierzbicki, Tomasz
+Cc: Fontaine, Celia
+Subject: RE: Ostrander incident - internal
+
+Agree with Annette. I spoke with Alice Moreno at Calder & Wynne this morning; she'll have Kenji Arai on it with her. From now on please mark anything on this "Privileged & Confidential - prepared at the direction of counsel" and send it to me rather than around the building. Do not forward any of this to Ostrander.
+
+Tomasz - who is our broker on the cyber policy, is it still Pinecrest? I'll handle the carrier notice once we have something in writing from Ostrander.
+
+Lionel
+
+-----Original Message-----
+From: Rhee, Annette
+Sent: Tuesday, March 11, 2025 8:05 AM
+To: Wierzbicki, Tomasz; Marchbanks, Lionel
+Cc: Fontaine, Celia
+Subject: RE: Ostrander incident - internal
+
+Thanks Tomasz. Noting for the file:
+
+- MSA 9.4 as amended by the First Amendment (eff. 7/1/2023): written notice within 48 hours of discovery, phone calls expressly don't count. If they found it early Sunday morning, 48 hours runs out about now (Tuesday morning).
+- BAA 2.4: breach report no later than 10 business days after discovery, i.e. by Friday 3/21 if discovery was 3/9. But the BAA says the shorter MSA period still applies (7.4).
+- Our own HIPAA clock (164.404) - need Lionel's view on when it starts for us. Ostrander is an independent contractor under the BAA, not our agent.
+
+Can we get the call with Nadia memorialized in writing? Date, time, what she said.
+
+Annette
+
+-----Original Message-----
+From: Wierzbicki, Tomasz
+Sent: Monday, March 10, 2025 7:48 PM
+To: Marchbanks, Lionel; Rhee, Annette
+Cc: Fontaine, Celia
+Subject: Ostrander incident - internal
+
+Lionel, Annette,
+
+Heads up. At about 4:15 pm today I got a call on my cell from Nadia Okafor (Ostrander's Director of InfoSec). Summary of what she told me:
+
+- They were hit by ransomware early Sunday morning (3/9). Files encrypted on "a number of servers" in their hosted environment, incl. the revenue-cycle platform we use. Platform has been down for all their clients since Sunday.
+- They have isolated the environment, brought in an outside IR firm and "notified law enforcement".
+- She could not (or would not) say whether our data was accessed or taken. Said it's "too early".
+- Formal written notice "to follow".
+
+I asked for IOCs, timeline and whether the SFTP drop zone was affected. No answers yet. I've put our side on watch and we're blocking their IP ranges at our edge except the SFTP endpoint until we know more.
+
+Under the contract I believe they owe us written notice - Annette, can you check the period? I think it's 48 hrs after the amendment.
+
+Will update tomorrow.
+
+Tomasz
+
+Tomasz Wierzbicki | Chief Information Security Officer
+Larkspur Health Partners, Inc.
+T (718) 555-0131 | M (917) 555-0186
+
+______________________________________________________________________
+CONFIDENTIALITY NOTICE: This e-mail message, including any attachments, is for the sole use of the intended recipient(s) and may contain confidential, privileged and/or protected health information. Any unauthorized review, use, disclosure or distribution is prohibited. If you are not the intended recipient, please contact the sender by reply e-mail and destroy all copies of the original message. Larkspur Health Partners, Inc., 400 Tillary Court, Brooklyn, NY 11201.

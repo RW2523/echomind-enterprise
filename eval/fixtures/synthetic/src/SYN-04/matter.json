@@ -1,0 +1,21 @@
+{
+ "title": "Okafor-Reyes v Brackenridge Analytics - employment",
+ "client": {
+  "name": "Brackenridge Analytics, Inc.",
+  "code": "BRA"
+ },
+ "practice_area": "Employment",
+ "jurisdiction": "California",
+ "lead": "harper",
+ "members": {
+  "alice": "attorney",
+  "sofia": "attorney"
+ },
+ "parties": [
+  [
+   "Daniela Okafor-Reyes",
+   "adverse"
+  ]
+ ],
+ "paper": "letter"
+}

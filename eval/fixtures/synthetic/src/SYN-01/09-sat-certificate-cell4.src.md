@@ -1,0 +1,54 @@
+---
+file: SAT Certificate - Cell 4 (FAILED).pdf
+title: Site Acceptance Test Certificate - Cell 4 (13 August 2024, failed)
+kind: evidence
+status: final
+render: scan
+style: form
+font: sans
+header: Quellcrest Robotics Ltd - Form QRL-F-SAT-02 rev 1
+scan: skew=0.9 noise=0.45 dpi=200 mode=gray
+---
+# SITE ACCEPTANCE TEST CERTIFICATE
+
+Customer: Varnholt Aerostructures Ltd, Sinfin Lane Works, Derby
+Contract: Supply and Installation Agreement dated 14/03/2023 (as varied) - PO VAR-PO-23-0412
+Cell no.: 4    Location: Bay 3    SAT no.: SAT-C4-01 (first SAT)
+Date of test: 13/08/2024    Start: 07:10    End: 12:22 (run aborted)
+Test procedure: Schedule 1 Part C para 2 / QRL-TP-118 rev 2
+
+| Ref | Parameter | Requirement | Result | Pass / Fail |
+|---|---|---|---|---|
+| B1 | Positional accuracy | ≤ 0.15 mm | 0.13 mm | PASS |
+| B2 | Repeatability | ≤ ±0.05 mm | ±0.04 mm | PASS |
+| B3 | Hole diameter | H8 | conforming | PASS |
+| B4 | Countersink depth | ±0.05 mm | conforming | PASS |
+| B5 | Cycle time per fastener (mean of 120) | ≤ 22.0 s | 24.1 s | FAIL |
+| B6 | Swage collar quality | zero defects | 3 defects / 120 | FAIL |
+| B7 | Availability, 8-hour continuous run | ≥ 95% | run aborted at 5 h 12 min (MFEE fault E-417) | FAIL |
+| B8 | Noise at 1 m | ≤ 80 dB(A) | 78 dB(A) | PASS |
+
+Overall result:   [ ] PASSED     [X] FAILED
+
+Acceptance Certificate to be issued:   [ ] YES     [X] NO
+
+Remarks (Supplier): MFEE swage head pressure drop from approx. 3 h 40 min. Fault E-417 (swage stroke out of tolerance) at 5 h 12 min - run stopped.
+
+[[hand: QRL note: vibration felt at stn 2 during run - floor? see NCR-044. KD]]
+
+Remarks (Buyer):
+
+[[hand: NOT ACCEPTED. Repeat SAT required - cl. 8.7 costs to QRL. RT 13/8/24]]
+
+[[hand: MFEE to go back to Coventry for rework. Re-test date TBC by QRL. TW]]
+
+For the Supplier: Kieran Doyle, Site Manager - Date: 13/08/2024 - Signed: [[sign: K. Doyle]]
+
+For the Buyer (Quality): Tomasz Wierzbicki, Quality Lead - Date: 13/08/2024 - Signed: [[sign: T. Wierzbicki]]
+
+For the Buyer (Contract Manager): Rhiannon Thorne - Date: 13/08/2024 - Signed: [[sign: R. Thorne]]
+
+[[stamp: VAL QUALITY - REJECTED / 13 AUG 2024]]
+
+Distribution: QRL (G. Whitlow, B. Kowalczyk), VAL Quality file Q-CELL-04, R. Thorne.
+Form QRL-F-SAT-02 rev 1 - one form per SAT attempt. A failed SAT does not count as Acceptance (clause 8.8).

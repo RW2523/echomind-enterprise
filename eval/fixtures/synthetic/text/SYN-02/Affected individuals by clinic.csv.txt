@@ -1,0 +1,13 @@
+Affected individuals by clinic (CSV)
+(file: Affected individuals by clinic.csv; raw; evidence, final)
+
+clinic_code,clinic_name,location,total_individuals,name_address,date_of_birth,ssn,health_insurance_id,diagnosis_procedure_codes,payment_card_or_bank
+LHP-01,Larkspur Flatbush Clinic,"Brooklyn, NY",4318,4318,4301,1942,3876,3512,214
+LHP-02,Larkspur Bay Ridge Clinic,"Brooklyn, NY",3207,3207,3198,1410,2915,2640,167
+LHP-03,Larkspur Williamsburg Clinic,"Brooklyn, NY",2954,2954,2940,1288,2611,2398,141
+LHP-04,Larkspur Astoria Clinic,"Queens, NY",3671,3671,3660,1733,3302,2987,188
+LHP-05,Larkspur Jamaica Clinic,"Queens, NY",2489,2489,2481,1105,2204,2011,122
+LHP-06,Larkspur Fordham Clinic,"Bronx, NY",3102,3102,3090,1467,2833,2560,156
+LHP-07,Larkspur St. George Clinic,"Staten Island, NY",1876,1876,1870,802,1690,1522,93
+LHP-08,Larkspur Yonkers Clinic,"Yonkers, NY (Westchester)",2295,2295,2288,1016,2047,1860,105
+TOTAL,All clinics,,23912,23912,23828,10763,21478,19490,1186

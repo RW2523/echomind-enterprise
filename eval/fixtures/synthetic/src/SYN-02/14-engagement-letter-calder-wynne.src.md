@@ -1,0 +1,111 @@
+---
+file: Engagement letter - Calder & Wynne.pdf
+title: Engagement letter - Calder & Wynne LLP (countersigned March 17, 2025)
+kind: correspondence
+status: executed
+render: pdf
+style: letter
+font: serif
+letterhead: Calder & Wynne LLP | 1180 Hollis Avenue, 22nd Floor | New York, NY 10017 | (212) 555-0100
+footer: Client-Matter No. 30517.001 - Privileged & Confidential
+---
+
+Alice Moreno
+Partner
+Direct: (212) 555-0151
+amoreno@calderwynne.example
+
+March 13, 2025
+
+PRIVILEGED & CONFIDENTIAL
+ATTORNEY-CLIENT COMMUNICATION
+
+BY EMAIL
+
+Lionel Marchbanks, Esq.
+General Counsel
+Larkspur Health Partners, Inc.
+400 Tillary Court
+Brooklyn, NY 11201
+
+Re: Engagement of Calder & Wynne LLP — Ostrander Billing Solutions security incident (Client-Matter No. 30517.001)
+
+Dear Lionel:
+
+Thank you for selecting Calder & Wynne LLP (the "Firm") to represent Larkspur Health Partners, Inc. ("Larkspur" or "you"). This letter sets out the scope of our engagement and the terms on which we will act. Our Standard Terms of Engagement, enclosed, also apply; if they conflict with this letter, this letter controls.
+
+1. Client. Our client in this matter is Larkspur Health Partners, Inc. only. Unless we agree otherwise in writing, we do not represent any director, officer or employee of Larkspur individually, or any affiliate, insurer or vendor of Larkspur.
+
+2. Scope. We will advise and represent Larkspur in connection with the security incident reported to Larkspur by its revenue-cycle vendor, Ostrander Billing Solutions LLC ("Ostrander"), on or about March 10, 2025 (the "Incident"), in three phases:
+
+Phase 1 — Incident response and regulatory notifications: directing the forensic investigation; advising on Larkspur's obligations under HIPAA (45 C.F.R. Part 164, Subpart D), New York General Business Law § 899-aa and other applicable state laws, including notice to affected individuals, the Secretary of Health and Human Services, state authorities and, where required, the media; preparing notification letters and call center materials; and advising the board and any committee of the board.
+
+Phase 2 — Vendor claims: advising on and pursuing Larkspur's rights against Ostrander under the Master Services Agreement dated as of February 1, 2022, as amended, and the Business Associate Agreement of the same date, including indemnification, cost recovery and termination rights, and any dispute resolution under those agreements.
+
+Phase 3 — Insurance: advising on notice to, and coverage under, Larkspur's cyber insurance policy and any other potentially applicable insurance, and assisting with the presentation of claims.
+
+The scope does not include litigation of third-party claims or regulatory enforcement proceedings, which would be the subject of a separate engagement letter or an amendment to this letter.
+
+3. Staffing. I will have overall responsibility for the engagement. Kenji Arai, a senior associate in our Corporate & Regulatory group, will lead the day-to-day work and will be your principal contact. Omar Haddad, a paralegal, will support the team. We will involve other lawyers, including colleagues in our Insurance Recovery and Litigation groups, where their experience is useful, after discussing it with you.
+
+4. Forensic investigation. To help preserve the attorney-client privilege and work product protection, we will retain Cobaltline Forensics LLC ("Cobaltline"), or another firm you approve, directly on Larkspur's behalf under a separate engagement letter between the Firm and the forensic firm. The forensic firm will report to us, and its work will be performed to assist us in giving legal advice to Larkspur. Larkspur will be responsible for the forensic firm's fees and expenses, which we will pass through without mark-up or which the forensic firm may invoice to Larkspur directly. Please do not commission any separate report on the Incident without first speaking with us.
+
+5. Fees. Our fees will be based on the time spent by our lawyers and paralegals at the hourly rates below, which are our standard rates for calendar year 2025. For this matter we will apply a courtesy discount of ten percent (10%) to those rates. Our rates are normally adjusted on January 1 of each year; we will give you at least thirty (30) days' notice of any adjustment.
+
+| Timekeeper | Position | 2025 standard hourly rate |
+|---|---|---|
+| Alice Moreno | Partner | USD 1,150 |
+| Kenji Arai | Senior Associate | USD 785 |
+| Omar Haddad | Paralegal | USD 340 |
+| Other partners | Partner | USD 995 – 1,250 |
+| Other associates | Associate | USD 560 – 825 |
+| Litigation support and e-discovery specialists | Specialist | USD 295 |
+
+6. Initial budget. At your request we have prepared the following initial budget. It is an estimate based on the information available today, not a fixed fee or a cap, and it will change as the facts develop. We will tell you promptly if we expect to exceed it.
+
+| Phase | Moreno (hours) | Arai (hours) | Haddad (hours) | Fees at standard rates (USD) |
+|---|---|---|---|---|
+| Phase 1 — Incident response and notifications | 60 | 140 | 50 | 195,900.00 |
+| Phase 2 — Vendor claims against Ostrander | 25 | 70 | 20 | 90,500.00 |
+| Phase 3 — Insurance | 15 | 45 | 10 | 55,975.00 |
+| Total at standard rates | 100 | 255 | 80 | 342,375.00 |
+| Less 10% courtesy discount | | | | (34,237.50) |
+| Estimated fees after discount | | | | 308,137.50 |
+| Estimated disbursements (excluding forensic, mailing, call center and credit monitoring vendors) | | | | 7,500.00 |
+| Total estimate | | | | 315,637.50 |
+
+7. Expenses. We will bill for out-of-pocket disbursements such as courier, filing fees and travel at cost. We do not charge for routine photocopying or legal research database use. Third-party vendor charges over USD 5,000 (other than the forensic firm under paragraph 4) will be incurred only with your prior approval.
+
+8. Billing and payment. We will invoice monthly, with time entries showing the timekeeper, date, time spent and a description of the work. Payment is due within thirty (30) days of the invoice date. We do not require a retainer for this matter.
+
+9. Insurance. We understand that Larkspur maintains cyber insurance that may cover some or all of our fees. Insurers often require prompt notice of an incident as a condition of coverage, and many limit reimbursement to their own panel firms or panel rates, or require consent before costs are incurred. We recommend that Larkspur give notice to its insurer promptly; we will assist with that notice at your request. Larkspur remains responsible for our fees whether or not they are reimbursed by an insurer.
+
+10. Conflicts. We have searched our records for Ostrander Billing Solutions LLC, its principals and Halvard Mutual Insurance Company, which we understand to be Larkspur's cyber insurer. We have no relationship with Ostrander. In 2023 the Firm concluded an unrelated reinsurance matter for Halvard Re Ltd., an affiliate of Halvard Mutual Insurance Company; we do not currently represent Halvard Mutual or any of its affiliates and will not do so in any matter adverse to Larkspur while this engagement continues. We do not believe this past representation affects our ability to represent Larkspur, but we ask you to confirm your consent by countersigning this letter.
+
+11. Records and termination. You may end our engagement at any time by written notice. We may withdraw in accordance with the New York Rules of Professional Conduct. At the end of the engagement we will return your original documents on request and retain our file for seven (7) years.
+
+12. Preservation. Please ensure that a document preservation notice is issued promptly to all personnel who may hold documents relating to the Incident or to Ostrander, including email, text and chat messages and call logs. We will provide a draft.
+
+If these terms are acceptable, please sign and return a copy of this letter. We will begin work immediately on the basis of your oral instruction of March 11, 2025.
+
+We appreciate the confidence you have placed in us.
+
+Very truly yours,
+
+CALDER & WYNNE LLP
+
+[[sign: Alice Moreno]]
+
+Alice Moreno, Partner
+
+Enclosure: Standard Terms of Engagement (2025)
+
+AGREED AND ACCEPTED, including the consent in paragraph 10:
+
+LARKSPUR HEALTH PARTNERS, INC.
+
+[[sign: Lionel Marchbanks]]
+
+By: Lionel Marchbanks
+Title: General Counsel
+Date: March 17, 2025

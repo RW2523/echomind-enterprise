@@ -1,0 +1,26 @@
+{
+ "title": "Varnholt v Quellcrest - robotic cells delay claim",
+ "client": {
+  "name": "Varnholt Aerostructures Limited",
+  "code": "VAR"
+ },
+ "practice_area": "Commercial litigation",
+ "jurisdiction": "England & Wales",
+ "lead": "harper",
+ "members": {
+  "alice": "attorney",
+  "lena": "attorney",
+  "omar": "paralegal"
+ },
+ "parties": [
+  [
+   "Quellcrest Robotics Ltd",
+   "adverse"
+  ],
+  [
+   "Quellcrest Automation Inc.",
+   "adverse"
+  ]
+ ],
+ "paper": "a4"
+}

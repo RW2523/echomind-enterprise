@@ -1,0 +1,922 @@
+{
+ "suite": "synthetic-load",
+ "base": "http://127.0.0.1:8161/api",
+ "documents": [
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Supply and Installation Agreement - EXECUTED VERSION.docx",
+   "title": "Supply and Installation Agreement - Varnholt / Quellcrest (executed version)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "26e2da75-67ec-417f-9228-3a5b32d24e60",
+   "index_status": "indexed",
+   "secs_to_searchable": 62,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/SIA draft v3 (CW comments 27.02.23).docx",
+   "title": "Supply and Installation Agreement - draft v3 with Calder & Wynne comments (27.02.23)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "c1933d6a-b67d-497b-b37d-11b13fd9f2e9",
+   "index_status": "indexed",
+   "secs_to_searchable": 82,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/SIA - signed execution pages (scan).pdf",
+   "title": "Supply and Installation Agreement - signed cover and execution pages (scan)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "467ec093-12c5-4f32-b451-c5e3ac24173a",
+   "index_status": "indexed",
+   "secs_to_searchable": 102,
+   "version": {
+    "number": 1,
+    "pages": 4
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Variation Agreement No 1 - 09.01.2024.pdf",
+   "title": "Variation Agreement No. 1 to the Supply and Installation Agreement (9 January 2024)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "66f19e9e-7906-4746-8db3-aa94549331c4",
+   "index_status": "indexed",
+   "secs_to_searchable": 102,
+   "version": {
+    "number": 1,
+    "pages": 5
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Variation No. 2 (signed copy).pdf",
+   "title": "Variation Agreement No. 2 - signed copy (22 July 2024)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "311f5d95-bb63-498f-ad72-b2e4e4ebf4e5",
+   "index_status": "indexed",
+   "secs_to_searchable": 102,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Email chain - Bay 3 site readiness (printed 18-06-2024).pdf",
+   "title": "Email chain - Bay 3 site readiness, March to June 2024 (printed 18 June 2024)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "f4c6cf91-746c-4d8f-9ab2-ca5beac12a85",
+   "index_status": "indexed",
+   "secs_to_searchable": 122,
+   "version": {
+    "number": 1,
+    "pages": 6
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/RE_ Milestone 4 payment - hold.txt",
+   "title": "RE: Milestone 4 payment - hold (Varnholt internal emails, Aug-Sep 2024)",
+   "render": "txt",
+   "expected": true,
+   "import": 202,
+   "document_id": "05f25aa8-fbf2-4266-83d5-6fe1eb0cc712",
+   "index_status": "indexed",
+   "secs_to_searchable": 122,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/FAT Report Cells 1-8 rev C.pdf",
+   "title": "Factory Acceptance Test Report - Cells 1 to 8 (QRL-VAR-FAT-001 rev C)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "1b710066-d8cb-4aa5-80d2-eacdfff3d67e",
+   "index_status": "indexed",
+   "secs_to_searchable": 122,
+   "version": {
+    "number": 1,
+    "pages": 4
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/SAT Certificate - Cell 4 (FAILED).pdf",
+   "title": "Site Acceptance Test Certificate - Cell 4 (13 August 2024, failed)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "e1e3f529-e12e-4f53-93db-b911e4a95c92",
+   "index_status": "indexed",
+   "secs_to_searchable": 142,
+   "version": {
+    "number": 1,
+    "pages": 1
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Invoice QR-INV-2024-117.pdf",
+   "title": "Quellcrest invoice QR-INV-2024-117 (Milestone 3, Cells 4-6)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "9066f2f8-f8f8-4517-af60-53f42f3e67e3",
+   "index_status": "indexed",
+   "secs_to_searchable": 142,
+   "version": {
+    "number": 1,
+    "pages": 1
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Invoice QR-INV-2024-131.pdf",
+   "title": "Quellcrest invoice QR-INV-2024-131 (Milestone 4, Cells 1-3)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "46d50002-5eb4-4da3-bbe2-b4e4e3f80609",
+   "index_status": "indexed",
+   "secs_to_searchable": 142,
+   "version": {
+    "number": 1,
+    "pages": 1
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Payments ledger.csv",
+   "title": "Payments ledger - Quellcrest Robotics Ltd (AP export, 3 October 2024)",
+   "render": "raw",
+   "expected": false,
+   "import": 415,
+   "detail": "{\"detail\":\"Only PDF, Word (.docx), text and Markdown files can be imported.\"}"
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Payments ledger (printed from Excel).pdf",
+   "title": "Payments ledger - Quellcrest Robotics Ltd (printed from Excel, 3 October 2024)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "231d1432-b2ca-4298-8756-a012b897c46f",
+   "index_status": "indexed",
+   "secs_to_searchable": 142,
+   "version": {
+    "number": 1,
+    "pages": 1
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Letter before claim 04.10.2024.docx",
+   "title": "Letter of claim and Dispute Notice to Quellcrest Robotics Ltd (4 October 2024)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "9520558e-4594-4231-bcb2-19e956ebb19c",
+   "index_status": "indexed",
+   "secs_to_searchable": 142,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Brannock Steele response 01-11-2024 (scan).pdf",
+   "title": "Brannock Steele LLP letter of response for Quellcrest (1 November 2024)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "321cce93-5c6b-4c6f-b71b-d2df82a655d2",
+   "index_status": "indexed",
+   "secs_to_searchable": 162,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Witness statement - R Thorne (draft 2).docx",
+   "title": "Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "62381a20-49ea-4a1e-a6e2-83c4bd57e8dd",
+   "index_status": "indexed",
+   "secs_to_searchable": 182,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/File note - call with client 12.09.24.txt",
+   "title": "File note - call with client, 12 September 2024 (L. Brandt)",
+   "render": "txt",
+   "expected": true,
+   "import": 202,
+   "document_id": "ac48c034-387d-4336-87f1-cfefec0fa6aa",
+   "index_status": "indexed",
+   "secs_to_searchable": 182,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-01",
+   "file": "SYN-01/Board minutes 26 Sept 2024 (extract).pdf",
+   "title": "Varnholt board minutes, 26 September 2024 (extract - item 6, Quellcrest)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "4350e7fc-a076-499e-b2d6-96afde2580db",
+   "index_status": "indexed",
+   "secs_to_searchable": 202,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Master Services Agreement - Larkspur-Ostrander (fully executed).pdf",
+   "title": "Master Services Agreement - Larkspur / Ostrander (fully executed)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "65d121d6-03f1-4408-a0dd-056b06579080",
+   "index_status": "indexed",
+   "secs_to_searchable": 222,
+   "version": {
+    "number": 1,
+    "pages": 16
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Business Associate Agreement.docx",
+   "title": "Business Associate Agreement - Larkspur / Ostrander (executed)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "5c034d00-b39d-4270-8158-e3b589e778d5",
+   "index_status": "indexed",
+   "secs_to_searchable": 242,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/First Amendment to MSA (eff. 7.1.2023).pdf",
+   "title": "First Amendment to Master Services Agreement (effective July 1, 2023)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "75a07c31-1649-44ed-84cf-a711612240c1",
+   "index_status": "indexed",
+   "secs_to_searchable": 242,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Ostrander Security Incident Notice 03-14-2025.pdf",
+   "title": "Ostrander Security Incident Notice (March 14, 2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "ce527296-c5f3-4da5-bf07-0ce0fdab3bf4",
+   "index_status": "indexed",
+   "secs_to_searchable": 242,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/FW_ RE_ Ostrander incident - internal.txt",
+   "title": "FW RE Ostrander incident - internal (Larkspur email chain, forwarded May 29, 2025)",
+   "render": "txt",
+   "expected": true,
+   "import": 202,
+   "document_id": "36025c6b-258c-4286-8052-1aa730ad7962",
+   "index_status": "indexed",
+   "secs_to_searchable": 263,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Cobaltline Preliminary Report DRAFT 2025-04-04.pdf",
+   "title": "Cobaltline Forensics - Preliminary Report (DRAFT v0.3, 4 April 2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "68995fa5-f480-4db8-949a-bd6941d73341",
+   "index_status": "indexed",
+   "secs_to_searchable": 283,
+   "version": {
+    "number": 1,
+    "pages": 5
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Cobaltline Final Forensic Report.pdf",
+   "title": "Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "8491a20f-e19b-4fbe-bf51-4e164a43c9e4",
+   "index_status": "indexed",
+   "secs_to_searchable": 283,
+   "version": {
+    "number": 1,
+    "pages": 8
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Cyber Policy HMC-CY-2024-08817.pdf",
+   "title": "Halvard Mutual Cyber Risk and Privacy Liability Policy HMC-CY-2024-08817 (2024-2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "71129245-282a-48eb-a327-6667c90c8dec",
+   "index_status": "indexed",
+   "secs_to_searchable": 323,
+   "version": {
+    "number": 1,
+    "pages": 13
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Notice of circumstances to Halvard 12 May 2025.docx",
+   "title": "Notice of Incident and Circumstances to Halvard Mutual (May 12, 2025)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "033789d1-a0f6-4064-ba8c-189908c68107",
+   "index_status": "indexed",
+   "secs_to_searchable": 323,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Board minutes 3.20.25 (signed).pdf",
+   "title": "Minutes of Special Meeting of the Board of Directors - March 20, 2025 (signed)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "17506e7e-736e-48fb-aa01-be138680b0d5",
+   "index_status": "indexed",
+   "secs_to_searchable": 323,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Affected individuals by clinic.csv",
+   "title": "Affected individuals by clinic (CSV)",
+   "render": "raw",
+   "expected": false,
+   "import": 415,
+   "detail": "{\"detail\":\"Only PDF, Word (.docx), text and Markdown files can be imported.\"}"
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Affected individuals by clinic (print).pdf",
+   "title": "Affected individuals by clinic (print)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "ef94a64a-e618-43ca-9427-50f0e3cc03d9",
+   "index_status": "indexed",
+   "secs_to_searchable": 343,
+   "version": {
+    "number": 1,
+    "pages": 1
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Patient notification letter - template v4.docx",
+   "title": "Patient notification letter - template v4 (draft with tracked changes)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "73fc853f-6452-4b1c-a677-dd8c01d68f5b",
+   "index_status": "indexed",
+   "secs_to_searchable": 343,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Engagement letter - Calder & Wynne.pdf",
+   "title": "Engagement letter - Calder & Wynne LLP (countersigned March 17, 2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "148167ba-badc-4cd1-a4e2-cfd5ad80a12b",
+   "index_status": "indexed",
+   "secs_to_searchable": 343,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Halvard reservation of rights 5.27.2025 (scan).pdf",
+   "title": "Halvard Mutual reservation of rights letter (May 27, 2025)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "1ba45905-8f12-48ce-9734-0222c12a67be",
+   "index_status": "indexed",
+   "secs_to_searchable": 363,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-02",
+   "file": "SYN-02/Ostrander - re indemnity demand.eml",
+   "title": "Ostrander - re indemnity demand (email, June 27, 2025)",
+   "render": "raw",
+   "expected": false,
+   "import": 415,
+   "detail": "{\"detail\":\"Only PDF, Word (.docx), text and Markdown files can be imported.\"}"
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Lease - Unit 4 Merrow Arcade (2016) scanned.pdf",
+   "title": "Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "52aec152-e645-4e86-a3b4-67095dcd8240",
+   "index_status": "indexed",
+   "secs_to_searchable": 423,
+   "version": {
+    "number": 1,
+    "pages": 20
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Rent review memorandum 2021 (signed).pdf",
+   "title": "Rent review memorandum - 24 June 2021 review (signed)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "856d9b5a-aac4-4c0b-b8d9-6ca85e8fb891",
+   "index_status": "indexed",
+   "secs_to_searchable": 444,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Deed of Variation 15.10.2020.pdf",
+   "title": "Deed of Variation - Unit 4 Merrow Arcade (15 October 2020)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "89143bfc-7912-43aa-a33e-56399fc6332f",
+   "index_status": "indexed",
+   "secs_to_searchable": 444,
+   "version": {
+    "number": 1,
+    "pages": 4
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Licence for Alterations - shopfront and mezzanine.docx",
+   "title": "Licence for Alterations - shopfront and mezzanine (7 March 2022)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "f1a6289e-8685-4db6-a207-5cb1330e8c97",
+   "index_status": "indexed",
+   "secs_to_searchable": 444,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Break notice 28.08.2025 + covering letter.docx",
+   "title": "Break notice dated 28 August 2025 and covering letter",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "4b61ddfe-25a3-49b8-943b-5bcedd71a8de",
+   "index_status": "indexed",
+   "secs_to_searchable": 464,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Proof of posting - recorded delivery 28-08-25.pdf",
+   "title": "Proof of posting - recorded delivery 28 August 2025",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "e3223f69-88ab-49a8-b77d-aacf9f594542",
+   "index_status": "indexed",
+   "secs_to_searchable": 464,
+   "version": {
+    "number": 1,
+    "pages": 1
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Carrow Hill change of name and address 3 May 2024.pdf",
+   "title": "Carrow Hill - change of name and address for notices (3 May 2024)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "810a8642-0b7c-4f27-927c-86861d878e4c",
+   "index_status": "indexed",
+   "secs_to_searchable": 464,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Pellow Grange letter 17.10.25 - break disputed.pdf",
+   "title": "Pellow Grange letter 17 October 2025 - break disputed",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "4bad46be-5bc9-40b6-a2c9-05064fa4960a",
+   "index_status": "indexed",
+   "secs_to_searchable": 464,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Service charge statement YE 24.03.2025.pdf",
+   "title": "Service charge statement - year ended 24 March 2025 (Unit 4)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "87691390-69b5-444f-9ee3-663d6e745ec9",
+   "index_status": "indexed",
+   "secs_to_searchable": 464,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Tenant rent ledger 2021-2025.pdf",
+   "title": "Tenant rent ledger 2021-2025 (Unit 4 Merrow Arcade)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "85ce2e4a-e022-4e8b-a618-ae8501769844",
+   "index_status": "indexed",
+   "secs_to_searchable": 484,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Email chain - dilapidations and reinstatement (printed).pdf",
+   "title": "Email chain - dilapidations and reinstatement (Unit 4 Merrow Arcade)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "b4c019f9-df0e-4437-ae3e-00b5a48c1e4e",
+   "index_status": "indexed",
+   "secs_to_searchable": 484,
+   "version": {
+    "number": 1,
+    "pages": 4
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Interim schedule of dilapidations rev 1.pdf",
+   "title": "Interim schedule of dilapidations rev 1 (3 November 2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "e75269a4-f1e4-4416-a520-2e4cdf81f7b2",
+   "index_status": "indexed",
+   "secs_to_searchable": 484,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Advice note - break clause (LB draft).docx",
+   "title": "Advice note - break clause, Unit 4 Merrow Arcade (LB draft)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "99c50ec3-5d2b-4e31-a2b3-87fc128142b7",
+   "index_status": "indexed",
+   "secs_to_searchable": 504,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-03",
+   "file": "SYN-03/Attendance note - client meeting 15.07.25.txt",
+   "title": "Attendance note - client meeting 15 July 2025",
+   "render": "txt",
+   "expected": true,
+   "import": 202,
+   "document_id": "77d3a6b9-169a-4d96-a750-535532779366",
+   "index_status": "indexed",
+   "secs_to_searchable": 504,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Offer Letter - D Okafor-Reyes 8.16.21.pdf",
+   "title": "Offer letter - Daniela Okafor-Reyes (August 16, 2021)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "0873ed79-a456-49ab-aa5a-dc44ddc6b59a",
+   "index_status": "indexed",
+   "secs_to_searchable": 504,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Employment Agreement (signed).docx",
+   "title": "Employment Agreement - Brackenridge Analytics / D. Okafor-Reyes (signed)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "1d69c029-2e4f-42cd-8892-dfc5767bf0a7",
+   "index_status": "indexed",
+   "secs_to_searchable": 524,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Brackenridge Employee Handbook 2024.pdf",
+   "title": "Brackenridge Analytics Employee Handbook 2024 (rev. 2024-01)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "b8b91d10-9205-4c3a-9ead-40835f86c3c2",
+   "index_status": "indexed",
+   "secs_to_searchable": 544,
+   "version": {
+    "number": 1,
+    "pages": 13
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/2024 Annual Bonus Plan.pdf",
+   "title": "Brackenridge Analytics 2024 Annual Bonus Plan",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "8b27ae39-4f89-4ea4-a10b-4210c691a794",
+   "index_status": "indexed",
+   "secs_to_searchable": 564,
+   "version": {
+    "number": 1,
+    "pages": 4
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Stock Option Grant Notice - 2021-10-01.pdf",
+   "title": "Stock Option Grant Notice - D. Okafor-Reyes (Grant No. 2021-0417, October 1, 2021)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "4c0e05ba-459d-4633-88bc-7b89064fc62e",
+   "index_status": "indexed",
+   "secs_to_searchable": 564,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/PIP - D. Okafor-Reyes (Nov 2024).docx",
+   "title": "Performance Improvement Plan - D. Okafor-Reyes (November 4, 2024)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "7a4438ee-ec95-4817-aacb-56bf7f6bedd6",
+   "index_status": "indexed",
+   "secs_to_searchable": 564,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Complaint to HR 10-21-2024.txt",
+   "title": "Complaint to HR - D. Okafor-Reyes (October 21, 2024)",
+   "render": "txt",
+   "expected": true,
+   "import": 202,
+   "document_id": "39befeb7-05a7-4da6-b6e0-265ff95a4322",
+   "index_status": "indexed",
+   "secs_to_searchable": 564,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/HR investigation notes (MGV).txt",
+   "title": "HR investigation notes - case HR-INV-2024-031 (M. Gutierrez-Vance)",
+   "render": "txt",
+   "expected": true,
+   "import": 202,
+   "document_id": "29beac06-7775-4078-afbd-0aaf6df6661e",
+   "index_status": "indexed",
+   "secs_to_searchable": 584,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Termination letter 01.10.2025.pdf",
+   "title": "Termination letter - D. Okafor-Reyes (January 10, 2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "0a4e972b-e5cc-4d9a-b367-15fa9a49efb4",
+   "index_status": "indexed",
+   "secs_to_searchable": 584,
+   "version": {
+    "number": 1,
+    "pages": 2
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Ostrowski & Lam demand letter (scan).pdf",
+   "title": "Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)",
+   "render": "scan",
+   "expected": true,
+   "import": 202,
+   "document_id": "8a802325-66ee-4a8d-969a-afa35453f7c9",
+   "index_status": "indexed",
+   "secs_to_searchable": 605,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Separation Agreement v2 (redline).docx",
+   "title": "Separation Agreement and General Release - v2 redline (O&L comments 2/21/2025)",
+   "render": "docx",
+   "expected": true,
+   "import": 202,
+   "document_id": "4ab3c493-e783-40f8-b095-248f0e83c572",
+   "index_status": "indexed",
+   "secs_to_searchable": 604,
+   "version": {
+    "number": 1,
+    "pages": null
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Payroll register extract.csv",
+   "title": "Payroll register extract - D. Okafor-Reyes (03/2023 - 01/2025)",
+   "render": "raw",
+   "expected": false,
+   "import": 415,
+   "detail": "{\"detail\":\"Only PDF, Word (.docx), text and Markdown files can be imported.\"}"
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Payroll register extract (print).pdf",
+   "title": "Payroll register extract (print) - D. Okafor-Reyes (03/2023 - 01/2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "1711f963-cc05-43b2-94d7-918e3081aceb",
+   "index_status": "indexed",
+   "secs_to_searchable": 625,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/Email chain - DS team restructure (printed).pdf",
+   "title": "Email chain - DS team restructure - Q1 headcount (Oct 28, 2024 - Jan 13, 2025)",
+   "render": "pdf",
+   "expected": true,
+   "import": 202,
+   "document_id": "5e4a8aa8-ee0c-47c9-a3f3-d20132797102",
+   "index_status": "indexed",
+   "secs_to_searchable": 625,
+   "version": {
+    "number": 1,
+    "pages": 3
+   }
+  },
+  {
+   "matter": "SYN-04",
+   "file": "SYN-04/PTO payout calculation.xlsx",
+   "title": "PTO payout calculation - D. Okafor-Reyes (final pay 01/10/2025)",
+   "render": "xlsx",
+   "expected": false,
+   "import": 415,
+   "detail": "{\"detail\":\"Only PDF, Word (.docx), text and Markdown files can be imported.\"}"
+  }
+ ],
+ "not_searchable": []
+}

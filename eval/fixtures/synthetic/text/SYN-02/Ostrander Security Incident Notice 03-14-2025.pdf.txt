@@ -1,0 +1,50 @@
+Ostrander Security Incident Notice (March 14, 2025)
+(file: Ostrander Security Incident Notice 03-14-2025.pdf; pdf; correspondence, received)
+
+[stamp: RECEIVED MAR 17 2025 - LARKSPUR LEGAL DEPT.]
+
+March 14, 2025
+
+VIA EMAIL (privacy@larkspurhealth.example; security@larkspurhealth.example; legalnotices@larkspurhealth.example) AND OVERNIGHT COURIER
+
+Larkspur Health Partners, Inc.
+400 Tillary Court
+Brooklyn, NY 11201
+
+Attention: Annette Rhee, Privacy Officer
+Tomasz Wierzbicki, Chief Information Security Officer
+Lionel Marchbanks, General Counsel
+
+Re: Notice of Security Incident — Master Services Agreement dated as of February 1, 2022, as amended (the "MSA"), and Business Associate Agreement effective February 1, 2022 (the "BAA")
+
+Dear Ms. Rhee, Mr. Wierzbicki and Mr. Marchbanks:
+
+Ostrander Billing Solutions, LLC ("OBS") is writing to notify Larkspur Health Partners, Inc. ("Larkspur") of a security incident affecting a portion of the OBS hosted revenue-cycle environment. We value our relationship with Larkspur and are committed to keeping you informed as our investigation proceeds.
+
+What happened. On Sunday, March 9, 2025, OBS identified a ransomware event that encrypted files on certain servers within our hosted environment and disrupted access to the OBS revenue-cycle platform. OBS immediately activated its incident response plan, isolated the affected environment, and engaged an outside forensic firm, Ironvale Response Group, to assist with containment and investigation. OBS has also notified federal law enforcement.
+
+As you know, our Director of Information Security, Nadia Okafor, spoke with your CISO, Mr. Wierzbicki, by telephone on March 10, 2025 to advise him of the service disruption and of the steps OBS was taking to restore service.
+
+On March 12, 2025, our investigation determined that certain systems used to process data of Larkspur were among the affected systems. OBS is providing this written notice within forty-eight (48) hours of that determination, consistent with Section 9.4 of the MSA, and well within the period provided in Section 2.4 of the BAA.
+
+What information may be involved. The affected systems are used to prepare and transmit claims, post remittances and generate patient statements. Depending on the file, such data may include patient names, addresses, dates of birth, health insurance information, and claims information such as dates of service and procedure codes. Our investigation into whether any specific Larkspur files were accessed is ongoing. At this time, we have no evidence that Larkspur data was exfiltrated or misused.
+
+What we are doing. OBS has rebuilt affected servers from known-good backups, reset credentials across the environment, deployed additional monitoring and endpoint protection, and restored the revenue-cycle platform. Full service was restored to Larkspur on March 13, 2025. Claims that were queued during the outage are being processed on a priority basis, and our account team will provide a backlog report under separate cover.
+
+Next steps. OBS will provide Larkspur with updates as our investigation progresses, and will share relevant findings consistent with our obligations under the MSA and the BAA. If our investigation determines that a Breach of Unsecured Protected Health Information has occurred, OBS will supplement this notice with the information described in Section 2.4 of the BAA, including the identification of affected individuals to the extent available. OBS asks that Larkspur coordinate with us before making any external statement regarding this matter so that communications are accurate and consistent.
+
+Your point of contact for this matter is Nadia Okafor, Director of Information Security, at nokafor@ostranderbilling.example or (860) 555-0174. Contractual matters may be directed to me.
+
+This notice is provided in the spirit of cooperation and transparency. It is not an admission of any fact, fault or liability, and OBS reserves all of its rights and defenses under the MSA, the BAA and applicable law.
+
+Sincerely,
+
+[signature: Bryce Kettering]
+
+Bryce Kettering
+Chief Operating Officer
+Ostrander Billing Solutions, LLC
+bkettering@ostranderbilling.example
+
+cc: Nadia Okafor, Director of Information Security
+Lauren Szabo, Deputy General Counsel

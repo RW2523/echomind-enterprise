@@ -1,0 +1,70 @@
+---
+file: Offer Letter - D Okafor-Reyes 8.16.21.pdf
+title: Offer letter - Daniela Okafor-Reyes (August 16, 2021)
+kind: correspondence
+status: executed
+render: pdf
+style: letter
+font: serif
+letterhead: Brackenridge Analytics, Inc. | 77 Almaden Crossing | San Jose, CA 95113 | (408) 555-0142
+footer: Brackenridge Analytics, Inc. - Confidential
+---
+
+August 16, 2021
+
+PERSONAL AND CONFIDENTIAL
+Via email: dor.personal@homemail.example
+
+Daniela Okafor-Reyes
+2290 Larkmead Court
+Campbell, CA 95008
+
+Re: Offer of Employment - Senior Data Scientist
+
+Dear Daniela:
+
+On behalf of Brackenridge Analytics, Inc. (the "Company" or "Brackenridge"), I am delighted to offer you employment as a Senior Data Scientist in our Data Science group. The terms of our offer are set out below.
+
+1. Position. You will be employed as Senior Data Scientist, reporting to Trevor Albright, Director of Data Science. Your position is classified as full-time and exempt from overtime under federal and California law. You will work on a hybrid basis from our headquarters at 77 Almaden Crossing, San Jose, and remotely, in accordance with the Company's remote and hybrid work policy as in effect from time to time.
+
+2. Start Date. Your first day of employment will be Tuesday, September 7, 2021 (the "Start Date"), unless we agree in writing on a different date.
+
+3. Base Salary. You will be paid a base salary at the annualized rate of $168,000.00, less applicable withholdings and deductions, paid biweekly in accordance with the Company's regular payroll practices. Your salary will be reviewed periodically and may be adjusted by the Company.
+
+4. Sign-On Bonus. The Company will pay you a one-time sign-on bonus of $15,000.00, less applicable withholdings, with the first regular payroll following your completion of thirty (30) days of employment. The sign-on bonus is an advance that you earn over your first twelve (12) months of employment. If you resign your employment within twelve (12) months of your Start Date, you agree to repay a pro rata portion of the gross sign-on bonus, calculated as the number of full months remaining in that twelve-month period divided by twelve. For example, if you resign after completing five (5) full months of employment, you would repay 7/12 of the bonus ($8,750.00). Repayment will be due within thirty (30) days after your last day of employment.
+
+5. Annual Bonus. You will be eligible to participate in the Company's annual bonus plan, with a target bonus of fifteen percent (15%) of the base salary you earn during the plan year. Your participation for 2021 will be prorated. Any bonus is subject to the terms of the applicable plan document as approved by the Board's Compensation Committee each year, including Company and individual performance and the requirement that you remain employed on the date the bonus is paid.
+
+6. Equity. Subject to approval by the Company's Board of Directors, management will recommend that you be granted an option to purchase 24,000 shares of the Company's common stock under the Brackenridge Analytics, Inc. 2019 Equity Incentive Plan (the "Plan"). The exercise price will be equal to the fair market value of the common stock on the date of grant, as determined by the Board. The option will vest over four years: 25% of the shares will vest on the first anniversary of your Start Date, and the remaining shares will vest in thirty-six (36) equal monthly installments thereafter, subject to your continued service. The option will be governed in all respects by the Plan and your grant documents.
+
+7. Benefits and Time Off. You will be eligible for the Company's standard benefits, including medical, dental and vision coverage beginning on the first day of the month following your Start Date, a 401(k) plan and an employee assistance program. You will accrue paid time off ("PTO") under the Company's PTO policy, currently fifteen (15) days per year for exempt employees, accrued each pay period, and you will receive paid sick leave and Company holidays in accordance with Company policy.
+
+8. At-Will Employment. Your employment with the Company is "at will." This means that either you or the Company may end the employment relationship at any time, with or without cause and with or without notice. Nothing in this letter, in any Company policy or handbook, or in any oral statement changes the at-will nature of your employment. Only a written agreement signed by the Company's Chief Executive Officer can change it.
+
+9. Employment Agreement. As a condition of employment, you must sign the Company's Employment Agreement, a copy of which is enclosed. The Employment Agreement contains, among other things, your obligations regarding confidential information and inventions, a limited non-solicitation of employees covenant, and a mutual agreement to arbitrate disputes before a neutral arbitrator. You are welcome to review it with a lawyer of your choice.
+
+10. Contingencies. This offer is contingent on (a) satisfactory completion of a background check conducted in compliance with applicable law, including the California Fair Chance Act, and (b) your providing documents establishing your identity and authorization to work in the United States within three (3) business days after your Start Date, as required by federal law.
+
+11. Entire Offer. This letter, together with the Employment Agreement and your equity documents, sets out the terms of your employment and supersedes any prior representations or discussions, whether written or oral. If there is any conflict between this letter and the Employment Agreement, the Employment Agreement will control.
+
+To accept this offer, please sign and date this letter and the enclosed Employment Agreement and return them to me no later than Monday, August 23, 2021. After that date this offer will lapse.
+
+We are excited about the prospect of you joining Brackenridge. Please call me at (408) 555-0142 or email people@brackenridge-analytics.example if you have any questions.
+
+Sincerely,
+
+[[sign: Denise Arbogast]]
+Denise Arbogast
+Vice President, People
+Brackenridge Analytics, Inc.
+
+Enclosures: Employment Agreement; 2021 Benefits Summary
+
+ACCEPTED AND AGREED:
+
+I accept the offer of employment on the terms set out above.
+
+[[sign: Daniela Okafor-Reyes]]
+Daniela Okafor-Reyes
+
+Date: 8/18/2021

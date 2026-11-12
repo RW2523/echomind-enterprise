@@ -1,0 +1,35 @@
+---
+file: Payments ledger (printed from Excel).pdf
+title: Payments ledger - Quellcrest Robotics Ltd (printed from Excel, 3 October 2024)
+kind: other
+status: final
+render: pdf
+style: table
+font: sans
+header: Varnholt Aerostructures Ltd - AP supplier ledger QUE001 Quellcrest Robotics Ltd - printed 03/10/2024 16:41 (M. Ferris)
+footer: Payments ledger.xlsx - Sheet: QUE001
+---
+**Supplier ledger: QUE001 - Quellcrest Robotics Ltd** (contract: Supply and Installation Agreement, PO VAR-PO-23-0412 and VAR-PO-23-0412/A1). Contract Price after VA1: £6,550,000.00 net. Due dates are 30 days from date received (contract cl. 7.3).
+
+| Invoice no. | Inv. date | Received | Description | Cells | MS | Net £ | VAT £ | Gross £ | Due | Paid | Paid £ | O/S £ | Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| QR-INV-2023-041 | 16/03/2023 | 16/03/2023 | M1 Signing | 1-6 | M1 | 972,000.00 | 194,400.00 | 1,166,400.00 | 15/04/2023 | 12/04/2023 | 1,166,400.00 | 0.00 | PAID |
+| QR-INV-2023-162 | 08/12/2023 | 08/12/2023 | M2 FAT | 1-3 | M2 | 729,000.00 | 145,800.00 | 874,800.00 | 07/01/2024 | 05/01/2024 | 874,800.00 | 0.00 | PAID |
+| QR-INV-2024-003 | 10/01/2024 | 10/01/2024 | M3 Delivery | 1-3 | M3 | 729,000.00 | 145,800.00 | 874,800.00 | 09/02/2024 | 08/02/2024 | 874,800.00 | 0.00 | PAID |
+| QR-INV-2024-009 | 10/01/2024 | 11/01/2024 | M1 Signing VA1 | 7-8 | M1 | 338,000.00 | 67,600.00 | 405,600.00 | 10/02/2024 | 09/02/2024 | 405,600.00 | 0.00 | PAID |
+| QR-INV-2024-044 | 15/03/2024 | 15/03/2024 | M2 FAT | 4 | M2 | 243,000.00 | 48,600.00 | 291,600.00 | 14/04/2024 | 12/04/2024 | 291,600.00 | 0.00 | PAID |
+| QR-INV-2024-098 | 21/06/2024 | 21/06/2024 | M2 FAT | 5-6 | M2 | 486,000.00 | 97,200.00 | 583,200.00 | 21/07/2024 | 19/07/2024 | 583,200.00 | 0.00 | PAID |
+| QR-INV-2024-117 | 12/07/2024 | 12/07/2024 | M3 Delivery | 4-6 | M3 | 729,000.00 | 145,800.00 | 874,800.00 | 11/08/2024 | 09/08/2024 | 874,800.00 | 0.00 | PAID |
+| QR-INV-2024-124 | 31/07/2024 | 31/07/2024 | M2 FAT | 7-8 | M2 | 507,000.00 | 101,400.00 | 608,400.00 | 30/08/2024 | 30/08/2024 | 608,400.00 | 0.00 | PAID |
+| QR-INV-2024-131 | 02/08/2024 | 05/08/2024 | M4 Acceptance | 1-3 | M4 | 607,500.00 | 121,500.00 | 729,000.00 | 04/09/2024 | - | 0.00 | 729,000.00 | ON HOLD |
+| QR-INV-2024-139 | 23/08/2024 | 23/08/2024 | M3 Delivery | 7-8 | M3 | 507,000.00 | 101,400.00 | 608,400.00 | 22/09/2024 | 20/09/2024 | 608,400.00 | 0.00 | PAID |
+| TOTAL | | | | | | 5,847,500.00 | 1,169,500.00 | 7,017,000.00 | | | 6,288,000.00 | 729,000.00 | |
+
+Notes column (from sheet):
+QR-INV-2023-041 - PO VAR-PO-23-0412
+QR-INV-2024-003 - DN 11/12/23, 18/12/23, 08/01/24
+QR-INV-2024-009 - PO VAR-PO-23-0412/A1
+QR-INV-2024-117 - DN 30/04/24, 24/06/24, 08/07/24
+QR-INV-2024-124 - PO VAR-PO-23-0412/A1
+QR-INV-2024-131 - ON HOLD - set-off LDs per MF 30/08
+QR-INV-2024-139 - DN 12/08/24, 19/08/24; PO VAR-PO-23-0412/A1

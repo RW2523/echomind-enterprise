@@ -1,0 +1,84 @@
+Halvard Mutual reservation of rights letter (May 27, 2025)
+(file: Halvard reservation of rights 5.27.2025 (scan).pdf; scan; correspondence, received)
+
+[stamp: RECEIVED MAY 29 2025 - CALDER & WYNNE LLP]
+
+May 27, 2025
+
+VIA EMAIL (karai@calderwynne.example) AND FIRST-CLASS MAIL
+
+Kenji Arai, Esq.
+Calder & Wynne LLP
+1180 Hollis Avenue, 22nd Floor
+New York, NY 10017
+
+Re: Insured: Larkspur Health Partners, Inc.
+Policy No.: HMC-CY-2024-08817 (Policy Period October 1, 2024 to October 1, 2025)
+Claim No.: HMC-CL-2025-03391
+Matter: Ostrander Billing Solutions vendor incident
+Your notice dated: May 12, 2025
+
+RESERVATION OF RIGHTS
+
+Dear Mr. Arai:
+
+Halvard Mutual Insurance Company ("Halvard") acknowledges receipt on May 12, 2025 of your letter of that date giving notice, on behalf of Larkspur Health Partners, Inc. ("Larkspur"), of an Incident and of circumstances arising from a ransomware attack on the systems of Larkspur's billing vendor, Ostrander Billing Solutions LLC ("Ostrander"). This matter has been assigned the claim number above and I will be handling it.
+
+We write to set out Halvard's position on the information received to date. Halvard is investigating this matter under a full reservation of rights, as set out below. Nothing in this letter is a denial of coverage, and nothing in it waives any right of Halvard under the Policy or at law.
+
+1. Facts as we understand them
+
+Based on your letter and its enclosure, we understand that Ostrander identified the ransomware attack on March 9, 2025; that Ostrander's Director of Information Security informed Larkspur's Chief Information Security Officer, Mr. Wierzbicki, of the attack by telephone on March 10, 2025; that Ostrander gave Larkspur written notice on March 14, 2025; and that approximately 18,400 individuals may be affected. Your letter states that Larkspur first became aware of the Incident on March 14, 2025. The enclosed Ostrander letter indicates otherwise.
+
+2. Late notice — Section V.A
+
+Section V.A of the Policy requires written notice of any Claim or Incident "as soon as practicable, and in no event later than sixty (60) days after the Insured's Chief Information Security Officer or General Counsel first becomes aware of such Claim or Incident." Larkspur's CISO became aware of the Incident on March 10, 2025. Sixty days from that date expired on May 9, 2025. Notice was given on May 12, 2025, sixty-three (63) days after March 10, 2025. Halvard reserves its right to decline coverage, in whole or in part, on the ground of late notice, to the extent permitted by New York Insurance Law § 3420 and Endorsement No. 1 (New York Amendatory Endorsement), including to the extent Halvard has been prejudiced by the delay.
+
+3. Dependent business sublimit
+
+The Incident occurred on the Computer System of Ostrander, a Service Provider, and therefore constitutes a Dependent Business Incident. Pursuant to Endorsement No. 2 (Dependent Business Incident Sublimit Amendment), the Limit of Liability for Insuring Agreement E was reduced from USD 1,500,000 to USD 500,000. It is Halvard's position that all Loss arising from the Ostrander incident, including Incident Response Costs, is subject to this USD 500,000 sublimit, which is part of and not in addition to the Policy Aggregate Limit of Liability. Halvard reserves all rights in this regard.
+
+4. Other sublimits and Retention
+
+Without prejudice to paragraph 3, we note that Notification Costs and Credit Monitoring Costs are subject to a combined sublimit of USD 750,000 under Insuring Agreement A, and Regulatory Fines and Penalties are subject to a sublimit of USD 1,000,000 under Insuring Agreement C. A single Retention of USD 100,000 applies to all Loss arising from the Incident.
+
+5. Failure to maintain security — Exclusion III.D
+
+We understand from public reporting that the attack may have exploited a vulnerability in a VPN appliance for which a critical patch had been available for some time. Exclusion III.D excludes Loss arising out of the failure to apply a critical security patch within forty-five (45) days after it was made available. Halvard reserves its rights under Exclusion III.D pending receipt of the forensic findings.
+
+6. Contractual liability and prior knowledge — Exclusions III.B and III.C
+
+Halvard reserves its rights under Exclusion III.B to the extent any Loss represents liability assumed by Larkspur under contract, including under its agreements with payors, and under Exclusion III.C to the extent any member of the Control Group knew, before the Continuity Date of October 1, 2021, of any deficiency in Ostrander's security. Please tell us whether any vendor risk review of Ostrander conducted by Larkspur identified any such deficiency.
+
+7. Consent to costs — Section V.C
+
+Section V.C requires the Insurer's prior written consent to Incident Response Costs, other than reasonable costs incurred within thirty (30) days after the Incident was first Discovered. Halvard did not consent to the retention of Calder & Wynne LLP, Cobaltline Forensics LLC or any other provider before your letter of May 12, 2025. Halvard reserves its right to decline costs incurred without consent after the thirty-day period, and to limit reimbursement of counsel and forensic fees to its panel rates. We will respond separately on your request for consent to the providers named in your letter.
+
+8. Subrogation and other insurance — Sections VII.A and VII.B
+
+Halvard's rights of subrogation against Ostrander must be preserved. Larkspur must not release, waive or compromise any claim against Ostrander, or enter into any settlement with Ostrander, without Halvard's prior written consent. Please also tell us whether Larkspur is an additional insured, or otherwise entitled to coverage, under any insurance maintained by Ostrander.
+
+9. Information requested
+
+To allow Halvard to complete its investigation, please provide within thirty (30) days:
+
+(a) the Master Services Agreement, all amendments and the Business Associate Agreement with Ostrander;
+(b) all notices and correspondence exchanged with Ostrander concerning the Incident;
+(c) Cobaltline's reports, preliminary and final, on terms to be agreed to protect privilege;
+(d) Larkspur's internal communications showing when its CISO and General Counsel first learned of the Incident;
+(e) invoices for all costs incurred to date, and estimates of future costs; and
+(f) any documentation supporting a claim for Dependent Business Loss, including claims backlog and collections data for March and April 2025.
+
+Halvard reserves the right to supplement this letter as further information becomes available, and to rely on any other term, condition or exclusion of the Policy. If you believe any fact stated in this letter is incorrect, or have information you wish Halvard to consider, please let me know.
+
+Sincerely,
+
+[signature: Priya Venkataraman]
+
+Priya Venkataraman
+Senior Claims Specialist, Cyber & Technology Claims
+Halvard Mutual Insurance Company
+pvenkataraman@halvardmutual.example | (617) 555-0129
+
+cc: Graham Tolliver, Pinecrest Risk Advisors, LLC
+Lionel Marchbanks, General Counsel, Larkspur Health Partners, Inc.

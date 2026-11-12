@@ -1,0 +1,21 @@
+{
+ "title": "Ashdown & Pryce - Merrow Arcade lease break",
+ "client": {
+  "name": "Ashdown & Pryce Retail Limited",
+  "code": "APR"
+ },
+ "practice_area": "Real estate",
+ "jurisdiction": "England & Wales",
+ "lead": "sofia",
+ "members": {
+  "alice": "attorney",
+  "lena": "attorney"
+ },
+ "parties": [
+  [
+   "Carrow Hill Property Holdings Limited",
+   "adverse"
+  ]
+ ],
+ "paper": "a4"
+}

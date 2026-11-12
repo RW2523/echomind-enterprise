@@ -1,0 +1,335 @@
+Halvard Mutual Cyber Risk and Privacy Liability Policy HMC-CY-2024-08817 (2024-2025)
+(file: Cyber Policy HMC-CY-2024-08817.pdf; pdf; contract, executed)
+
+HALVARD MUTUAL INSURANCE COMPANY
+
+600 Larchmont Wharf, Boston, Massachusetts 02210
+
+CYBER RISK AND PRIVACY LIABILITY POLICY — DECLARATIONS
+
+THIS POLICY CONTAINS INSURING AGREEMENTS WRITTEN ON A CLAIMS-MADE AND REPORTED BASIS AND INSURING AGREEMENTS WRITTEN ON AN INCIDENT-DISCOVERED BASIS. DEFENSE COSTS REDUCE THE LIMITS OF LIABILITY AND ARE SUBJECT TO THE RETENTION. PLEASE READ THE ENTIRE POLICY CAREFULLY.
+
+| Item | Particulars |
+| Policy Number | HMC-CY-2024-08817 |
+| Renewal of | HMC-CY-2023-07264 |
+| Item 1. Named Insured | Larkspur Health Partners, Inc. |
+| Address | 400 Tillary Court, Brooklyn, New York 11201 |
+| Item 2. Policy Period | From October 1, 2024 to October 1, 2025, both at 12:01 a.m. local time at the address of the Named Insured |
+| Item 5. Retroactive Date | October 1, 2021 (Insuring Agreements B and C) |
+| Item 5. Continuity Date | October 1, 2021 |
+| Item 6. Premium | USD 187,450.00 (plus applicable surcharges) |
+| Item 8. Producer | Pinecrest Risk Advisors, LLC, New York, New York |
+
+Item 3. Limits of Liability
+
+| Insuring Agreement | Limit of Liability | Sublimit (part of and not in addition to the Limit) |
+| Policy Aggregate Limit of Liability (all Insuring Agreements combined) | USD 5,000,000 | — |
+| A. Incident Response | USD 5,000,000 | Notification and Credit Monitoring Costs: USD 750,000 |
+| B. Network Security and Privacy Liability | USD 5,000,000 | — |
+| C. Regulatory Proceedings | USD 5,000,000 | Regulatory Fines and Penalties: USD 1,000,000 |
+| D. Business Interruption and Data Restoration | USD 5,000,000 | — |
+| E. Dependent Business Incident | USD 1,500,000 | — |
+| F. Cyber Extortion | USD 1,000,000 | — |
+
+All Limits of Liability and sublimits are aggregate for the Policy Period, are part of and not in addition to the Policy Aggregate Limit of Liability, and are subject to Section IV.
+
+Item 4. Retention and Waiting Period
+
+| Insuring Agreement | Retention | Waiting Period |
+| A, B, C and F | USD 100,000 each Incident or Claim | — |
+| D. Business Interruption and Data Restoration | USD 100,000 each Incident | 12 hours |
+| E. Dependent Business Incident | USD 100,000 each Incident | 12 hours |
+
+A single Retention applies to all Loss arising from the same Incident or from Related Incidents, irrespective of the number of Insuring Agreements triggered.
+
+Item 7. Notice of Claim or Incident
+
+Halvard Mutual Insurance Company, Cyber & Technology Claims, 600 Larchmont Wharf, Boston, Massachusetts 02210
+Email: cyberclaims@halvardmutual.example
+24-hour incident hotline: (800) 555-0188
+
+Item 9. Forms and Endorsements Attached at Inception
+
+| No. | Title | Form |
+| — | Cyber Risk and Privacy Liability Policy | HMC-CY 100 NY (01/24) |
+| 1 | New York Amendatory Endorsement | HMC-CY 501 NY (01/24) |
+| 2 | Sanctions Limitation and Cyber Extortion Payment Conditions Endorsement | HMC-CY 214 (06/23) |
+
+These Declarations, the completed Application, the Policy form and any endorsements constitute the entire contract of insurance.
+
+Countersigned at Boston, Massachusetts, September 24, 2024.
+
+[signature: Martin L. Ashcombe]
+
+Martin L. Ashcombe, Authorized Representative, Halvard Mutual Insurance Company
+
+--- page break ---
+
+CYBER RISK AND PRIVACY LIABILITY POLICY
+
+In consideration of the payment of the premium, in reliance on the Application, and subject to the Declarations and to all terms, conditions, exclusions and limitations of this Policy, Halvard Mutual Insurance Company (the "Insurer") and the Insureds agree as follows. Words and phrases in bold type or with initial capital letters have the meanings given in Section II.
+
+SECTION I — INSURING AGREEMENTS
+
+A. Incident Response. The Insurer shall pay on behalf of the Insured, or reimburse the Insured for, Incident Response Costs incurred by the Insured as a direct result of a Security Failure or Privacy Event first Discovered during the Policy Period and reported to the Insurer in accordance with Section V.A.
+
+B. Network Security and Privacy Liability. The Insurer shall pay on behalf of the Insured Damages and Defense Costs that the Insured becomes legally obligated to pay as a result of a Claim first made against the Insured during the Policy Period and reported to the Insurer in accordance with Section V.A, arising out of a Security Failure or Privacy Event that first occurs on or after the Retroactive Date.
+
+C. Regulatory Proceedings. The Insurer shall pay on behalf of the Insured Defense Costs, Regulatory Fines and Penalties and Consumer Redress Amounts that the Insured becomes legally obligated to pay as a result of a Regulatory Proceeding first commenced against the Insured during the Policy Period and reported to the Insurer in accordance with Section V.A, arising out of a Security Failure or Privacy Event that first occurs on or after the Retroactive Date.
+
+D. Business Interruption and Data Restoration. The Insurer shall pay the Insured for Business Interruption Loss incurred during the Period of Restoration, after the Waiting Period, and for Data Restoration Costs, in each case as a direct result of an actual and measurable interruption or degradation of the Insured's Computer System caused by a Security Failure first Discovered during the Policy Period.
+
+E. Dependent Business Incident. The Insurer shall pay the Insured for Dependent Business Loss incurred during the Period of Restoration, after the Waiting Period, as a direct result of a Dependent Business Incident first Discovered during the Policy Period.
+
+F. Cyber Extortion. The Insurer shall reimburse the Insured for Extortion Loss incurred as a direct result of a Cyber Extortion Threat first made against the Insured during the Policy Period, subject to Endorsement No. 2.
+
+SECTION II — DEFINITIONS
+
+1. "Application" means the application for this Policy, including all attachments and supplemental questionnaires submitted to the Insurer, including the ransomware supplemental questionnaire dated August 30, 2024.
+
+2. "Business Interruption Loss" means (a) the net income (net profit or loss before income taxes) that the Insured would have earned but for the interruption, and (b) continuing normal operating expenses, including payroll, together with Extra Expense.
+
+3. "Claim" means (a) a written demand against an Insured for money or non-monetary relief; (b) a civil proceeding commenced by service of a complaint or similar pleading; (c) an arbitration or mediation proceeding; or (d) a written request to toll or waive a statute of limitations, in each case alleging a Security Failure or Privacy Event. "Claim" includes a Regulatory Proceeding only for purposes of Insuring Agreement C.
+
+4. "Computer System" means computer hardware, software, firmware, networks, storage, mobile devices, and associated input and output devices, data storage devices, networking equipment and backup facilities, including systems accessible through the internet or remote access gateways.
+
+5. "Consumer Redress Amounts" means sums the Insured is legally required to deposit in a fund for the payment of consumer claims as a result of a Regulatory Proceeding.
+
+6. "Control Group" means the Named Insured's Chief Executive Officer, Chief Financial Officer, General Counsel, Chief Information Security Officer (or the most senior person responsible for information security), Privacy Officer and Risk Manager, or the functional equivalent of any of them.
+
+7. "Credit Monitoring Costs" means reasonable and necessary costs, incurred with the Insurer's consent, of providing credit monitoring, identity monitoring, identity restoration and identity theft insurance to individuals whose Personal Information was or may have been compromised in a Privacy Event, for a period of up to twenty-four (24) months or such longer period as is required by law or by a Regulatory authority.
+
+8. "Cyber Extortion Threat" means a credible threat or series of related threats to (a) release, divulge, disseminate, destroy or use Personal Information or confidential information in the care, custody or control of the Insured; (b) introduce malicious code into, or interrupt or encrypt, the Insured's Computer System; or (c) maintain an encryption or interruption already effected; made by a person other than a Control Group member for the purpose of demanding money, securities, digital currency or other property.
+
+9. "Damages" means compensatory damages, judgments, settlements and pre- and post-judgment interest, and punitive or exemplary damages where insurable under the law most favorable to their insurability. Damages do not include (a) fines or penalties except as covered under Insuring Agreement C; (b) the cost of complying with injunctive relief; (c) the return or restitution of fees; or (d) liquidated damages, service credits or contractual penalties, except to the extent the Insured would have been liable for them in the absence of the contract.
+
+10. "Data Restoration Costs" means reasonable costs to restore, recreate or recollect data and software that were damaged, corrupted or destroyed by a Security Failure, but not the cost of improving or upgrading any Computer System.
+
+11. "Defense Costs" means reasonable and necessary attorneys' fees, expert fees and other costs incurred in the investigation, defense or appeal of a Claim or Regulatory Proceeding, with the Insurer's consent. Defense Costs do not include the salaries or overhead of the Insured.
+
+12. "Dependent Business" means a Service Provider.
+
+13. "Dependent Business Incident" means an actual and measurable interruption, suspension, failure or degradation of a Service Provider's Computer System caused by a Security Failure of that Service Provider's Computer System.
+
+14. "Dependent Business Loss" means Business Interruption Loss incurred by the Insured as a direct result of a Dependent Business Incident, including Extra Expense incurred to perform manually or through an alternative provider the services ordinarily performed by the Service Provider.
+
+15. "Discovered" or "Discovery" means the first time a member of the Control Group becomes aware of facts that would cause a reasonable person to believe that a Security Failure, Privacy Event, Dependent Business Incident or Cyber Extortion Threat has occurred or is occurring, regardless of when the act or event first took place and even though the exact cause or extent of the Loss is not then known.
+
+16. "Extortion Loss" means (a) money, digital currency or other property surrendered, with the Insurer's prior written consent, in response to a Cyber Extortion Threat; and (b) reasonable fees of a negotiator or consultant retained with the Insurer's consent.
+
+17. "Extra Expense" means reasonable and necessary expenses, in excess of normal operating expenses, incurred to reduce or avoid Business Interruption Loss, but only to the extent such expenses reduce the loss.
+
+18. "Incident" means a Security Failure, Privacy Event, Dependent Business Incident or Cyber Extortion Threat.
+
+19. "Incident Response Costs" means the following reasonable and necessary costs incurred within twelve (12) months after Discovery, with the Insurer's consent as provided in Section V.C: (a) fees of a law firm to advise the Insured on its response to the Incident and its notification obligations ("breach counsel"); (b) fees of a forensic firm to determine the cause, scope and extent of the Incident and the data affected; (c) Notification Costs; (d) Credit Monitoring Costs; (e) public relations and crisis management costs; and (f) costs to determine the Insured's indemnification rights against a third party, including a Service Provider, in respect of the Incident.
+
+20. "Insured" means (a) the Named Insured and any Subsidiary; (b) any past, present or future director, officer, trustee or employee of the Named Insured or a Subsidiary, solely while acting in that capacity; and (c) any person or entity the Named Insured has agreed in a written contract to add as an insured, solely for liability arising from the conduct of the Named Insured.
+
+21. "Insured's Computer System" means a Computer System leased, owned or operated by the Insured, or operated for the Insured by a third party solely under the Insured's direction and control. Insured's Computer System does not include any Service Provider's Computer System.
+
+22. "Loss" means Incident Response Costs, Damages, Defense Costs, Regulatory Fines and Penalties, Consumer Redress Amounts, Business Interruption Loss, Data Restoration Costs, Dependent Business Loss and Extortion Loss.
+
+23. "Notification Costs" means reasonable and necessary costs of (a) notifying individuals, Regulatory authorities, the media and others as required by Privacy Law, or voluntarily where the Insurer consents; (b) printing, mailing, postage and substitute notice; and (c) establishing and operating a call center to respond to inquiries from notified individuals.
+
+24. "Period of Restoration" means the period beginning when the interruption commences and ending on the earlier of (a) the date the relevant Computer System is restored, or with reasonable speed could have been restored, to substantially the condition before the interruption, plus thirty (30) days; or (b) one hundred twenty (120) days after the interruption commenced.
+
+25. "Personal Information" means (a) any information concerning an individual that is protected by any Privacy Law, including protected health information as defined in 45 C.F.R. § 160.103, and private information as defined in New York General Business Law § 899-aa; (b) an individual's name in combination with a Social Security number, driver's license number, account number or payment card number, medical or health insurance information, or biometric data; and (c) any other non-public personal information of an individual.
+
+26. "Privacy Event" means (a) the actual or reasonably suspected unauthorized access to, acquisition, use, disclosure or loss of Personal Information in the care, custody or control of the Insured, or of a Service Provider on behalf of the Insured; or (b) a violation of any Privacy Law by the Insured.
+
+27. "Privacy Law" means any federal, state, local or foreign law or regulation governing the confidentiality, integrity, security or notification of breach of Personal Information, including HIPAA and the HITECH Act and their regulations at 45 C.F.R. Parts 160 and 164, the Federal Trade Commission Act, and New York General Business Law §§ 899-aa and 899-bb.
+
+28. "Regulatory Fines and Penalties" means civil fines and penalties imposed in a Regulatory Proceeding, including those imposed by the Office for Civil Rights of the U.S. Department of Health and Human Services or a state attorney general, where insurable under the law most favorable to their insurability.
+
+29. "Regulatory Proceeding" means a request for information, civil investigative demand, or civil proceeding brought by or on behalf of a federal, state, local or foreign governmental agency (a "Regulatory authority") alleging a violation of Privacy Law.
+
+30. "Related Incidents" means Incidents that have as a common nexus any fact, circumstance, situation, event, transaction or cause, or series of causally connected facts or events.
+
+31. "Retention" means the amount stated in Item 4 of the Declarations.
+
+32. "Security Failure" means a failure or violation of the security of a Computer System, including unauthorized access or use, a denial of service attack, the introduction of malicious code or ransomware, or the theft of access credentials, that results in the compromise of data or the interruption of that Computer System.
+
+33. "Service Provider" means a business that is not owned, operated or controlled by an Insured and that provides, under a written contract with the Insured, information technology services, including hosting, cloud, data processing, payment processing, billing and revenue-cycle services, to the Insured.
+
+34. "Service Provider's Computer System" means a Computer System leased, owned or operated by a Service Provider.
+
+35. "Subsidiary" means any entity in which the Named Insured owns more than fifty percent (50%) of the voting interests, directly or indirectly, on or before the inception of the Policy Period.
+
+36. "Waiting Period" means the number of hours stated in Item 4 of the Declarations, beginning when the interruption commences.
+
+SECTION III — EXCLUSIONS
+
+The Insurer shall not be liable to pay any Loss:
+
+A. Bodily Injury and Property Damage. For bodily injury, sickness, disease, mental anguish or death of any person, or for physical damage to or destruction of tangible property, other than mental anguish or emotional distress alleged in a Claim arising from a Privacy Event.
+
+B. Contractual Liability. Based upon, arising out of or attributable to any liability of the Insured assumed under any contract or agreement, including any indemnity, hold harmless or warranty; provided that this Exclusion shall not apply to (1) liability that the Insured would have had in the absence of such contract or agreement; (2) the Insured's contractual obligation to maintain the confidentiality or security of Personal Information; (3) Incident Response Costs; or (4) amounts payable under a merchant services agreement as a result of a Privacy Event involving payment card data.
+
+C. Prior Known Circumstances. Based upon, arising out of or attributable to any Incident, fact or circumstance of which any member of the Control Group had knowledge before the Continuity Date and which a reasonable person would have expected to give rise to a Claim or Loss, or which was the subject of notice under any prior policy.
+
+D. Failure to Maintain Security. Arising out of the Insured's failure to apply, within forty-five (45) days after it was made available by the manufacturer, a security patch or update rated "critical" by the manufacturer to the Insured's Computer System, where such failure was known to a member of the Control Group before the Incident. This Exclusion applies solely to the Insured's Computer System and shall not apply to any Service Provider's Computer System or to Loss arising from a Dependent Business Incident or a Privacy Event involving Personal Information in the care, custody or control of a Service Provider.
+
+E. War and Infrastructure. Arising out of war, invasion, acts of foreign enemies, hostilities or warlike operations (whether war is declared or not), civil war or rebellion, or any failure of a power, water, telecommunications or internet infrastructure not under the control of the Insured or a Service Provider; provided that this Exclusion shall not apply to a cyber act by a non-state actor.
+
+F. Intentional Acts. Arising out of any dishonest, fraudulent, criminal or malicious act or omission, or any knowing violation of law, committed by a member of the Control Group, as established by a final, non-appealable adjudication.
+
+G. Antitrust and Unfair Trade. Arising out of any antitrust violation, price fixing or restraint of trade.
+
+H. Securities. Arising out of any violation of any securities law.
+
+I. Patent and Trade Secret. Arising out of the infringement of any patent or the misappropriation of any trade secret.
+
+J. Unsolicited Communications. Arising out of any unsolicited telephone call, text message, facsimile or email, including under the Telephone Consumer Protection Act.
+
+K. Governmental Seizure. Arising out of the confiscation, nationalization or destruction of any Computer System by order of any governmental authority.
+
+L. Service Credits and Contractual Penalties. For any service credit, liquidated damages or contractual penalty, or the return or reduction of fees, owed by the Insured to any person under contract.
+
+SECTION IV — LIMITS OF LIABILITY AND RETENTION
+
+A. Policy Aggregate Limit. The Policy Aggregate Limit of Liability in Item 3 of the Declarations is the maximum the Insurer shall pay for all Loss under all Insuring Agreements combined, regardless of the number of Incidents, Claims or Insureds.
+
+B. Insuring Agreement Limits and Sublimits. The Limit of Liability for each Insuring Agreement, and each sublimit, is the maximum the Insurer shall pay for all Loss under that Insuring Agreement or sublimit, and is part of and not in addition to the Policy Aggregate Limit of Liability. The sublimit for Notification and Credit Monitoring Costs is the maximum the Insurer shall pay for all Notification Costs and Credit Monitoring Costs combined under Insuring Agreement A. The sublimit for Regulatory Fines and Penalties is the maximum the Insurer shall pay for all Regulatory Fines and Penalties under Insuring Agreement C.
+
+C. Retention. The Insurer's obligation to pay Loss applies only in excess of the Retention, which the Insured shall bear uninsured. A single Retention applies to all Loss arising out of the same Incident or Related Incidents. Where Loss arising from one Incident is covered under more than one Insuring Agreement, only the single highest applicable Retention applies.
+
+D. Related Incidents. All Related Incidents are a single Incident, Discovered when the first of them is Discovered, and all Claims arising from Related Incidents are a single Claim first made when the first of them is made.
+
+E. Allocation. Where Loss arising from a single Incident is covered under more than one Insuring Agreement, the Insured and the Insurer shall allocate the Loss to the Insuring Agreement under which it is covered by its nature, and each amount allocated shall be subject to the Limit and any sublimit of that Insuring Agreement. Incident Response Costs shall be allocated to Insuring Agreement A whether the Incident occurred on the Insured's Computer System or on a Service Provider's Computer System.
+
+F. Business Interruption Measurement. Business Interruption Loss and Dependent Business Loss shall be determined having regard to the experience of the business before the interruption and its probable experience had no interruption occurred, and shall be reduced to the extent the Insured is able to resume operations or recover delayed revenue.
+
+SECTION V — NOTICE AND CLAIM CONDITIONS
+
+A. Notice of Claim or Incident. As a condition precedent to coverage under this Policy, the Insured shall give written notice to the Insurer of any Claim or Incident as soon as practicable, and in no event later than sixty (60) days after the Insured's Chief Information Security Officer or General Counsel first becomes aware of such Claim or Incident. Notice shall be given to the address in Item 7 of the Declarations and shall include a description of the Claim or Incident, the date of Discovery, the persons and data involved, and the Insured's estimate of the Loss, so far as then known. The 24-hour incident hotline is provided for assistance only; a call to the hotline does not constitute notice under this Section V.A.
+
+B. Notice of Circumstances. If during the Policy Period the Insured first becomes aware of circumstances that could reasonably be expected to give rise to a Claim and gives written notice to the Insurer of those circumstances, including the reasons for anticipating a Claim and full particulars of dates, persons and entities involved, then any Claim subsequently arising from those circumstances shall be deemed first made during the Policy Period.
+
+C. Consent; Incident Response Providers. The Insured shall not incur any Incident Response Costs, Defense Costs or Extortion Loss, admit liability, or make any settlement offer, without the Insurer's prior written consent, which shall not be unreasonably withheld or delayed; provided that Incident Response Costs incurred within thirty (30) days after the Incident is first Discovered shall not require prior consent if they are otherwise reasonable and necessary and are promptly reported to the Insurer. The Insurer maintains a panel of breach counsel and forensic firms; the Insured may retain a firm not on the panel with the Insurer's consent, and the Insurer may limit reimbursement to the hourly rates it pays its panel providers for comparable services.
+
+D. Proof of Loss. For Business Interruption Loss and Dependent Business Loss, the Insured shall submit a sworn proof of loss, with supporting documents, within six (6) months after the end of the Period of Restoration.
+
+E. Cooperation. The Insured shall cooperate with the Insurer in the investigation and adjustment of any Incident and the defense of any Claim, and shall provide such information, documents and access to personnel and forensic reports as the Insurer reasonably requests, subject to the preservation of privilege where the Insurer and the Insured so agree.
+
+F. Mitigation. The Insured shall take all reasonable steps to mitigate Loss following the Discovery of an Incident.
+
+SECTION VI — DEFENSE AND SETTLEMENT
+
+A. Duty to Defend. The Insurer has the right and duty to defend any Claim covered under Insuring Agreement B or C, even if the allegations are groundless, false or fraudulent. The Insurer shall appoint counsel, in consultation with the Insured.
+
+B. Settlement. The Insurer shall not settle any Claim without the Insured's consent. If the Insured refuses to consent to a settlement recommended by the Insurer and acceptable to the claimant, the Insurer's liability for that Claim shall not exceed the amount of the proposed settlement plus Defense Costs incurred up to the date of refusal, plus seventy percent (70%) of Loss incurred thereafter.
+
+C. Exhaustion. The Insurer's duty to defend and to pay Loss ends upon exhaustion of the applicable Limit of Liability.
+
+SECTION VII — GENERAL CONDITIONS
+
+A. Subrogation. In the event of any payment under this Policy, the Insurer shall be subrogated to all of the Insured's rights of recovery against any person or organization, including any Service Provider, and the Insured shall execute all documents and do everything necessary to secure those rights. After an Incident, the Insured shall do nothing to prejudice those rights, and shall not release, waive or compromise any right of recovery against a Service Provider without the Insurer's prior written consent. A written waiver or limitation of the Insured's rights against a Service Provider agreed in a contract entered into before the Incident does not breach this condition. Any recovery shall be applied first to reimburse the Insured for any Loss in excess of the Limit of Liability, then to the Insurer, and then to the Retention.
+
+B. Other Insurance. This Policy is excess over any other valid and collectible insurance, including any insurance maintained by a Service Provider under which the Insured is entitled to coverage, unless such other insurance is written specifically excess of this Policy.
+
+C. Cancellation. The Named Insured may cancel this Policy by written notice to the Insurer. The Insurer may cancel this Policy only for non-payment of premium, as provided in Endorsement No. 1.
+
+D. Territory. This Policy applies to Incidents and Claims anywhere in the world, subject to Endorsement No. 2.
+
+E. Assignment. No assignment of interest under this Policy shall bind the Insurer without its written consent.
+
+F. Representations. The Insureds represent that the statements in the Application are true and accurate. The Application is deemed attached to and forms part of this Policy.
+
+G. Action Against the Insurer. No action shall lie against the Insurer unless the Insured has complied with all terms of this Policy, subject to Endorsement No. 1.
+
+H. Bankruptcy. The bankruptcy or insolvency of an Insured shall not relieve the Insurer of its obligations under this Policy.
+
+I. Changes. Notice to any agent or knowledge possessed by any person shall not effect a waiver or change in any part of this Policy. This Policy may be changed only by endorsement issued by the Insurer.
+
+J. Headings. Section titles and headings are for convenience only and do not affect the meaning of the Policy.
+
+K. Named Insured as Agent. The Named Insured shall act on behalf of all Insureds with respect to notice, premium, cancellation and the receipt of return premium.
+
+L. Conformity to Statute. Any term of this Policy that conflicts with the law of the state in which this Policy is issued is amended to conform to that law.
+
+IN WITNESS WHEREOF, the Insurer has caused this Policy to be signed by its President and Secretary, but it shall not be valid unless countersigned on the Declarations by an authorized representative of the Insurer.
+
+[signature: Eleanor V. Whitfield]
+
+Eleanor V. Whitfield, President
+
+[signature: Raymond J. Ostergaard]
+
+Raymond J. Ostergaard, Secretary
+
+--- page break ---
+
+ENDORSEMENT NO. 1 — NEW YORK AMENDATORY ENDORSEMENT
+
+Form HMC-CY 501 NY (01/24)
+Policy No. HMC-CY-2024-08817 — Named Insured: Larkspur Health Partners, Inc.
+Effective date of endorsement: October 1, 2024
+
+THIS ENDORSEMENT CHANGES THE POLICY. PLEASE READ IT CAREFULLY.
+
+1. Section V.A (Notice of Claim or Incident) is amended by adding the following at the end:
+
+"Failure to give any notice required by this Section V.A within the time prescribed shall not invalidate any Claim made by the Insured, injured person or any other claimant, unless the failure to provide timely notice has prejudiced the Insurer. Failure to give notice within the prescribed time shall not invalidate a Claim if it is shown not to have been reasonably possible to give such notice within the prescribed time and that notice was given as soon as was reasonably possible. This paragraph is included to conform to New York Insurance Law § 3420 and shall be applied in accordance with that law, including as to the burden of establishing prejudice."
+
+2. Section VII.C (Cancellation) is amended to provide that the Insurer may cancel for non-payment of premium only by mailing written notice of cancellation to the Named Insured at least fifteen (15) days before the effective date of cancellation, stating the reason for cancellation.
+
+3. Section VII.G (Action Against the Insurer) is amended to provide that any action against the Insurer must be brought within the period permitted by New York law.
+
+All other terms and conditions of this Policy remain unchanged.
+
+[signature: Martin L. Ashcombe]
+
+Authorized Representative
+
+--- page break ---
+
+ENDORSEMENT NO. 2 — SANCTIONS LIMITATION AND CYBER EXTORTION PAYMENT CONDITIONS ENDORSEMENT
+
+Form HMC-CY 214 (06/23)
+Policy No. HMC-CY-2024-08817 — Named Insured: Larkspur Health Partners, Inc.
+Effective date of endorsement: October 1, 2024
+
+THIS ENDORSEMENT CHANGES THE POLICY. PLEASE READ IT CAREFULLY.
+
+1. Sanctions. The Insurer shall not provide coverage, and shall not be liable to pay any Loss or provide any benefit, to the extent that such coverage, payment or benefit would expose the Insurer to any sanction, prohibition or restriction under the trade or economic sanctions laws or regulations of the United States, including those administered by the Office of Foreign Assets Control of the U.S. Department of the Treasury.
+
+2. Conditions to Payment of Extortion Loss. As a condition of any payment under Insuring Agreement F, the Insured shall: (a) obtain the Insurer's prior written consent to any payment in response to a Cyber Extortion Threat; (b) notify the Federal Bureau of Investigation or other appropriate law enforcement authority before any payment is made; (c) conduct, through a consultant approved by the Insurer, a sanctions screening of the threat actor and any digital currency wallet to which payment is proposed; and (d) take all reasonable steps to determine that the threat is credible and that payment is likely to result in the decryption or non-disclosure of the data concerned.
+
+3. Extortion Threats Against Service Providers. Insuring Agreement F does not apply to any Cyber Extortion Threat made against a Service Provider, even if the threat concerns Personal Information of the Insured's patients or customers held by that Service Provider.
+
+All other terms and conditions of this Policy remain unchanged.
+
+[signature: Martin L. Ashcombe]
+
+Authorized Representative
+
+--- page break ---
+
+ENDORSEMENT NO. 3 — DEPENDENT BUSINESS INCIDENT SUBLIMIT AMENDMENT
+
+Form HMC-CY 330 (03/24)
+Policy No. HMC-CY-2024-08817 — Named Insured: Larkspur Health Partners, Inc.
+Effective date of endorsement: October 1, 2024
+Date of issue: November 14, 2024
+Additional/(return) premium: (USD 6,250.00)
+
+THIS ENDORSEMENT CHANGES THE POLICY. PLEASE READ IT CAREFULLY.
+
+In consideration of the return premium stated above, it is agreed that:
+
+1. Item 3 of the Declarations is amended by deleting the Limit of Liability shown for "E. Dependent Business Incident" (USD 1,500,000) and replacing it with:
+
+| Insuring Agreement | Limit of Liability |
+| E. Dependent Business Incident | USD 500,000 |
+
+2. The Limit of Liability of USD 500,000 stated in paragraph 1 of this endorsement is the maximum aggregate amount the Insurer shall pay for all Dependent Business Loss under Insuring Agreement E during the Policy Period, regardless of the number of Dependent Business Incidents or Service Providers involved. It is part of and not in addition to the Policy Aggregate Limit of Liability.
+
+3. Nothing in this endorsement reduces or otherwise affects the Limits of Liability or sublimits applicable to Insuring Agreements A, B, C, D or F, including where the Loss under such Insuring Agreements arises from an Incident on a Service Provider's Computer System. The Retention and Waiting Period for Insuring Agreement E are unchanged.
+
+4. This endorsement was issued at the request of the Named Insured, through the Producer, following the Insurer's review of the Named Insured's Service Provider schedule submitted on October 22, 2024.
+
+All other terms and conditions of this Policy remain unchanged.
+
+[signature: Martin L. Ashcombe]
+
+Authorized Representative

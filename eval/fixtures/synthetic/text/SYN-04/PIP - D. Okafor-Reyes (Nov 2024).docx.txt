@@ -1,0 +1,81 @@
+Performance Improvement Plan - D. Okafor-Reyes (November 4, 2024)
+(file: PIP - D. Okafor-Reyes (Nov 2024).docx; docx; memo, final)
+
+Performance Improvement Plan
+
+| Employee | Daniela Okafor-Reyes |
+| Employee ID | 10487 |
+| Title / level | Senior Data Scientist (IC4) |
+| Manager | Trevor Albright, Director, Data Science |
+| HR Business Partner | Marisol Gutierrez-Vance |
+| Date issued | November 4, 2024 |
+| PIP period | 60 days: November 4, 2024 - January 3, 2025 |
+| Check-in meetings | November 18, 2024; December 2, 2024; December 16, 2024 |
+| Final review | On or about January 3, 2025 |
+
+1. Purpose
+
+This Performance Improvement Plan ("PIP") identifies specific areas where your performance has not met the expectations for a Senior Data Scientist, sets out the improvement required, and describes the support the Company will provide during the PIP period. The goal of this PIP is to help you succeed in your role.
+
+2. Background
+
+As discussed in our 1:1 on September 12, 2024 (verbal warning), and again in your 2024 mid-year check-in, there have been ongoing concerns about the pace of your delivery on Ledgerline work, your adoption of the Atlas platform stack, and your responsiveness to the team. Since September 23, 2024 your primary responsibility has been the Ledgerline query-layer migration and data validation work, which is on the critical path for our Q1 2025 finance-customer releases. In the October sprints you missed two sprint commitments (LDG-407 and LDG-409), and status on your tickets was often not updated until asked. Atlas onboarding modules assigned to the whole team in August remain incomplete.
+
+3. Areas for Improvement and Objectives
+
+Objective 1 - Ledgerline delivery.
+Deliver LDG-412 (finance dashboard query-layer migration) to code-complete and merged by November 22, 2024, and LDG-418 (data validation suite for the migrated query layer) by December 13, 2024, each meeting the acceptance criteria in the ticket.
+Measure: tickets merged by the due dates with no open blocking review comments.
+
+Objective 2 - Atlas platform adoption.
+Complete Atlas onboarding modules 1 through 4 by December 6, 2024, and ship one feature pipeline (the Ledgerline-to-Atlas revenue feature backfill) to the Atlas staging environment by December 20, 2024.
+Measure: module completion recorded in the learning portal; pipeline running in staging and reviewed by the Atlas tech lead.
+
+Objective 3 - Communication.
+Post a written weekly status update in the #ds-team channel every Friday by 5:00 p.m. PT covering progress, risks and next steps, and attend the daily stand-up (or post an asynchronous update when out).
+Measure: weekly updates posted on time for each week of the PIP period.
+
+Objective 4 - Collaboration and code review.
+Respond to code reviews assigned to you within two (2) business days.
+Measure: average review response time of two business days or less over the PIP period, based on repository data.
+
+4. Support Provided
+
+- Weekly 30-minute pairing session on the Atlas stack with Kevin Strand, Atlas tech lead.
+- Access to the Atlas staging environment and the Atlas onboarding learning path (to be requested by your manager in the first week of the PIP).
+- Biweekly check-in meetings with your manager on the dates listed above; your HR Business Partner may attend.
+- Your manager will review ticket scope with you at each check-in and agree any changes to due dates in writing.
+
+5. Check-ins and Review
+
+At each check-in we will review progress against each objective and record it in BrackNet. At the final review on or about January 3, 2025, your manager and your HR Business Partner will assess whether each objective has been met. Possible outcomes include successful completion of the PIP, an extension of the PIP, or further action.
+
+6. Consequences
+
+Failure to meet the objectives of this PIP, or to sustain the required level of performance after the PIP period, may result in further disciplinary action, up to and including termination of employment. This PIP is issued under Employee Handbook Policies 6.1 and 6.3. Nothing in this PIP changes the at-will nature of your employment, as described in Employee Handbook Policy 2.1 and Section 7 of your Employment Agreement, and nothing in this PIP guarantees employment for the PIP period.
+
+7. Employee Comments
+
+You may add written comments below or attach a separate statement. Your comments will be kept with this PIP in your personnel file.
+
+Employee comments (added 11/04/2024):
+
+"I do not agree with this PIP. I believe it is retaliation for my complaint of October 21, 2024 about Trevor, which HR is still investigating. I have never received a verbal or written warning, including on September 12. The Ledgerline scope was set when I was moved off Atlas on September 23 and LDG-407/409 slipped because the source tables changed. I asked for Atlas staging access in August and still do not have it. I will do my best to meet these objectives but I want this response on file. - DOR"
+
+8. Acknowledgment
+
+Your signature confirms that you have received this PIP and that it has been discussed with you. It does not mean that you agree with it.
+
+Employee: Daniela Okafor-Reyes
+Signature: ______________________ Date: __________
+Employee declined to sign. PIP discussed and copy provided 11/04/2024, 10:00 a.m. - witnessed MGV
+
+Manager:
+[signature: Trevor Albright]
+Trevor Albright, Director, Data Science
+Date: 11/04/2024
+
+HR Business Partner:
+[signature: Marisol Gutierrez-Vance]
+Marisol Gutierrez-Vance, HR Business Partner
+Date: 11/04/2024

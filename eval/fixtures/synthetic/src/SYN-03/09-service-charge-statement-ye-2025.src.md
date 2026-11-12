@@ -1,0 +1,79 @@
+---
+file: Service charge statement YE 24.03.2025.pdf
+title: Service charge statement - year ended 24 March 2025 (Unit 4)
+kind: other
+status: received
+render: pdf
+style: table
+font: sans
+header: QUARRINGTON LAKE PROPERTY MANAGEMENT - MERROW ARCADE, BATH
+---
+
+# Service Charge Certificate and Statement
+
+Merrow Arcade, 18-24 Kingsgate Street, Bath
+
+Accounting Year: 25 March 2024 to 24 March 2025
+
+Landlord: Carrow Hill Property Holdings Limited
+
+Unit: Unit 4 - Tenant: Ashdown & Pryce Retail Limited
+
+Tenant's Share: 6.85% (Lease dated 24 June 2016, Schedule 4, Part 1, paragraph 2.1)
+
+Date of Certificate: 30 June 2025 - Invoice QL/SC/2506-0388
+
+## 1. Service Costs: budget and actual
+
+| Head of expenditure | Budget 2024/25 (£) | Actual 2024/25 (£) | Variance (£) |
+|---|---|---|---|
+| Cleaning and janitorial | 61,500.00 | 63,412.27 | 1,912.27 |
+| Security and CCTV | 74,800.00 | 76,925.40 | 2,125.40 |
+| Repairs and maintenance (general) | 44,000.00 | 51,368.92 | 7,368.92 |
+| Atrium roof glazing - emergency works (note 1) | 0.00 | 86,415.00 | 86,415.00 |
+| Surveyor and CDM fees - atrium works (note 1) | 0.00 | 7,926.00 | 7,926.00 |
+| Mechanical and electrical maintenance | 18,700.00 | 20,144.65 | 1,444.65 |
+| Lift and escalator maintenance | 22,400.00 | 23,960.00 | 1,560.00 |
+| Fire safety systems | 13,900.00 | 14,286.30 | 386.30 |
+| Electricity (common parts) | 41,600.00 | 46,233.81 | 4,633.81 |
+| Water and drainage | 7,800.00 | 7,412.66 | (387.34) |
+| Waste management | 19,200.00 | 20,075.14 | 875.14 |
+| Marketing and events | 23,000.00 | 21,850.00 | (1,150.00) |
+| Seasonal decorations | 6,500.00 | 6,180.00 | (320.00) |
+| Health and safety and risk assessments | 4,600.00 | 4,600.00 | 0.00 |
+| Accountancy and audit | 4,900.00 | 5,150.00 | 250.00 |
+| Management fee | 36,000.00 | 36,000.00 | 0.00 |
+| Sinking fund contribution (note 2) | 15,000.00 | 15,000.00 | 0.00 |
+| Sundries and contingency | 18,100.00 | 12,244.96 | (5,855.04) |
+| **Total Service Costs** | **412,000.00** | **519,185.11** | **107,185.11** |
+
+## 2. Unit 4 - Tenant's Share
+
+| Item | £ |
+|---|---|
+| Tenant's Share of actual Service Costs (6.85% x £519,185.11) | 35,564.18 |
+| Less: payments on account received (4 x £7,055.50, being 6.85% of the budget of £412,000.00) | (28,222.00) |
+| **Balancing charge due from the Tenant** | **7,342.18** |
+
+The balancing charge is payable within 21 days after service of this Certificate (Schedule 4, Part 1, paragraph 5.1), that is by 21 July 2025. VAT will be added at the standard rate where applicable.
+
+## 3. Budget 2025/26
+
+| Item | £ |
+|---|---|
+| Budgeted Service Costs, 25 March 2025 to 24 March 2026 | 430,000.00 |
+| Tenant's Share (6.85%) | 29,455.00 |
+| Quarterly payment on account from 25 March 2025 | 7,363.75 |
+
+## Notes
+
+1. The atrium roof glazing works were emergency works following storm damage on 7 December 2024, when four panes of the atrium roof were lost and a further eleven were cracked. The works comprised temporary weathering, scaffolding and the replacement of fifteen double-glazed units and associated gaskets, carried out between 9 December 2024 and 21 February 2025. The surveyor and CDM fees relate to the specification and supervision of those works. These costs fall within paragraph 3 of Part 2 and paragraph 4 of Part 3 of Schedule 4 to the Lease.
+
+2. The balance of the sinking fund at 24 March 2025 was £61,400.00. No sum was drawn from the sinking fund for the atrium works.
+
+3. Tenants may inspect the invoices and receipts at our offices within three months after service of this Certificate (Schedule 4, Part 1, paragraph 7.1). Please contact the property manager to arrange an appointment.
+
+Certified on behalf of the Landlord by Quarrington Lake Property Management, 2nd Floor, 41 Cheyne Parade, Bath BA1 1HS
+
+[[sign: K. Pilcher]]
+Karen Pilcher, Senior Property Manager - 30/06/2025

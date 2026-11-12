@@ -1,0 +1,34 @@
+Quellcrest invoice QR-INV-2024-117 (Milestone 3, Cells 4-6)
+(file: Invoice QR-INV-2024-117.pdf; pdf; evidence, received)
+
+QUELLCREST ROBOTICS LTD
+Unit 7, Tolland Park, Brackenhurst Road, Coventry CV3 4RZ
+T 01632 960350 | accounts.receivable@quellcrest-robotics.example
+
+TAX INVOICE
+
+| Invoice no. | Invoice date | Customer PO | Customer account |
+| QR-INV-2024-117 | 12/07/2024 | VAR-PO-23-0412 | VAR001 |
+
+Bill to: Varnholt Aerostructures Limited, Accounts Payable, Sinfin Lane Works, Calloway Road, Derby DE24 9GN
+Contract: Supply and Installation Agreement dated 14/03/2023 (as varied)
+Milestone: M3 - Delivery to Site (Schedule 2)
+
+| Line | Description | Delivery note | Delivery date | % of Cell Price | Cell Price (GBP) | Amount (GBP) |
+| 1 | Cell 4 - Milestone 3 (Delivery) | DN-QR-24-0193 | 30/04/2024 | 30% | 810,000.00 | 243,000.00 |
+| 2 | Cell 5 - Milestone 3 (Delivery) | DN-QR-24-0288 | 24/06/2024 | 30% | 810,000.00 | 243,000.00 |
+| 3 | Cell 6 - Milestone 3 (Delivery) | DN-QR-24-0311 | 08/07/2024 | 30% | 810,000.00 | 243,000.00 |
+
+|  | GBP |
+| Subtotal (net) | 729,000.00 |
+| VAT at 20% | 145,800.00 |
+| Total due | 874,800.00 |
+
+Contract summary (net, GBP): Contract Price (as varied by VA1) 6,550,000.00 | Invoiced before this invoice 3,497,000.00 | This invoice 729,000.00 | Invoiced to date 4,226,000.00 | Balance to invoice 2,324,000.00
+
+Payment terms: 30 days. Due date: 11/08/2024.
+Signed delivery notes attached.
+
+Please remit to: Quellcrest Robotics Ltd, Hallam Commercial Bank plc, Coventry branch. Sort code 40-11-62, account 71839204. Please quote the invoice number as reference.
+
+Queries: Lynne Barraclough, Credit Control, accounts.receivable@quellcrest-robotics.example

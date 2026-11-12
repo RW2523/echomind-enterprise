@@ -1,0 +1,98 @@
+Brannock Steele LLP letter of response for Quellcrest (1 November 2024)
+(file: Brannock Steele response 01-11-2024 (scan).pdf; scan; correspondence, received)
+
+[stamp: RECEIVED / 04 NOV 2024 - C&W LLP]
+
+By email (hquinn@calderwynne.example) and first class post
+
+Calder & Wynne LLP
+40 Aldgate Wharf
+London EC3N 4QT
+
+For the attention of Harper Quinn
+
+Your ref: HQ/LB/VAR.0141
+Our ref: BS/CL/QUE.22-118
+Date: 1 November 2024
+
+Dear Sirs
+
+Your client: Varnholt Aerostructures Limited - Our client: Quellcrest Robotics Ltd - Supply and Installation Agreement dated 14 March 2023 - Letter of Response
+
+1. We act for Quellcrest Robotics Ltd ("Quellcrest"). We write in response to your letter of 4 October 2024 (the "Letter of Claim"), which our client received by email the same day. This is our client's letter of response under the Pre-Action Protocol for Construction and Engineering Disputes. Defined terms have the meaning given in the Agreement (as varied by VA1 and VA2) or in your letter. Our client does not respond to every point in the Letter of Claim, and nothing should be taken as admitted by reason of not being addressed.
+
+2. In summary: (a) the Letter of Claim misstates the effect of VA2 and so overstates the Liquidated Damages even on your client's own case; (b) our client is entitled to an extension of time of five weeks for Cells 4, 5 and 6 by reason of Buyer Delay in Bay 3; (c) your client's purported set-off is invalid and in any event far exceeds any Liquidated Damages; and (d) your client is in breach of clause 7.3 by failing to pay invoice QR-INV-2024-131, which our client claims together with interest.
+
+VA2
+
+3. VA2 was signed at your client's premises on 22 July 2024 by Ms Thorne and Mr Whitlow. Before signature, the typed reference in clause 2.1 to "four (4) weeks" was struck through by hand and replaced with "six (6) weeks", and the amendment was initialled by both signatories. A copy of the signed VA2 is enclosed. Your client holds the original.
+
+4. The Planned Acceptance Dates of Cells 5, 6, 7 and 8 are therefore 26 July, 9 August, 23 August and 6 September 2024, not the dates in your table. Even on your client's case as to Bay 3 (which is denied), the Liquidated Damages as at 4 October 2024 would be £163,225, not £196,325: your figures for Cells 5 to 8 are overstated by £33,100.
+
+Bay 3 - Buyer Delay
+
+5. Schedule 5 paragraph 2.2 required the slab within each Cell footprint to be "dry" and "suitable for the installation of post-installed anchors in accordance with" drawing QR-FD-0412 rev B. When our client's site team took readings on 30 April 2024 the slab surface relative humidity was 86 to 89%. On 2 May 2024 three of five trial anchors failed below the 12 kN proof load shown on rev B. The slab was neither dry nor suitable. Rev C of the drawing clarified, but did not change, the requirement.
+
+6. Mr Whitlow's email of 2 May 2024 was a notice under Schedule 5 paragraph 3.2, given on the third Business Day after the Bay Handover Certificate of 29 April 2024. There was accordingly no deemed compliance under paragraph 3.3.
+
+7. Your client then engaged its flooring contractor to apply a moisture-suppressant primer to the Cell 4 to 6 footprints between 13 and 24 May 2024 - work it would hardly have commissioned had the slab been compliant. Re-tests passed on 3 June 2024, and Bay 3 complied with Schedule 5 from that date. The delay was 35 days (29 April to 3 June 2024), that is five weeks.
+
+Clause 11.3
+
+8. Our client became aware of the Buyer Delay on 2 May 2024, when the pull-out tests failed. The readings of 30 April 2024 were preliminary; they did not of themselves show that the slab was unsuitable for anchoring, still less that the Planned Acceptance Dates would be affected. Ms Kowalczyk's internal reference to a call on "4/30" concerned those readings, not any delay. Notice was given on 15 May 2024, within 14 days after 2 May 2024 (the last day being 16 May 2024).
+
+9. As to service, the notice was sent to your client's Contract Manager, with whom all Bay 3 matters had been dealt with, and Mr Whitlow's email stated that a hard copy would follow. Ms Thorne acknowledged it and responded on its merits on 16 May 2024 without taking any point on service. Your client has waived, and is estopped from relying on, any requirement of clause 22.4.
+
+10. Our client is therefore entitled to an extension of five weeks for each of Cells 4, 5 and 6. The extension for Cells 5 and 6 is in addition to the six weeks agreed in VA2, which concerned a different matter (Recital (B) of VA2) and expressly preserved the Bay 3 claim (clause 4.2 of VA2).
+
+Liquidated Damages on our client's case
+
+11. Without admission, and to compare like with like, on our client's case the position as at 4 October 2024 is:
+
+| Cell | Planned Acceptance Date (as extended) | Acceptance | Full weeks | Liquidated Damages (£) |
+| 4 | 5 July 2024 | Not yet Accepted (to 4 October 2024) | 13 | 52,650 |
+| 5 | 30 August 2024 | 20 September 2024 | 3 | 12,150 |
+| 6 | 13 September 2024 | 27 September 2024 | 2 | 8,100 |
+| 7 | 23 August 2024 | 25 September 2024 | 4 | 16,900 |
+| 8 | 6 September 2024 | 1 October 2024 | 3 | 12,675 |
+| Total |  |  |  | 102,475 |
+
+12. The repeat SAT of Cell 4 is scheduled for 8 November 2024. Our client does not accept that the failure of the SAT on 13 August 2024 was attributable to it: the remarks on the SAT Certificate record vibration at station 2, transmitted through the treated slab (NCR-044). The cause of that failure is a Technical Dispute within clause 21.3(a) and paragraph (c) of the definition, which our client reserves the right to refer to an Expert. Your client's reservation of costs under clause 8.7 is premature.
+
+Set-off and the unpaid invoice
+
+13. Invoice QR-INV-2024-131 for Milestone 4 on Cells 1, 2 and 3, in the sum of £729,000 including VAT, fell due on 1 September 2024. Your client did not dispute it under clause 7.4 and gave no notice under clause 7.5 until the Letter of Claim, more than a month after the due date. A set-off of which no notice had been given cannot justify non-payment on the due date.
+
+14. In any event, your client has withheld the entire £729,000 against Liquidated Damages which it put at £196,325 even on its own (overstated) figures. On no view can the balance of £532,675 be withheld. Your client's statement that it will "account for any balance" once Cell 4 is resolved is not an answer: clause 7.5 permits set-off of an amount owed, not the retention of an unrelated sum as security.
+
+15. Our client claims the sum of £729,000, together with statutory interest under the Late Payment of Commercial Debts (Interest) Act 1998 at 8% above the reference rate of 5.25%, that is 13.25% per annum, from 2 September 2024. Interest accrues at £264.64 per day and amounted to £16,142.86 at the date of this letter. Our client also claims fixed-sum compensation of £100 under section 5A of the Act.
+
+16. Our client requires payment of £532,675 on account within 7 days of the date of this letter, without prejudice to its claim for the balance and interest. Failing payment, our client reserves the right to issue proceedings, and to apply for summary judgment, without further notice.
+
+Senior management meeting
+
+17. The 15 Business Day period in clause 21.2 expired on 25 October 2024 without a meeting; the dates offered in your letter were not convenient for Mr Fenn. Our client remains willing to meet, and Mr Fenn and Ms Kowalczyk can attend at Sinfin Lane Works on 19 November 2024.
+
+Documents
+
+18. Please provide copies of: the Bay 3 slab pour records and cube test results; the FM2 survey; any relative humidity readings taken by or for your client; your flooring contractor's method statement, test results and invoices for the May 2024 works; Bay Handover Certificate HC-B3-01; and your client's internal communications concerning the readiness of Bay 3.
+
+19. Our client reserves all its rights, including the right to rely on clause 18 of the Agreement.
+
+Yours faithfully
+
+[signature: Brannock Steele LLP]
+
+Brannock Steele LLP
+
+Contact: Conor Lisle, Senior Associate - c.lisle@brannocksteele.example - DD 01632 960591
+
+Enc. Signed VA2
+
+[handwritten: HQ - signed VA2 says SIX weeks - our table used 4!]
+
+[handwritten: LB pls check vs RT's scan + recalc 5-8 and Cell 4 to date.]
+
+[handwritten: Inv 131 due date - 1/9 or 4/9? HQ 4/11]
+
+Brannock Steele LLP is a limited liability partnership registered in England and Wales (OC405519), authorised and regulated by the Solicitors Regulation Authority.

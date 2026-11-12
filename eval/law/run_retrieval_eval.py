@@ -7,7 +7,8 @@
 Run against a PRIVATE copy of the demo (its API container): the script copies itself into the container and runs there,
 with the backend's code and data, then writes eval/law/reports/<time>-retrieval-<label>.json and .md on the host.
 
-Relevance comes from the answer keys (eval/fixtures/demo/answer_key_*.jsonl), whose `evidence` is the documents' exact
+Relevance comes from the answer keys (eval/fixtures/demo/answer_key_*.jsonl, or --key-files: since 2026-11-12 also the synthetic
+set in eval/fixtures/synthetic), whose `evidence` is the documents' exact
 words, checked against each document when the set was made: an evidence segment (pieces joined by " | ") is found in a
 passage of its own document (`source`, and the `also` entries) when the passage holds every "…"-piece of it, or, for a
 segment the chunking splits, its longest piece. Each item is searched the way research searches it (the question with the
@@ -234,7 +235,11 @@ def mean(xs):
 
 
 def host(args) -> int:
-    keys = sorted((ROOT / "eval" / "fixtures" / "demo").glob("answer_key_*.jsonl"))
+    keys = sorted({p for g in args.key_files.split(",") if g for p in ROOT.glob(g)}) if args.key_files \
+        else sorted((ROOT / "eval" / "fixtures" / "demo").glob("answer_key_*.jsonl"))
+    if not keys:
+        print(f"no answer keys match {args.key_files}", file=sys.stderr)
+        return 2
     tmp = "/tmp/reval"
     subprocess.run(["docker", "exec", args.container, "mkdir", "-p", tmp], check=True)
     joined = Path(f"/tmp/reval-{os.getpid()}.jsonl")
@@ -309,6 +314,8 @@ def main() -> int:
     ap.add_argument("--search-only", action="store_true", help="the search stages only, not the answer model's context (fast)")
     ap.add_argument("--limit", type=int, default=0, help="the first N single-turn items only (a slow reranker's benchmark)")
     ap.add_argument("--inside", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("--key-files", default="", help="other answer keys: comma-separated globs from the repository root; "
+                                                    "default the demo's")
     ap.add_argument("--keys", default="", help=argparse.SUPPRESS)
     ap.add_argument("--out", default="", help=argparse.SUPPRESS)
     args = ap.parse_args()

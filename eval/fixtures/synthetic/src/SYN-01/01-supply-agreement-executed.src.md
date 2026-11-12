@@ -1,0 +1,657 @@
+---
+file: Supply and Installation Agreement - EXECUTED VERSION.docx
+title: Supply and Installation Agreement - Varnholt / Quellcrest (executed version)
+kind: contract
+status: executed
+render: docx
+style: contract
+font: serif
+numbering: auto
+header: VARNHOLT / QUELLCREST - SUPPLY AND INSTALLATION AGREEMENT - CONFIDENTIAL
+footer: CW/VAR/0141 - Execution version
+---
+# SUPPLY AND INSTALLATION AGREEMENT
+
+Dated ________ 2023
+
+VARNHOLT AEROSTRUCTURES LIMITED
+as Buyer
+
+and
+
+QUELLCREST ROBOTICS LTD
+as Supplier
+
+relating to the design, manufacture, supply, delivery, installation, testing and commissioning of six robotic drilling and fastening cells at Sinfin Lane Works, Derby
+
+Calder & Wynne LLP
+40 Aldgate Wharf
+London EC3N 4QT
+Ref: CW/VAR/0141
+
+<<<PAGE>>>
+
+THIS AGREEMENT is dated ________ 2023
+
+## PARTIES
+
+(1) VARNHOLT AEROSTRUCTURES LIMITED, incorporated and registered in England and Wales with company number 07731846, whose registered office is at Sinfin Lane Works, Calloway Road, Derby DE24 9GN (the "Buyer"); and
+
+(2) QUELLCREST ROBOTICS LTD, incorporated and registered in England and Wales with company number 10482277, whose registered office is at Unit 7, Tolland Park, Brackenhurst Road, Coventry CV3 4RZ (the "Supplier"),
+
+each a "Party" and together the "Parties".
+
+## BACKGROUND
+
+(A) The Buyer manufactures wing ribs and spars at Sinfin Lane Works, Derby, and wishes to automate the drilling and fastening of its A-series rib family.
+
+(B) The Supplier, a subsidiary of Quellcrest Automation Inc. of Ohio, designs and installs robotic drilling and fastening systems.
+
+(C) Following a tender, the Buyer has agreed to purchase and the Supplier to supply and install six such cells on the terms of this Agreement.
+
+## AGREED TERMS
+
+1. DEFINITIONS AND INTERPRETATION
+
+1.1 The definitions and rules of interpretation in this clause 1 apply in this Agreement.
+
+"Acceptance" means, in respect of a Cell, the successful completion of the SAT for that Cell in accordance with clause 8, and "Accepted" shall be construed accordingly. The date of Acceptance is determined in accordance with clause 8.8.
+
+"Acceptance Certificate" means a certificate issued by the Buyer under clause 8.8 recording the Acceptance of a Cell.
+
+"Applicable Law" means all laws, regulations and binding codes of practice in force in England from time to time, including the Supply of Machinery (Safety) Regulations 2008.
+
+"Authorised Representative" has the meaning given in clause 12.3.
+
+"Background IPR" means Intellectual Property Rights of a Party existing before the date of this Agreement or developed independently of it.
+
+"Bay" means each of Bay 2 and Bay 3 of the main production hall at the Site, as shown on the Buyer's drawing VAR-SL-GA-002 rev D, and "Bay 2" and "Bay 3" shall be construed accordingly.
+
+"Bay Handover Certificate" means a certificate issued by the Buyer under paragraph 3.1 of Schedule 5.
+
+"Business Day" means a day other than a Saturday, a Sunday or a public holiday in England.
+
+"Business Hours" means the period from 9.00 am to 5.30 pm on any Business Day.
+
+"Buyer Delay" means any of the following, to the extent that it delays the Supplier in achieving Acceptance of a Cell by its Planned Acceptance Date: (a) a failure by the Buyer to make a Bay available to the Supplier, in a condition that complies with the Site Readiness Requirements, by the Site Readiness Date for that Bay; (b) any breach by the Buyer of its obligations under this Agreement; (c) a Variation requested by the Buyer which the Parties agree in writing affects the Timetable; or (d) any other act of prevention by the Buyer or by any contractor of the Buyer (other than the Supplier and its subcontractors).
+
+"Cell" means each of the six robotic drilling and fastening cells, numbered Cell 1 to Cell 6, to be supplied under this Agreement, each comprising the equipment, Software and Documentation described in Schedule 1.
+
+"Cell Price" means, in respect of each Cell, the sum of eight hundred and ten thousand pounds sterling (£810,000).
+
+"Confidential Information" has the meaning given in clause 14.1.
+
+"Contract Manager" means, for the Buyer, Rhiannon Thorne (Head of Manufacturing Engineering) and, for the Supplier, Gary Whitlow (Director - Projects), or in either case such other person as that Party may appoint by notice to the other.
+
+"Contract Price" means the price payable for the Cells set out in clause 6.1, as adjusted from time to time in accordance with this Agreement.
+
+"Defect" means any defect in design, materials or workmanship, or any failure of a Cell to conform to the Specification.
+
+"Delivery" means delivery of a Cell to the relevant Bay at the Site in accordance with clause 5, evidenced by a delivery note signed on behalf of the Buyer, and "Delivered" shall be construed accordingly.
+
+"Dispute" means any dispute or difference between the Parties arising out of or in connection with this Agreement.
+
+"Dispute Notice" has the meaning given in clause 21.1.
+
+"Documentation" means the operating and maintenance manuals, schematics, software back-ups, declarations of conformity and test records for each Cell.
+
+"Expert" means an independent expert appointed in accordance with clause 21.4.
+
+"FAT" means the factory acceptance tests for a Cell described in Part C of Schedule 1, carried out at the Supplier's premises in Coventry.
+
+"FAT Certificate" means the certificate issued by the Buyer under clause 8.3.
+
+"Force Majeure Event" has the meaning given in clause 20.1.
+
+"Foreground IPR" means Intellectual Property Rights created by or on behalf of the Supplier in the course of performing this Agreement.
+
+"Good Industry Practice" means the skill, care and foresight reasonably expected of a skilled and experienced supplier of automated aerospace assembly equipment.
+
+"Group Company" means a company's subsidiaries and holding companies and their subsidiaries.
+
+"Insolvency Event" means, in relation to a Party, an arrangement with its creditors, the appointment of an administrator, receiver or liquidator, a winding-up resolution (other than for a solvent reconstruction) or any analogous event.
+
+"Intellectual Property Rights" means patents, copyright, design rights, rights in software, database rights, know-how and all other intellectual property rights, registered or unregistered, anywhere in the world.
+
+"Liquidated Damages" means the liquidated damages payable under clause 9 and Schedule 4.
+
+"Milestone" means each payment milestone set out in Schedule 2, and "Milestone Payment" means the amount payable on the achievement of a Milestone.
+
+"Planned Acceptance Date" means, for each Cell, the date set out against that Cell in Schedule 3, as that date may be extended in accordance with clause 11 or clause 20 or by a Variation.
+
+"Programme" means the Supplier's programme for the Works prepared and updated in accordance with clause 4.1.
+
+"SAT" means the site acceptance tests for a Cell described in Part C of Schedule 1, carried out at the Site.
+
+"SAT Certificate" means the test record, in the Supplier's form QRL-F-SAT-02, completed and signed by both Parties at the conclusion of each SAT.
+
+"Site" means the Buyer's premises at Sinfin Lane Works, Calloway Road, Derby DE24 9GN.
+
+"Site Readiness Date" means, for each Bay, the date set out against that Bay in paragraph 1 of Schedule 5.
+
+"Site Readiness Requirements" means the requirements set out in paragraph 2 of Schedule 5.
+
+"Software" means the cell control software (including the Supplier's QC-Fasten application), robot programs, PLC code, vision recipes and all updates to them supplied with or for a Cell.
+
+"Specification" means the specification set out in Schedule 1.
+
+"Supplier Personnel" means all employees, agents, consultants and subcontractors of the Supplier engaged in the Works.
+
+"Technical Dispute" means a Dispute as to: (a) whether a Cell conforms to the Specification; (b) whether a Cell has passed, or ought to have passed, any FAT or SAT; (c) the cause of the failure of any FAT or SAT; or (d) any other matter which the Parties agree in writing to refer to an Expert.
+
+"Test Specification" means Part C of Schedule 1.
+
+"Timetable" means the dates and periods set out in clause 4.2 and Schedule 3.
+
+"Variation" means a variation to this Agreement agreed in accordance with clause 12.
+
+"VAT" means value added tax chargeable under the Value Added Tax Act 1994 and any similar replacement tax.
+
+"Warranty Period" has the meaning given in clause 15.1.
+
+"Works" means all work, services and things to be done or supplied by the Supplier under this Agreement.
+
+1.2 In this Agreement, unless the context otherwise requires:
+
+(a) clause, Schedule and paragraph headings shall not affect the interpretation of this Agreement;
+
+(b) the Schedules form part of this Agreement and shall have effect as if set out in full in the body of this Agreement;
+
+(c) a person includes a corporate or unincorporated body;
+
+(d) a reference to a company includes any body corporate, wherever incorporated;
+
+(e) words in the singular shall include the plural and vice versa;
+
+(f) a reference to a statute is to it as amended or re-enacted from time to time;
+
+(g) a reference to writing or written includes email, subject to clause 22.4;
+
+(h) where a period is expressed to run from or after a given day, act or event, it shall be calculated exclusive of that day, and a reference to "days" is to calendar days unless Business Days are specified;
+
+(i) the words "including" and "in particular" are illustrative and do not limit the preceding words;
+
+(j) a reference to this Agreement is to it as varied from time to time in accordance with clause 12;
+
+(k) any obligation on a Party not to do something includes an obligation not to allow that thing to be done; and
+
+(l) a reference to the Site includes each Bay.
+
+1.3 If there is any conflict or inconsistency between the clauses and the Schedules, the clauses shall prevail. If there is any conflict or inconsistency between the Schedules, the Schedule with the lower number shall prevail, save that Schedule 3 shall prevail over Schedule 1 as to dates.
+
+2. SUPPLY OF THE CELLS
+
+2.1 The Buyer appoints the Supplier, and the Supplier agrees, to design, manufacture, supply, deliver, install, test and commission the Cells and to carry out the Works in accordance with this Agreement.
+
+2.2 The Supplier shall carry out the Works in accordance with the Specification, the Programme, Good Industry Practice and Applicable Law, so that each Cell bears UKCA marking and is accompanied by a declaration of conformity on Delivery.
+
+2.3 The Supplier is responsible for the design of each Cell and its fitness to meet Part B of Schedule 1, notwithstanding any review by the Buyer.
+
+2.4 The Supplier shall supply the Documentation for each Cell not later than its Delivery, and shall deliver the training and spares described in Part E of Schedule 1.
+
+2.5 The Supplier shall procure that its subcontractors and suppliers (including the suppliers of robots and spindles) deliver in time to meet the Timetable, and is responsible for their acts and omissions as if they were its own.
+
+3. THE SITE AND THE BUYER'S OBLIGATIONS
+
+3.1 The Buyer shall make each Bay available to the Supplier, in a condition that complies with the Site Readiness Requirements, by the Site Readiness Date for that Bay.
+
+3.2 The Buyer shall give the Supplier Personnel reasonable access to the Site during Business Hours and provide, free of charge, the services described in Schedule 5.
+
+3.3 The Supplier shall procure that the Supplier Personnel comply with the Buyer's site rules and permit-to-work system.
+
+3.4 The Supplier acknowledges that it has inspected the Site and, save as expressly provided in this Agreement, shall not be entitled to any extension of time or additional payment for any matter it could reasonably have foreseen from that inspection.
+
+4. TIMETABLE
+
+4.1 The Supplier shall submit the Programme to the Buyer within twenty (20) Business Days after the date of this Agreement and shall update it at least monthly. The Programme shall show the sequence and timing of design, manufacture, FAT, Delivery, installation, SAT and Acceptance of each Cell.
+
+4.2 Without prejudice to clause 4.1, the Supplier shall:
+
+(a) complete the FAT of each Cell not later than eight (8) weeks before its Planned Acceptance Date;
+
+(b) achieve Delivery of each Cell not later than four (4) weeks before its Planned Acceptance Date; and
+
+(c) achieve Acceptance of each Cell on or before its Planned Acceptance Date, as set out in Schedule 3.
+
+4.3 The Contract Managers shall meet at least monthly to review progress against the Programme.
+
+4.4 If the Supplier becomes aware that it is likely to miss any date in the Timetable, it shall promptly notify the Buyer and within ten (10) Business Days submit a recovery plan, without prejudice to clause 9.
+
+5. DELIVERY AND INSTALLATION
+
+5.1 The Supplier shall deliver each Cell DDP (Incoterms 2020) to the relevant Bay and shall be responsible for offloading, positioning, anchoring, levelling and connecting it.
+
+5.2 The Supplier shall give the Buyer not less than five (5) Business Days' written notice of each proposed Delivery.
+
+5.3 Each Delivery shall be accompanied by a delivery note stating the Cell number and the purchase order number. The Buyer's signature of a delivery note is evidence of receipt only and not of acceptance.
+
+5.4 Following Delivery, the Supplier shall install and commission the Cell in accordance with the Programme and shall notify the Buyer when the Cell is ready for SAT.
+
+6. CONTRACT PRICE
+
+6.1 The Contract Price is four million eight hundred and sixty thousand pounds sterling (£4,860,000), being a Cell Price of £810,000 for each of the six Cells.
+
+6.2 The Contract Price and all other sums payable under this Agreement are exclusive of VAT, which shall be payable in addition at the applicable rate.
+
+6.3 The Contract Price is fixed and firm and is inclusive of all design, manufacture, packaging, transport, insurance in transit, installation, commissioning, testing, Documentation, training, the spares listed in Part E of Schedule 1, travel and subsistence, and all other costs and expenses of the Supplier.
+
+6.4 The Contract Price may be adjusted only by a Variation agreed in accordance with clause 12.
+
+7. PAYMENT
+
+7.1 The Supplier may invoice each Milestone Payment on or after the achievement of the relevant Milestone in accordance with Schedule 2. An invoice may cover the same Milestone for more than one Cell.
+
+7.2 An invoice is valid only if it: (a) quotes the Buyer's purchase order number; (b) identifies the Milestone and the Cell or Cells to which it relates; (c) states the amount calculated in accordance with Schedule 2; (d) states VAT separately; and (e) is accompanied by the evidence specified in Schedule 2. Invoices shall be sent by email to accounts.payable@varnholt-aero.example or by post to Accounts Payable at the Site.
+
+7.3 The Buyer shall pay each valid invoice within thirty (30) days after the date of its receipt by the Buyer.
+
+7.4 If the Buyer disputes any invoice or part of an invoice, it shall notify the Supplier in writing within ten (10) Business Days after its receipt, giving reasons, and shall pay any undisputed part in accordance with clause 7.3. The Dispute shall be resolved in accordance with clause 21.
+
+7.5 The Buyer may set off any amount owed to it by the Supplier under this Agreement, including Liquidated Damages under clause 9, against any amount payable by it to the Supplier under this Agreement, provided that the Buyer gives the Supplier written notice of the amount set off and the basis on which it has been calculated.
+
+7.6 If a Party fails to pay any undisputed sum by its due date, it shall pay interest on the overdue sum from the due date until the date of actual payment, whether before or after judgment, at the rate of three per cent (3%) per annum above the Bank of England's base rate from time to time, accruing daily. The Parties agree that this clause 7.6 constitutes a substantial remedy for late payment for the purposes of the Late Payment of Commercial Debts (Interest) Act 1998.
+
+7.7 VAT shall be payable on receipt of a valid VAT invoice.
+
+7.8 No payment by the Buyer shall constitute acceptance of any Cell or of any part of the Works, or a waiver of any of the Buyer's rights.
+
+8. TESTING: FAT AND SAT
+
+8.1 Each Cell shall be tested in accordance with the Test Specification. The Supplier shall provide all labour, instruments and test coupons.
+
+8.2 The Supplier shall give the Buyer not less than ten (10) Business Days' written notice of the date of each FAT. The Buyer may attend and witness each FAT and each SAT.
+
+8.3 If a Cell passes the FAT, the Buyer shall issue a FAT Certificate within three (3) Business Days.
+
+8.4 If a Cell fails the FAT, the Supplier shall promptly remedy the failure and repeat the FAT within fifteen (15) Business Days, at its own cost. The FAT Milestone Payment shall not become due until a FAT Certificate has been issued.
+
+8.5 No Cell shall be Delivered until a FAT Certificate has been issued for it, unless the Buyer agrees otherwise in writing.
+
+8.6 When a Cell has been installed and commissioned, the SAT shall be carried out on a date agreed between the Contract Managers. The results of each SAT shall be recorded on a SAT Certificate signed by both Parties.
+
+8.7 If a Cell fails the SAT, the Supplier shall promptly remedy the failure and the SAT shall be repeated. The Supplier shall reimburse the Buyer's reasonable costs of attending and supporting any repeat SAT.
+
+8.8 Acceptance of a Cell shall occur on the date on which that Cell successfully completes the SAT, as recorded in the Acceptance Certificate. The Buyer shall issue the Acceptance Certificate within five (5) Business Days after that date, and shall not unreasonably withhold or delay it.
+
+8.9 If the Buyer uses a Cell for commercial production (other than for the purposes of testing, training or trial runs) for more than ten (10) consecutive Business Days before Acceptance, that Cell shall be deemed to have been Accepted on the tenth such Business Day.
+
+8.10 Acceptance shall not relieve the Supplier of liability for any Defect.
+
+9. LIQUIDATED DAMAGES
+
+9.1 If Acceptance of a Cell has not occurred by its Planned Acceptance Date, the Supplier shall pay the Buyer Liquidated Damages for each full week in the period from the Planned Acceptance Date until the date of Acceptance of that Cell, calculated in accordance with Schedule 4.
+
+9.2 Liquidated Damages shall be payable at the rate of zero point five per cent (0.5%) of the Cell Price of the delayed Cell for each full week of delay.
+
+9.3 The Parties confirm that the Liquidated Damages are proportionate to the Buyer's legitimate interest in the timely Acceptance of the Cells, are a genuine pre-estimate of the loss likely to be suffered by the Buyer, and are not a penalty.
+
+9.4 The payment of Liquidated Damages shall be the Buyer's sole and exclusive financial remedy for delay by the Supplier in achieving Acceptance of a Cell by its Planned Acceptance Date, without prejudice to the Buyer's rights under clause 8.7 and clause 19.
+
+9.5 The total Liquidated Damages payable in respect of any Cell shall not exceed ten per cent (10%) of the Cell Price of that Cell.
+
+9.6 The Buyer may deduct Liquidated Damages from any sum due to the Supplier in accordance with clause 7.5, or may recover them from the Supplier as a debt.
+
+10. TITLE AND RISK
+
+10.1 Title in each Cell shall pass to the Buyer on the earlier of its Delivery and the payment of the FAT Milestone Payment for that Cell.
+
+10.2 Risk in each Cell shall remain with the Supplier until its Acceptance and shall then pass to the Buyer.
+
+10.3 The Supplier warrants that it will have full and unencumbered title to each Cell at the time title passes to the Buyer.
+
+11. EXTENSION OF TIME
+
+11.1 If the Supplier is, or will be, delayed in achieving Acceptance of any Cell by its Planned Acceptance Date by reason of a Buyer Delay, the Supplier shall, subject to and in accordance with this clause 11, be entitled to such extension of the Planned Acceptance Date of each affected Cell as is fair and reasonable.
+
+11.2 For the avoidance of doubt, a Buyer Delay includes the failure of a Bay to comply with the Site Readiness Requirements at its Site Readiness Date, subject to paragraph 3 of Schedule 5.
+
+11.3 It shall be a condition precedent to the Supplier's entitlement to any extension of time under this clause 11 that the Supplier gives written notice to the Buyer within fourteen (14) days after the date on which the Supplier became aware of the Buyer Delay, stating the cause of the delay, the Cell or Cells affected and, so far as then practicable, the anticipated effect on the Planned Acceptance Date of each affected Cell. If the Supplier fails to give notice in accordance with this clause 11.3, the Supplier shall not be entitled to any extension of time in respect of that Buyer Delay and the Buyer shall be released from all liability in respect of it.
+
+11.4 Within ten (10) Business Days after giving notice under clause 11.3, the Supplier shall provide such further particulars and supporting evidence as the Buyer may reasonably require.
+
+11.5 The Buyer shall notify the Supplier of its decision on the extension of time (if any) within fifteen (15) Business Days after receipt of the particulars under clause 11.4.
+
+11.6 The Supplier shall use all reasonable endeavours to prevent and minimise any delay, including by re-sequencing the Works where practicable.
+
+11.7 Where a delay to a Cell is caused concurrently by a Buyer Delay and by any matter for which the Supplier is responsible (including any failure by its subcontractors or suppliers), the Supplier shall be entitled to an extension of time only to the extent that the delay caused by the Buyer Delay exceeds the delay caused by that matter.
+
+11.8 Extensions of time for a Force Majeure Event shall be dealt with under clause 20.
+
+11.9 Save as provided in this clause 11, in clause 20 or by a Variation, the Supplier shall not be entitled to any extension of a Planned Acceptance Date.
+
+12. VARIATIONS
+
+12.1 The Buyer may request a change to the Works (a "Change Request"). Within ten (10) Business Days the Supplier shall notify the Buyer of its effect (if any) on the Contract Price, the Specification and the Timetable.
+
+12.2 No Variation of this Agreement (including any change to the Contract Price, the Specification, the Timetable or any Planned Acceptance Date) shall be effective unless it is in writing, expressly states that it varies this Agreement and is signed by an Authorised Representative of each Party.
+
+12.3 For the purposes of clause 12.2, a Party's Authorised Representative is any director of that Party or, in respect of a Variation which does not increase the Contract Price, its Contract Manager.
+
+12.4 The Supplier shall not be entitled to any payment for any change to the Works that has not been agreed in accordance with this clause 12.
+
+13. INTELLECTUAL PROPERTY
+
+13.1 Each Party shall retain ownership of its Background IPR. Save as set out in this clause 13, nothing in this Agreement transfers any Intellectual Property Rights.
+
+13.2 The Supplier grants the Buyer a non-exclusive, perpetual, irrevocable, royalty-free licence to use, copy for back-up and modify the Software and the Supplier's Background IPR embodied in the Cells for the purposes of operating, maintaining and relocating the Cells.
+
+13.3 Foreground IPR in fixtures, jigs and programs created specifically for the Buyer's parts shall vest in the Buyer, and the Supplier assigns it to the Buyer with full title guarantee. Other Foreground IPR vests in the Supplier and is licensed under clause 13.2.
+
+13.4 The Supplier warrants that the Buyer's use of the Cells and Software will not infringe any third party's Intellectual Property Rights.
+
+14. CONFIDENTIALITY
+
+14.1 "Confidential Information" means all confidential information disclosed by one Party to the other in connection with this Agreement, including its terms, the Buyer's part designs and production data, and the Supplier's source code and know-how.
+
+14.2 Each Party shall keep the other's Confidential Information confidential, use it only for the purposes of this Agreement and disclose it only to those of its and its Group Companies' employees, advisers, insurers and subcontractors who need to know it and are bound by equivalent obligations.
+
+14.3 Clause 14.2 does not apply to information which is public (other than by breach), was lawfully held before disclosure, or must be disclosed by law or by a court or regulator.
+
+14.4 This clause 14 shall survive for five (5) years after the expiry of the last Warranty Period or the earlier termination of this Agreement.
+
+15. WARRANTY
+
+15.1 The Supplier warrants each Cell for a period of twenty-four (24) months from the date of Acceptance of that Cell (the "Warranty Period").
+
+15.2 The Supplier warrants that each Cell shall, throughout its Warranty Period: (a) conform to the Specification, including the performance requirements in Part B of Schedule 1; (b) be free from Defects; and (c) be fit for the purpose of drilling and fastening the Buyer's parts described in Schedule 1.
+
+15.3 The Supplier shall remedy any Defect notified during the Warranty Period at its own cost, within the response and rectification times set out in Part E of Schedule 1.
+
+15.4 Any part repaired or replaced under this clause 15 shall be warranted for twelve (12) months from its repair or replacement or until the end of the Warranty Period, whichever is later, provided that no Warranty Period shall extend beyond thirty-six (36) months from Acceptance of the relevant Cell.
+
+15.5 Clause 15 does not apply to fair wear and tear or to Defects caused by the Buyer's failure to follow the Documentation or by unapproved modification.
+
+16. INSURANCE
+
+16.1 The Supplier shall maintain with reputable insurers: (a) public liability insurance of not less than £10,000,000 per occurrence; (b) employer's liability insurance of not less than £10,000,000 per occurrence; (c) product liability insurance of not less than £5,000,000 in the aggregate; and (d) professional indemnity insurance of not less than £5,000,000 per claim and in the aggregate.
+
+16.2 The Supplier shall insure each Cell for its full replacement value against all risks until Acceptance, including in transit, and shall maintain the insurance in clause 16.1(d) for six (6) years after Acceptance of the last Cell.
+
+17. INDEMNITIES
+
+17.1 The Supplier shall indemnify the Buyer against all liabilities, costs, expenses, damages and losses (including reasonable legal fees) suffered or incurred by the Buyer arising out of any claim that the receipt or use of the Cells, the Software or the Documentation infringes the Intellectual Property Rights of a third party.
+
+17.2 The Supplier shall indemnify the Buyer against all liabilities, costs, expenses, damages and losses arising out of the death of or personal injury to any person, or loss of or damage to property, caused by the negligence or breach of statutory duty of the Supplier or the Supplier Personnel at the Site.
+
+17.3 The Buyer shall promptly notify the Supplier of any claim under clause 17.1 and allow it the conduct of the claim at its cost.
+
+18. LIMITATION OF LIABILITY
+
+18.1 Nothing in this Agreement limits or excludes either Party's liability: (a) for death or personal injury caused by its negligence; (b) for fraud or fraudulent misrepresentation; (c) in the case of the Supplier, under the indemnity in clause 17.1; or (d) for any other liability which cannot be limited or excluded by Applicable Law.
+
+18.2 Subject to clauses 18.1 and 18.3, the Supplier's total aggregate liability under or in connection with this Agreement, whether arising in contract, tort (including negligence), breach of statutory duty or otherwise, shall not exceed an amount equal to one hundred per cent (100%) of the Contract Price.
+
+18.3 Liquidated Damages paid or payable under clause 9 are subject to the limit in clause 9.5 and shall not count towards, or be included in, the limit in clause 18.2.
+
+18.4 Subject to clause 18.1, the Buyer's total aggregate liability under or in connection with this Agreement, other than its obligation to pay the Contract Price and interest under clause 7.6, shall not exceed twenty per cent (20%) of the Contract Price.
+
+18.5 Subject to clause 18.1, neither Party shall be liable to the other for any loss of profit, loss of revenue, loss of production, loss of business, loss of goodwill or anticipated savings, or for any indirect or consequential loss, provided that this clause 18.5 shall not exclude or limit the Supplier's liability to pay Liquidated Damages or to reimburse costs under clause 8.7.
+
+19. TERMINATION
+
+19.1 Either Party may terminate this Agreement with immediate effect by notice to the other if the other suffers an Insolvency Event.
+
+19.2 The Buyer may terminate this Agreement, in whole or in respect of any affected Cell only, by notice to the Supplier if:
+
+(a) the Supplier commits a material breach of this Agreement which is not remedied within thirty (30) days after notice requiring it to be remedied;
+
+(b) the maximum Liquidated Damages under clause 9.5 have become payable in respect of that Cell; or
+
+(c) that Cell fails the SAT on three (3) occasions.
+
+19.3 The Supplier may terminate this Agreement by notice if the Buyer fails to pay any undisputed sum within sixty (60) days after receipt of notice from the Supplier that the sum is overdue.
+
+19.4 On termination in respect of a Cell under clause 19.2, the Supplier shall repay the Milestone Payments made for that Cell, less the reasonable value of any part the Buyer elects to retain, and the Buyer may recover the reasonable additional cost of a replacement cell, subject to clause 18.
+
+19.5 Termination shall not affect accrued rights. Clauses 7.5, 7.6, 9, 13, 14, 17, 18, 21, 22 and 28 survive termination.
+
+20. FORCE MAJEURE
+
+20.1 A "Force Majeure Event" means an event beyond the reasonable control of the affected Party, including fire, flood, epidemic, war, terrorism or a national strike, but excluding industrial action of its own or its subcontractors' workforce and any failure or delay of a subcontractor or supplier not itself caused by a Force Majeure Event.
+
+20.2 A Party affected by a Force Majeure Event shall notify the other within five (5) Business Days after becoming aware of it and mitigate its effect. Provided it does so, it shall not be in breach to the extent its performance is prevented or delayed, and the affected Planned Acceptance Dates shall be extended by such period as is fair and reasonable.
+
+20.3 If a Force Majeure Event prevents performance for more than ninety (90) consecutive days, either Party may terminate this Agreement in respect of any Cell not yet Delivered by notice to the other.
+
+21. DISPUTE RESOLUTION
+
+21.1 Either Party may give the other written notice of a Dispute (a "Dispute Notice"), setting out its nature and full particulars.
+
+21.2 Within fifteen (15) Business Days after the date of a Dispute Notice, the Managing Director of the Buyer and the Managing Director of the Supplier (who may be accompanied by the VP Programs of Quellcrest Automation Inc.) shall meet in good faith to attempt to resolve the Dispute.
+
+21.3 If the Dispute is not resolved within fifteen (15) Business Days after the date of the Dispute Notice:
+
+(a) if it is a Technical Dispute, either Party may refer it to an Expert under clause 21.4; and
+
+(b) any other Dispute shall be resolved in accordance with clause 21.5.
+
+21.4 The Expert shall be an independent engineer experienced in automated assembly systems, agreed by the Parties or, failing agreement within ten (10) Business Days, nominated on the application of either Party by the President for the time being of the Society of Expert Engineers. The Expert shall act as an expert and not as an arbitrator, and his or her determination shall be final and binding save for fraud or manifest error. The Expert's fees shall be borne equally unless the Expert directs otherwise.
+
+21.5 Subject to clauses 21.2 to 21.4, the courts of England and Wales shall have exclusive jurisdiction to settle any Dispute, and the Parties agree that any proceedings shall be commenced in the Technology and Construction Court.
+
+21.6 Nothing in this clause 21 shall prevent either Party from seeking urgent injunctive or other interim relief.
+
+21.7 The Parties shall continue to perform their obligations under this Agreement pending the resolution of any Dispute.
+
+22. NOTICES
+
+22.1 Any notice given under or in connection with this Agreement shall be in writing, in English, and shall be delivered by hand, sent by pre-paid first-class post or recorded delivery, or sent by email, to the address set out in clause 22.2.
+
+22.2 The addresses for service of notices are:
+
+(a) the Buyer: Varnholt Aerostructures Limited, Sinfin Lane Works, Calloway Road, Derby DE24 9GN, marked for the attention of the Company Secretary; email: company.secretary@varnholt-aero.example; with a copy to the Buyer's Contract Manager; and
+
+(b) the Supplier: Quellcrest Robotics Ltd, Unit 7, Tolland Park, Brackenhurst Road, Coventry CV3 4RZ, marked for the attention of the Managing Director; email: legal@quellcrest-robotics.example; with a copy (which shall not constitute notice) to Quellcrest Automation Inc., 4100 Corbel Avenue, Dayton, Ohio 45414, USA, for the attention of the VP Programs,
+
+or such other address as a Party may notify to the other in accordance with this clause 22.
+
+22.3 A notice shall be deemed to have been received: (a) if delivered by hand, at the time it is left at the address; (b) if sent by pre-paid first-class post or recorded delivery, at 9.00 am on the second Business Day after posting; and (c) if sent by email, at the time of transmission or, if that time falls outside Business Hours, at 9.00 am on the next Business Day.
+
+22.4 Communications relating to the day-to-day management of the Works, including programme updates, test notices and Site matters, may be sent by email between the Contract Managers. Any notice under clause 11, clause 19 or clause 21 shall be given in accordance with clauses 22.1 to 22.3, and shall not be validly given by email to the Contract Manager alone.
+
+23. ASSIGNMENT AND SUBCONTRACTING
+
+23.1 Neither Party may assign or transfer its rights or obligations under this Agreement without the other's prior written consent, save that the Buyer may assign the benefit of clause 15 to a Group Company or a purchaser of the Cells.
+
+23.2 The Supplier shall not subcontract the installation or testing of any Cell without the Buyer's prior written consent (not to be unreasonably withheld).
+
+24. ENTIRE AGREEMENT
+
+24.1 This Agreement constitutes the entire agreement between the Parties and supersedes all previous drafts, agreements and understandings relating to its subject matter, including the Supplier's quotation QR-Q-2211 rev 4 dated 6 January 2023 and all tender correspondence.
+
+24.2 Neither Party relies on any statement or representation not set out in this Agreement. Nothing in this clause 24 limits liability for fraud.
+
+24.3 No terms or conditions endorsed upon, delivered with or contained in any quotation, delivery note, invoice or other document of the Supplier shall form part of this Agreement.
+
+25. WAIVER, REMEDIES AND SEVERANCE
+
+25.1 A waiver is only effective if given in writing. A failure or delay in exercising a right or remedy is not a waiver of it.
+
+25.2 Except as expressly provided in this Agreement (including clause 9.4), the rights and remedies provided under this Agreement are in addition to, and not exclusive of, any rights or remedies provided by law.
+
+25.3 If any provision of this Agreement is or becomes invalid or unenforceable, it shall be modified to the minimum extent necessary to make it enforceable or, if that is not possible, deleted, without affecting the rest of this Agreement.
+
+26. THIRD PARTY RIGHTS
+
+26.1 Save under clause 23.1, no person other than a Party has any right under the Contracts (Rights of Third Parties) Act 1999 to enforce any term of this Agreement.
+
+27. GENERAL
+
+27.1 Nothing in this Agreement establishes a partnership or joint venture or makes either Party the agent of the other.
+
+27.2 Each Party shall pay its own costs incurred in connection with the negotiation, preparation and execution of this Agreement.
+
+27.3 This Agreement may be executed in any number of counterparts, which together constitute one agreement.
+
+28. GOVERNING LAW
+
+28.1 This Agreement and any Dispute or claim (including non-contractual disputes or claims) arising out of or in connection with it or its subject matter or formation shall be governed by and construed in accordance with the law of England and Wales.
+
+<<<NUMBERING OFF>>>
+
+<<<PAGE>>>
+
+## SCHEDULE 1 - SPECIFICATION
+
+### Part A - Scope of supply
+
+1. Each Cell shall comprise: a six-axis industrial robot of the 300 kg payload class on a 12 m linear floor track (seventh axis); a multi-function end effector ("MFEE") which drills, countersinks, inspects, applies sealant, inserts fasteners and swages collars in a single cycle, with an HSK-63 high-speed spindle; a 3D vision and surface-normality sensing system; two fixtures for the Buyer's A-series rib family (part numbers VAR-R-1100 to VAR-R-1180); perimeter guarding with interlocked gates and light curtains; a cell controller running the Supplier's QC-Fasten software (version 4 or later) with an OPC UA interface to the Buyer's manufacturing execution system; a tool magazine, swarf extraction and a fastener feed system; and the Documentation, training and spares described in Part E.
+
+2. The approved suppliers of the robot, the HSK-63 spindle drive units and the vision system are those listed in the Supplier's tender return of 12 December 2022.
+
+### Part B - Performance requirements
+
+| Ref | Parameter | Requirement | Method of measurement |
+|---|---|---|---|
+| B1 | Positional accuracy (true position of hole) | ≤ 0.15 mm | Laser tracker, 50-hole coupon |
+| B2 | Repeatability | ≤ ±0.05 mm | 30 repeat cycles |
+| B3 | Hole diameter | H8 at 4.8 mm and 6.35 mm | Bore gauge, 100% |
+| B4 | Countersink depth | ±0.05 mm | Depth gauge, 100% |
+| B5 | Cycle time per fastener (drill, countersink, insert, swage) | ≤ 22.0 s | Mean over 120 consecutive fasteners |
+| B6 | Swage collar quality | Zero defects | Visual and go/no-go gauge, 100% |
+| B7 | Availability in continuous run | ≥ 95% over 8 hours | SAT only |
+| B8 | Noise at 1 m from guarding | ≤ 80 dB(A) | Class 1 sound level meter |
+
+### Part C - Test Specification
+
+1. FAT. The FAT of each Cell shall be carried out at the Supplier's facility in Coventry and shall demonstrate requirements B1 to B6 and B8 on a 2024-T3 aluminium alloy coupon (6 mm + 4 mm stack) of not less than 50 holes, using a calibrated laser tracker.
+
+2. SAT. The SAT of each Cell shall be carried out in the relevant Bay after commissioning and shall demonstrate requirements B1 to B8, including not less than 120 fasteners on production parts and an 8-hour continuous run.
+
+3. Pass criteria. A Cell passes a test only if it meets every requirement tested. Failure to meet any single requirement is a failure of the test.
+
+4. Records. FAT results shall be recorded in the Supplier's FAT report and on a FAT Certificate; SAT results on a SAT Certificate (form QRL-F-SAT-02) signed by both Parties; Acceptance on an Acceptance Certificate.
+
+### Part D - Layout
+
+1. Cells 1, 2 and 3 shall be installed in Bay 2 and Cells 4, 5 and 6 in Bay 3, in the positions shown on the Buyer's drawing VAR-SL-GA-002 rev D.
+
+2. The footprint of each Cell is 8.5 m x 14.0 m. Each Cell shall be anchored to the floor slab in accordance with the Supplier's foundation drawing QR-FD-0412 rev B.
+
+### Part E - Training, Documentation, spares and warranty response
+
+1. Training: operator training (3 days) and maintenance training (5 days) for up to 12 staff per Bay. Documentation in English, electronic and two paper copies.
+
+2. Spares: per the Supplier's spares list SL-VAR-01 for each Cell.
+
+3. Warranty response: Priority 1 (Cell not operable) - attendance on Site within 24 hours, rectification within 10 Business Days; Priority 2 (degraded operation) - attendance within 3 Business Days.
+
+<<<PAGE>>>
+
+## SCHEDULE 2 - PRICE AND PAYMENT MILESTONES
+
+1. The Cell Price for each Cell is £810,000 and the Contract Price is £4,860,000 (exclusive of VAT).
+
+2. The Milestone Payments for each Cell are:
+
+| Milestone | Payment event | Evidence required with invoice | % of Cell Price | Amount per Cell (£) | Total for Cells 1-6 (£) |
+|---|---|---|---|---|---|
+| M1 | Signature of this Agreement | None | 20% | 162,000 | 972,000 |
+| M2 | Issue of FAT Certificate for the Cell | Copy FAT Certificate | 30% | 243,000 | 1,458,000 |
+| M3 | Delivery of the Cell to the Site | Signed delivery note | 30% | 243,000 | 1,458,000 |
+| M4 | Acceptance of the Cell | Copy Acceptance Certificate | 20% | 162,000 | 972,000 |
+| Total | | | 100% | 810,000 | 4,860,000 |
+
+3. Each invoice shall quote purchase order number VAR-PO-23-0412 and shall comply with clause 7.2.
+
+4. VAT shall be added to each Milestone Payment at the applicable rate.
+
+<<<PAGE>>>
+
+## SCHEDULE 3 - PLANNED ACCEPTANCE DATES
+
+| Cell | Location | Planned Acceptance Date |
+|---|---|---|
+| Cell 1 | Bay 2 | 9 February 2024 |
+| Cell 2 | Bay 2 | 23 February 2024 |
+| Cell 3 | Bay 2 | 8 March 2024 |
+| Cell 4 | Bay 3 | 24 May 2024 |
+| Cell 5 | Bay 3 | 7 June 2024 |
+| Cell 6 | Bay 3 | 21 June 2024 |
+
+The dates for FAT and Delivery of each Cell are fixed by reference to its Planned Acceptance Date in accordance with clause 4.2.
+
+<<<PAGE>>>
+
+## SCHEDULE 4 - LIQUIDATED DAMAGES
+
+1. Rate. For each full week in the period from the Planned Acceptance Date of a Cell until the date of its Acceptance, the Supplier shall pay Liquidated Damages of 0.5% of the Cell Price of that Cell.
+
+2. Full week. A "full week" means each complete period of seven (7) consecutive days, the first such period commencing on the day after the Planned Acceptance Date. No Liquidated Damages are payable for any part of a week.
+
+3. Each Cell separately. Liquidated Damages accrue for each Cell separately and by reference to its own Planned Acceptance Date and Cell Price.
+
+4. Cap. The Liquidated Damages for any Cell shall not exceed 10% of its Cell Price (clause 9.5).
+
+5. Table.
+
+| Cell | Cell Price (£) | Liquidated Damages per full week (£) | Maximum Liquidated Damages (£) |
+|---|---|---|---|
+| Cells 1 to 6 (each) | 810,000 | 4,050 | 81,000 |
+
+6. Illustration (for information only). If Acceptance of a Cell occurs 45 days after its Planned Acceptance Date, six (6) full weeks have elapsed and Liquidated Damages of £24,300 are payable. The maximum of £81,000 is reached after twenty (20) full weeks.
+
+<<<PAGE>>>
+
+## SCHEDULE 5 - SITE READINESS REQUIREMENTS
+
+1. Site Readiness Dates
+
+| Bay | Cells | Site Readiness Date |
+|---|---|---|
+| Bay 2 | Cells 1, 2 and 3 | 27 November 2023 |
+| Bay 3 | Cells 4, 5 and 6 | 29 April 2024 |
+
+2. Site Readiness Requirements
+
+2.1 Building. The Bay shall be weathertight, with the roof, cladding, doors and permanent lighting complete, and with ambient temperature maintained between 15°C and 25°C.
+
+2.2 Floor slab. Within the footprint of each Cell shown in Part D of Schedule 1, the floor slab shall:
+
+(a) be a reinforced concrete ground-bearing slab not less than 250 mm thick, of strength class C32/40;
+
+(b) have been poured not less than twenty-eight (28) days before the Site Readiness Date;
+
+(c) achieve free-movement surface regularity classification FM2;
+
+(d) be level to within ±3 mm over any 3 m;
+
+(e) be dry, clean and free of laitance, standing water, oil and contamination; and
+
+(f) be suitable for the installation of post-installed anchors in accordance with the Supplier's foundation drawing QR-FD-0412 rev B.
+
+2.3 Services. For each Cell: a 400 V three-phase 125 A supply at a lockable isolator within 5 m; compressed air at 6.5 to 7.0 bar, dry and oil-free; one Cat 6 network drop; and lighting of not less than 500 lux.
+
+2.4 Access. A clear route not less than 4.5 m wide and 5.0 m high from the delivery door to each Cell position, and the Bay clear of other trades within the Cell footprints.
+
+3. Handover
+
+3.1 When a Bay complies with paragraph 2, the Buyer shall issue a Bay Handover Certificate to the Supplier stating the date from which the Bay is available.
+
+3.2 The Supplier shall inspect the Bay and shall, within three (3) Business Days after the date of the Bay Handover Certificate, notify the Buyer in writing of any respect in which it considers that the Bay does not comply with paragraph 2, giving reasonable particulars.
+
+3.3 If the Supplier does not give notice under paragraph 3.2, the Bay shall be deemed to comply with paragraph 2 as at the date of the Bay Handover Certificate, save in respect of any non-compliance which could not reasonably have been discovered on inspection.
+
+3.4 If the Supplier gives notice under paragraph 3.2 and the Bay does not comply with paragraph 2, the Buyer shall remedy the non-compliance and issue a further Bay Handover Certificate.
+
+<<<PAGE>>>
+
+## EXECUTION
+
+This Agreement has been entered into on the date stated at the beginning of it.
+
+Signed by GRAHAM PETRAKIS, Managing Director, for and on behalf of VARNHOLT AEROSTRUCTURES LIMITED
+Signature: ..............................................
+Date: ..............................................
+
+Signed by MALCOLM FERRIS, Director (Chief Financial Officer), for and on behalf of VARNHOLT AEROSTRUCTURES LIMITED
+Signature: ..............................................
+Date: ..............................................
+
+Signed by DOUGLAS FENN, Managing Director, for and on behalf of QUELLCREST ROBOTICS LTD
+Signature: ..............................................
+Date: ..............................................
+
+Signed by GARY WHITLOW, Director - Projects, for and on behalf of QUELLCREST ROBOTICS LTD
+Signature: ..............................................
+Date: ..............................................

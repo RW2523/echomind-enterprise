@@ -1,0 +1,54 @@
+Varnholt board minutes, 26 September 2024 (extract - item 6, Quellcrest)
+(file: Board minutes 26 Sept 2024 (extract).pdf; pdf; note, final)
+
+VARNHOLT AEROSTRUCTURES LIMITED
+
+(Company number 07731846)
+
+Minutes of a meeting of the Board of Directors held at Sinfin Lane Works, Calloway Road, Derby on Thursday 26 September 2024 at 10.00 am
+
+EXTRACT - ITEM 6 ONLY. Prepared for the purpose of obtaining legal advice in contemplation of litigation.
+
+Present: Elaine Mortimer (Chair, non-executive); Graham Petrakis (Managing Director); Malcolm Ferris (Chief Financial Officer); Hannah Kirkby (Operations Director); Ian Rutherford (non-executive director)
+
+In attendance: Nadia Okafor (Company Secretary, minutes); Rhiannon Thorne (Head of Manufacturing Engineering, item 6 only); Harper Quinn (Calder & Wynne LLP, item 6 only, by video link)
+
+[Items 1 to 5 not extracted.]
+
+6. QUELLCREST ROBOTICS - ROBOTIC CELLS PROGRAMME - DISPUTE
+
+6.1 Status. RT reported on the eight cells supplied by Quellcrest Robotics Ltd ("QRL") under the Supply and Installation Agreement as varied by Variation Agreements No. 1 and No. 2. Cells 1 to 3 were accepted in February and March 2024. Cell 4 failed its site acceptance test on 13 August 2024 and QRL had not yet offered a re-test date. Cells 5 and 7 had been accepted on 20 and 25 September 2024. The SAT of Cell 6 was scheduled for 27 September and that of Cell 8 for early October.
+
+6.2 Financial position. MF reported that the contract value following Variation No. 1 was £6,550,000 (excluding VAT), of which £6,288,000 including VAT had been paid. QRL's invoice QR-INV-2024-131 (Milestone 4, Cells 1 to 3) for £729,000 including VAT had been withheld since 30 August 2024. Liquidated damages accrued to date were estimated by management at £130,650 for Cells 4, 5 and 7 (Cell 4 at 16 full weeks, £64,800), with Cells 6 and 8 to follow; the total was expected to be in the region of £195,000 to £200,000, increasing by £4,050 for each further week until Cell 4 was accepted, subject to the cap of £81,000 for Cell 4.
+
+6.3 Lost production. MF reported that the cost of subcontracting drilling while Cell 4 was unavailable was estimated at £410,000 and asked whether it could be recovered from QRL. HQ advised that clause 9.4 of the Agreement makes liquidated damages Varnholt's sole financial remedy for delay and that clause 18.5 excludes loss of production, so that these costs were unlikely to be recoverable as damages for delay; they might be relevant to any commercial negotiation.
+
+6.4 Legal advice. HQ summarised her advice on (a) QRL's notice of 15 May 2024 claiming an extension of time for Bay 3, which was arguably out of time under the 14-day condition precedent in clause 11.3; (b) set-off, which required written notice under clause 7.5 and should be limited to liquidated damages actually accrued, with a risk of interest on any balance withheld; and (c) procedure: a letter of claim under the Pre-Action Protocol for Construction and Engineering Disputes, the senior management meeting under clause 21.2, and proceedings in the Technology and Construction Court if the dispute was not resolved. HQ estimated costs to the end of disclosure at £240,000 to £280,000 excluding VAT.
+
+6.5 Discussion. The Chair asked whether withholding the whole invoice, rather than the liquidated damages only, was justified. MF considered that the full amount should be held as leverage until Cell 4 was accepted. IR expressed concern at the risk of interest and costs and asked that his reservation be recorded. GP noted that he would lead the senior management discussions with QRL's Managing Director, Douglas Fenn.
+
+6.6 Resolutions. After discussion, it was RESOLVED that:
+
+(a) a litigation budget of £260,000 (excluding VAT) be approved for the dispute with QRL, covering the pre-action stage and, if proceedings are issued, work up to and including the case management conference and disclosure;
+
+(b) a contingency of up to £40,000 (excluding VAT) in addition be available on the joint approval of the Managing Director and the Chief Financial Officer, any further increase to require the approval of the Board;
+
+(c) Calder & Wynne LLP be instructed to send a letter of claim and Dispute Notice to QRL by 4 October 2024;
+
+(d) invoice QR-INV-2024-131 continue to be withheld pending advice, the position to be reviewed weekly by MF with Calder & Wynne LLP;
+
+(e) GP lead the senior management escalation under clause 21.2 of the Agreement; and
+
+(f) NO issue a document preservation notice to all staff involved in the programme.
+
+6.7 IR's reservation in respect of resolution (d) was noted.
+
+HQ and RT left the meeting.
+
+[Items 7 to 10 not extracted.]
+
+Signed as a correct record:
+
+[signature: E. Mortimer]
+
+Elaine Mortimer, Chair - 24 October 2024

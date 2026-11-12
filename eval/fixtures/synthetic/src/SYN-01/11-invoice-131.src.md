@@ -1,0 +1,45 @@
+---
+file: Invoice QR-INV-2024-131.pdf
+title: Quellcrest invoice QR-INV-2024-131 (Milestone 4, Cells 1-3)
+kind: evidence
+status: received
+render: pdf
+style: table
+font: sans
+footer: Quellcrest Robotics Ltd - Registered in England No. 10482277 - VAT GB 294 6618 03
+---
+**QUELLCREST ROBOTICS LTD**
+Unit 7, Tolland Park, Brackenhurst Road, Coventry CV3 4RZ
+T 01632 960350 | accounts.receivable@quellcrest-robotics.example
+
+# TAX INVOICE
+
+| Invoice no. | Invoice date | Customer PO | Customer account |
+|---|---|---|---|
+| QR-INV-2024-131 | 02/08/2024 | VAR-PO-23-0412 | VAR001 |
+
+Bill to: Varnholt Aerostructures Limited, Accounts Payable, Sinfin Lane Works, Calloway Road, Derby DE24 9GN
+Contract: Supply and Installation Agreement dated 14/03/2023 (as varied)
+Milestone: M4 - Acceptance (Schedule 2)
+
+| Line | Description | Acceptance Certificate | Acceptance date | % of Cell Price | Cell Price (GBP) | Amount (GBP) |
+|---|---|---|---|---|---|---|
+| 1 | Cell 1 - Milestone 4 (Acceptance) | AC-C1 | 07/02/2024 | 25% | 810,000.00 | 202,500.00 |
+| 2 | Cell 2 - Milestone 4 (Acceptance) | AC-C2 | 23/02/2024 | 25% | 810,000.00 | 202,500.00 |
+| 3 | Cell 3 - Milestone 4 (Acceptance) | AC-C3 | 06/03/2024 | 25% | 810,000.00 | 202,500.00 |
+
+| | GBP |
+|---|---|
+| Subtotal (net) | 607,500.00 |
+| VAT at 20% | 121,500.00 |
+| Total due | 729,000.00 |
+
+Contract summary (net, GBP): Contract Price (as varied by VA1) 6,550,000.00 | Invoiced before this invoice 4,733,000.00 | This invoice 607,500.00 | Invoiced to date 5,340,500.00 | Balance to invoice 1,209,500.00
+
+Payment terms: 30 days from date of invoice. Due date: 01/09/2024.
+Copies of Acceptance Certificates AC-C1, AC-C2 and AC-C3 attached.
+Interest may be charged on overdue accounts under the Late Payment of Commercial Debts (Interest) Act 1998.
+
+Please remit to: Quellcrest Robotics Ltd, Hallam Commercial Bank plc, Coventry branch. Sort code 40-11-62, account 71839204. Please quote the invoice number as reference.
+
+Queries: Lynne Barraclough, Credit Control, accounts.receivable@quellcrest-robotics.example

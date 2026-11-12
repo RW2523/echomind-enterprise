@@ -1,0 +1,138 @@
+---
+file: Witness statement - R Thorne (draft 2).docx
+title: Witness statement of Rhiannon Thorne - draft 2 (14 February 2025)
+kind: evidence
+status: draft
+render: docx
+style: statement
+font: serif
+numbering: auto
+author: Harper Quinn
+changes_date: 2025-02-14
+header: DRAFT 2 - 14.02.2025 - PRIVILEGED AND CONFIDENTIAL - PREPARED IN CONTEMPLATION OF LITIGATION
+footer: CW/VAR/0141 - WS RT draft 2
+---
+Party: Claimant
+Witness: Rhiannon Thorne
+Statement: 1st
+Exhibits: RT-1 to RT-6
+Date: [ ] 2025
+
+IN THE HIGH COURT OF JUSTICE
+BUSINESS AND PROPERTY COURTS OF ENGLAND AND WALES
+TECHNOLOGY AND CONSTRUCTION COURT (KBD)
+
+Claim No. [HT-2025-______]
+
+BETWEEN:
+
+VARNHOLT AEROSTRUCTURES LIMITED
+Claimant
+
+- and -
+
+QUELLCREST ROBOTICS LTD
+Defendant
+
+# WITNESS STATEMENT OF RHIANNON THORNE
+
+## A. Introduction
+
+1. I am the Head of Manufacturing Engineering of Varnholt Aerostructures Limited ("Varnholt"), the Claimant, of Sinfin Lane Works, Calloway Road, Derby DE24 9GN. I have worked for Varnholt since 2016 and have held my current role since 2021. I am responsible for Varnholt's capital equipment programmes, and I was Varnholt's Contract Manager under the agreement with the Defendant ("Quellcrest") described below.
+
+2. I make this statement in support of Varnholt's claim. The facts in it are within my own knowledge unless I say otherwise. Where they are not, I identify the source and believe them to be true.
+
+3. This statement was prepared by Calder & Wynne LLP, Varnholt's solicitors, following two video calls with me and from my comments on an earlier draft. English is my first language.
+
+4. I refer to documents in the exhibits marked "RT-1" to "RT-6". References in the form [RT-3/4] are to page 4 of exhibit RT-3. I have not been referred to any document other than those listed in the Annex to this statement.
+
+## B. The Agreement
+
+5. Varnholt makes wing ribs and spars at Sinfin Lane Works. In 2022 we decided to automate the drilling and fastening of our A-series rib family, and after a tender we chose Quellcrest, a UK subsidiary of Quellcrest Automation Inc. of Dayton, Ohio.
+
+6. The Supply and Installation Agreement (the "Agreement") was signed at Sinfin Lane Works on 14 March 2023 by Graham Petrakis and Malcolm Ferris for Varnholt and by Douglas Fenn and Gary Whitlow for Quellcrest. I was present. The date at the head of the Agreement was left blank, and the signatories each wrote the date by their signature on the execution pages [RT-1/1-4].
+
+7. The Agreement was for six Cells at £810,000 each, £4,860,000 in total. By Variation Agreement No. 1 dated 9 January 2024 ("VA1") Varnholt ordered two more Cells, Cells 7 and 8, at £845,000 each, so that the price became £6,550,000. VA1 also moved the Planned Acceptance Dates of Cells 4, 5 and 6 back by one week, to 31 May, 14 June and 28 June 2024, and set dates of 12 July and 26 July 2024 for Cells 7 and 8 [RT-2].
+
+## C. Bay 3
+
+8. Cells 4, 5 and 6 were to go into Bay 3, which was then a new extension. Our Facilities & Estates Manager, Craig Mellor, arranged for the Bay 3 slab to be poured on 18 March 2024, 42 days before the Site Readiness Date of 29 April 2024 [RT-3/3].
+
+9. On 15 March 2024 Mr Whitlow confirmed that the foundation drawing QR-FD-0412 rev B was current. He mentioned that Quellcrest would normally want relative humidity readings before drilling, but neither he nor the drawing gave any limit [RT-3/2].
+
+10. Quellcrest's Site Manager, Kieran Doyle, walked Bay 3 with Mr Mellor on 26 April 2024 and Quellcrest sent a snag list with seven items. Items 1 to 6 were closed out on Saturday 27 April. Item 7 was "Slab RH to be checked before anchors - TBC" [RT-3/4].
+
+11. I issued Bay Handover Certificate HC-B3-01 for Bay 3 on Monday 29 April 2024 [RT-3/5]. Cell 4 was delivered the next morning.
+
+12. At 17:05 on 30 April 2024 Dev Anand, our Procurement Manager, emailed me to say that Mr Whitlow had telephoned him just after 4pm about humidity readings of 86 to 89% taken by Mr Doyle that afternoon, and that Quellcrest would not drill anchors until the reading was 75% or less [RT-3/6]. {==I spoke to Dev about the call that evening.==}{>>HQ: RT - please confirm you spoke to DA on 30/4 itself, and whether GW said when Kieran took the readings (26/4 walk-down or 30/4?). Important for the 11.3 point.<<}
+
+13. On 2 May 2024 Mr Whitlow emailed me to say that three of five trial anchors had failed and that Quellcrest regarded Bay 3 as non-compliant [RT-3/7]. Later that afternoon Brenda Kowalczyk, Quellcrest's VP Programs in Ohio, replied to everyone on that email. Her email referred to Mr Whitlow having called her "4/30" with the moisture numbers, to a further call on "05/01", and asked him to get the contract notice out "ASAP (14 days!!)" [RT-3/8]. I read "4/30" as 30 April and "05/01" as 1 May; Ms Kowalczyk writes dates in the American way. She also proposed a call on "05/06/2024", which I took to mean Monday 6 May, a bank holiday here, and I suggested Tuesday 7 May instead [RT-3/9].
+
+14. I did not, and do not, accept that Bay 3 was non-compliant. Schedule 5 to the Agreement does not give any humidity limit. Note 6 on rev B said only that the slab should be dry, and it was dry: there was no standing water. The 75% limit and the change from expansion anchors to resin anchors first appeared in rev C of the drawing, which Mr Whitlow sent me on 7 May 2024 [RT-3/10].
+
+15. {==Quellcrest did not notify any non-compliance with Schedule 5 within three Business Days of the handover.==}{>>HQ: Careful - this is wrong on the documents. GW's email of 2 May is the third Business Day after 29/4 (30/4, 1/5, 2/5) and expressly says it is a para 3.2 notice. Suggest we delete this sentence, or limit it to "nothing was raised at the walk-down on 26 April". Please discuss with LB.<<} Nothing about humidity was raised at the walk-down on 26 April 2024 other than item 7.
+
+16. To keep the programme moving, and without accepting that anything was wrong with the slab, Varnholt arranged for Pennick Flooring Ltd to apply a moisture-suppressant primer to the Cell 4 to 6 footprints between 13 and 24 May 2024. On 3 June 2024 Quellcrest re-tested resin anchors, which passed, and Mr Whitlow wrote that Quellcrest regarded Bay 3 as ready from that day [RT-3/13]. Installation of Cell 4 started on 4 June 2024.
+
+## D. Quellcrest's notice of 15 May 2024
+
+17. At 18:52 on Wednesday 15 May 2024 Mr Whitlow emailed me and Mr Anand, copied to Ms Kowalczyk, attaching a letter ref. QRL/VAR/EOT/003 giving notice of "Buyer Delay" under clause 11.3 [RT-3/11]. The email said that a hard copy would follow. I have not seen a hard copy. [RT to confirm with NO whether anything was received at the company secretary address.]
+
+18. I replied on 16 May 2024 rejecting the notice, both because Bay 3 complied with Schedule 5 and because Quellcrest had known about the readings by 30 April [RT-3/12].
+
+## E. Factory tests and Variation No. 2
+
+19. Cells 1 to 6 passed their factory acceptance tests at the first attempt. Cells 7 and 8 failed their first FATs, on 1 and 8 July 2024, on positional accuracy (0.21 mm and 0.19 mm against 0.15 mm), and passed on re-test on 22 and 29 July 2024 [RT-4]. The FATs of Cells 5 and 6 took place in June 2024 rather than April because Quellcrest's spindle supplier delivered late; the spindle units arrived on 20 May 2024.
+
+20. On 28 June 2024 Quellcrest asked for more time for Cells 5 to 8 because of the late spindles. Quellcrest sent us a Word draft of Variation Agreement No. 2 ("VA2") on 17 July 2024 providing for a four-week extension, with the warranty on those Cells increased to 30 months. Mr Anand circulated that Word draft internally on 18 July 2024.
+
+21. VA2 was signed in my office on 22 July 2024. Before signing, Mr Whitlow asked for six weeks rather than four, given the FAT failures on Cell 7 and the risk on Cell 8. I agreed. I struck through "four (4)" in clause 2.1, Mr Whitlow wrote in "six (6) weeks", and we both initialled the change [RT-5].
+
+22. When I spoke to Calder & Wynne on 12 September 2024 I said that the signed VA2 was the same as the Word draft. That was my mistake: I had forgotten the change to six weeks. I understand that Calder & Wynne's letter of 4 October 2024 used four weeks as a result.
+
+## F. Site acceptance tests and Acceptance
+
+23. Cell 4 failed its first SAT on 13 August 2024. The cycle time was 24.1 seconds against the 22.0 seconds required, three swaged collars were defective, and the continuous run was stopped after 5 hours 12 minutes because of an end-effector fault [RT-6/1]. I wrote "NOT ACCEPTED" on the certificate. Mr Doyle added a note about vibration at station 2. I did not feel any vibration, and Cells 5 and 6, on the same slab, both passed SAT at the first attempt.
+
+24. The end effector of Cell 4 was returned to Coventry for rework. Cell 4 passed its repeat SAT on 8 November 2024.
+
+25. I have checked the Acceptance Certificates [RT-6/2-6]. The dates are:
+
+| Cell | Planned Acceptance Date (VA1) | As extended by VA2 | Acceptance |
+|---|---|---|---|
+| Cell 4 | 31 May 2024 | not extended | 8 November 2024 |
+| Cell 5 | 14 June 2024 | 26 July 2024 | 20 September 2024 |
+| Cell 6 | 28 June 2024 | 9 August 2024 | 27 September 2024 |
+| Cell 7 | 12 July 2024 | 23 August 2024 | 25 September 2024 |
+| Cell 8 | 26 July 2024 | 6 September 2024 | 1 October 2024 |
+
+26. Cells 1, 2 and 3 were Accepted on 7 February, 23 February and 6 March 2024, before or on their Planned Acceptance Dates.
+
+## G. The Milestone 4 invoice
+
+27. Quellcrest's invoice QR-INV-2024-131 for the Acceptance milestone on Cells 1 to 3 is dated 2 August 2024 and was received by post on 5 August 2024. On 30 August 2024 Mr Ferris decided that it should not be paid while liquidated damages were running on the later Cells. I agreed with that at the time. I was not involved in the calculation of the invoice.
+
+## H. Effect of the delays
+
+28. For context only: while Cell 4 was out of action Varnholt had to subcontract drilling of part of the A-series ribs to another company. Mr Ferris is better placed than I am to give the figures.
+
+## STATEMENT OF TRUTH
+
+I believe that the facts stated in this witness statement are true. I understand that proceedings for contempt of court may be brought against anyone who makes, or causes to be made, a false statement in a document verified by a statement of truth without an honest belief in its truth.
+
+I understand that the purpose of this witness statement is to set out matters of fact of which I have personal knowledge. I understand that it is not my function to argue the case, either generally or on particular points, or to take the court through the documents in the case. This witness statement sets out only my personal knowledge and recollection, in my own words. On points that I understand to be important in the case, I have stated honestly (a) how well I recall matters and (b) whether my memory has been refreshed by considering documents, if so how and when. I have not been asked or encouraged by anyone to include in this statement anything that is not my own account, to the best of my ability and recollection, of events I witnessed or matters of which I have personal knowledge.
+
+Signed: ..............................................
+Rhiannon Thorne
+Dated: ..............................................
+
+[Certificate of compliance by the relevant legal representative - to be signed by Harper Quinn, Calder & Wynne LLP, on finalisation.]
+
+## ANNEX - DOCUMENTS REFERRED TO
+
+RT-1: Supply and Installation Agreement dated 14 March 2023, with the signed execution pages.
+RT-2: Variation Agreement No. 1 dated 9 January 2024.
+RT-3: Email chain concerning Bay 3, 14 March to 3 June 2024 (printed 18 June 2024), with Bay Handover Certificate HC-B3-01.
+RT-4: Factory Acceptance Test Report QRL-VAR-FAT-001 rev C dated 2 August 2024.
+RT-5: Variation Agreement No. 2 dated 22 July 2024 (signed copy).
+RT-6: SAT Certificate for Cell 4 dated 13 August 2024, and Acceptance Certificates AC-C4 to AC-C8.

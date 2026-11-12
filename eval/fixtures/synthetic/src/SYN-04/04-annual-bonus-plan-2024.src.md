@@ -1,0 +1,126 @@
+---
+file: 2024 Annual Bonus Plan.pdf
+title: Brackenridge Analytics 2024 Annual Bonus Plan
+kind: other
+status: final
+render: pdf
+style: policy
+font: sans
+header: Brackenridge Analytics, Inc. - 2024 Annual Bonus Plan
+footer: Confidential - People team
+---
+
+# Brackenridge Analytics, Inc. 2024 Annual Bonus Plan
+
+Adopted by the Compensation Committee of the Board of Directors on January 24, 2024. Effective for the Plan Year beginning January 1, 2024. Plan Administrator: Vice President, People (Denise Arbogast).
+
+## 1. Purpose
+
+The 2024 Annual Bonus Plan (the "Plan") rewards eligible employees for the Company's performance and their individual contributions during 2024, and encourages them to remain with the Company through the date bonuses are paid.
+
+## 2. Definitions
+
+"Base Salary Earned" means the base salary actually paid to a Participant for the Plan Year, excluding bonuses, commissions, equity, expense reimbursements, stipends and any PTO paid out at separation.
+
+"Company Factor" means the funding factor determined by the Compensation Committee under Section 4(b).
+
+"Individual Multiplier" means the multiplier corresponding to the Participant's calibrated performance rating for the Plan Year under Section 4(c).
+
+"Participant" means an employee who meets the eligibility requirements of Section 3.
+
+"Payment Date" means March 14, 2025, or such other date in March 2025 as the Plan Administrator may set, provided that no payment will be made later than March 15, 2025.
+
+"Plan Year" means January 1, 2024 through December 31, 2024.
+
+"Target Bonus Percentage" means the percentage shown for the Participant's level in Table 1.
+
+## 3. Eligibility
+
+(a) Regular full-time and part-time employees in bonus-eligible positions who are hired on or before October 1, 2024 are Participants.
+
+(b) Employees on a sales commission plan, interns, temporary employees and contractors are not eligible.
+
+(c) Participants hired during the Plan Year, or who change level during the Plan Year, participate on the basis of their Base Salary Earned in each level, so that no separate proration is required.
+
+## 4. Bonus Calculation
+
+Each Participant's bonus is calculated as follows:
+
+Bonus = Target Bonus Percentage x Base Salary Earned x Company Factor x Individual Multiplier
+
+(a) Target Bonus Percentage.
+
+Table 1 - Target Bonus Percentage by level
+
+| Level | Typical titles | Target Bonus Percentage |
+|---|---|---|
+| IC3 | Data Scientist, Software Engineer II, Analyst II | 10% |
+| IC4 | Senior Data Scientist, Senior Software Engineer | 15% |
+| IC5 | Staff / Principal Data Scientist or Engineer | 20% |
+| M1 | Manager | 20% |
+| M2 | Director | 25% |
+| VP | Vice President | 35% |
+
+(b) Company Factor. After the end of the Plan Year the Compensation Committee will certify the Company's annual recurring revenue ("ARR") attainment against the 2024 operating plan and set the Company Factor using Table 2. The Committee may adjust the Company Factor by up to 0.10 in either direction for extraordinary events, and its determination is final.
+
+Table 2 - Company Factor by ARR attainment
+
+| 2024 ARR attainment vs. plan | Company Factor |
+|---|---|
+| Below 85.0% | 0.00 (Plan not funded) |
+| 85.0% - 89.9% | 0.75 |
+| 90.0% - 94.9% | 0.90 |
+| 95.0% - 104.9% | 1.00 |
+| 105.0% - 109.9% | 1.10 |
+| 110.0% and above | 1.25 |
+
+(c) Individual Multiplier. The Individual Multiplier is based on the Participant's performance rating for the Plan Year as determined in the calibration process described in Employee Handbook Policy 6.2.
+
+Table 3 - Individual Multiplier by rating
+
+| Performance rating | Individual Multiplier |
+|---|---|
+| Exceeds Expectations | 1.25 |
+| Meets Expectations | 1.0 |
+| Partially Meets Expectations | 0.5 |
+| Does Not Meet Expectations | 0 |
+
+(d) Example. A Participant at level IC4 with Base Salary Earned of $160,000, a Meets Expectations rating and a Company Factor of 1.00 would receive 15% x $160,000 x 1.00 x 1.0 = $24,000. The example is for illustration only.
+
+## 5. Employment on the Payment Date
+
+(a) General rule. A Participant must be actively employed by the Company on the Payment Date to earn any bonus under the Plan. A Participant whose employment ends for any reason before the Payment Date, whether voluntarily or involuntarily and with or without cause, has not earned and will not receive a bonus for the Plan Year, prorated or otherwise, except as provided in Sections 5(b) and 5(c).
+
+(b) Position elimination. A Participant whose employment is terminated by the Company after December 31, 2024 and before the Payment Date solely because the Participant's position is eliminated in a restructuring or reduction in force approved by the Vice President, People will receive a bonus calculated under Section 4 using an Individual Multiplier of 1.0, notwithstanding Section 6, payable on the Payment Date, subject to the Participant signing and not revoking a general release of claims in a form provided by the Company.
+
+(c) Death or disability. If a Participant's employment ends before the Payment Date because of death or long-term disability, the Participant (or the Participant's estate) will receive a bonus calculated using Base Salary Earned, the Target Bonus Percentage and the Company Factor, with an Individual Multiplier of 1.0.
+
+(d) Leaves of absence. A Participant on an approved leave of absence on the Payment Date is treated as employed. Because the bonus is based on Base Salary Earned, periods of unpaid leave reduce the bonus proportionately.
+
+## 6. Performance Improvement Plans
+
+A Participant who is on an active performance improvement plan on December 31, 2024 may receive an Individual Multiplier of no more than 0.5 for the Plan Year, unless the Participant has successfully completed the performance improvement plan before calibration.
+
+## 7. Administration
+
+The Plan Administrator interprets the Plan, determines eligibility and calculates bonuses, subject to the Compensation Committee's authority over the Company Factor and executive officer bonuses. The Plan Administrator's interpretations are final and binding to the maximum extent permitted by law. Bonuses are paid in cash through payroll, less applicable withholdings.
+
+## 8. Taxes; Section 409A
+
+Bonuses are intended to qualify as short-term deferrals exempt from Section 409A of the Internal Revenue Code and will be paid no later than March 15, 2025. Bonuses are supplemental wages subject to withholding.
+
+## 9. No Contract of Employment
+
+The Plan does not create a contract of employment or change the at-will nature of any Participant's employment. The Plan is not incorporated into any employment agreement, offer letter or handbook. No bonus is earned, vested or payable under the Plan until the Payment Date, subject to the conditions in Section 5.
+
+## 10. Amendment and Termination
+
+The Compensation Committee may amend or terminate the Plan at any time before the Payment Date, provided that no amendment after December 31, 2024 may reduce the Target Bonus Percentage applicable to any Participant for the Plan Year.
+
+<<<PAGE>>>
+
+## Administrative note - 2024 Company Factor (added January 30, 2025)
+
+On January 28, 2025, the Compensation Committee certified 2024 ARR attainment of 92.4% of the 2024 operating plan and, applying Table 2 without adjustment, approved a Company Factor of 0.90 for the 2024 Plan Year. Calibrated ratings will be finalized by February 21, 2025, and bonuses will be paid on the Payment Date, March 14, 2025.
+
+D. Arbogast, VP People

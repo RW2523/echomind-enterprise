@@ -1,0 +1,89 @@
+---
+file: Ostrowski & Lam demand letter (scan).pdf
+title: Ostrowski & Lam LLP demand letter re D. Okafor-Reyes (February 3, 2025)
+kind: correspondence
+status: received
+render: scan
+style: letter
+font: serif
+letterhead: Ostrowski & Lam LLP | 1950 Harrison Quay, Suite 600 | Oakland, CA 94612 | Tel. (510) 555-0163
+scan: skew=0.5 noise=0.25 dpi=200 mode=gray
+---
+
+[[stamp: RECEIVED FEB 04 2025 BRACKENRIDGE LEGAL]]
+
+Jakub Ostrowski
+Partner
+jostrowski@ostrowskilam.example
+Direct: (510) 555-0164
+
+February 3, 2025
+
+VIA EMAIL AND CERTIFIED MAIL
+
+Owen Thackeray, Esq.
+General Counsel
+Brackenridge Analytics, Inc.
+77 Almaden Crossing
+San Jose, CA 95113
+
+CONFIDENTIAL SETTLEMENT COMMUNICATION
+Subject to Cal. Evid. Code §§ 1152 and 1154 and Fed. R. Evid. 408
+
+Re: Daniela Okafor-Reyes - Claims Against Brackenridge Analytics, Inc.
+
+Dear Mr. Thackeray:
+
+This firm represents Daniela Okafor-Reyes in connection with her employment with, and termination by, Brackenridge Analytics, Inc. ("Brackenridge" or the "Company"). Please direct all further communications regarding Ms. Okafor-Reyes to me, and ensure that no one at the Company, including her former manager Trevor Albright, contacts her directly.
+
+We write to set out Ms. Okafor-Reyes's claims and to give the Company an opportunity to resolve them before we proceed further.
+
+Factual Background
+
+Ms. Okafor-Reyes joined Brackenridge as a Senior Data Scientist on September 7, 2021. For more than three years she was a valued member of the Data Science team. She received a "Meets Expectations" rating and a full annual bonus for 2023, and in the second quarter of 2024 she led the forecasting model prototype on which the Company's new Atlas platform is built.
+
+Beginning in August 2024, her manager, Mr. Albright, began making remarks about her age. He told her she was "not exactly a digital native," introduced her to a new team member as "our resident veteran," asked whether she had "thought about a glide path," and followed up in writing, on September 20, 2024, asking her to "think about what the next chapter looks like for you." On September 23, 2024 he removed her from the Atlas project and gave the technical lead role to a colleague in his twenties, reassigning Ms. Okafor-Reyes, who is 41 years old, to maintenance of the Company's legacy Ledgerline dashboards. She was then excluded from Atlas design reviews.
+
+On October 21, 2024, Ms. Okafor-Reyes made a written complaint to Human Resources about Mr. Albright's conduct. Exactly two weeks later, on November 4, 2024, Mr. Albright placed her on a 60-day Performance Improvement Plan. The PIP refers to a "verbal warning" on September 12, 2024 that was never given. Until that day Ms. Okafor-Reyes had never received any warning, written or oral, in more than three years of employment. The PIP set objectives that depended on access to systems the Company did not provide until December 17, 2024, three days before one of the PIP deadlines.
+
+On December 6, 2024 HR told Ms. Okafor-Reyes that her complaint was "unsubstantiated," although, as we understand it, Mr. Albright did not deny making the remarks. On January 10, 2025, eighty-one days after her complaint, the Company terminated her employment, purportedly for failing the PIP. On information and belief, Mr. Albright had decided to remove Ms. Okafor-Reyes from the team before the PIP was issued, and the PIP was a pretext to paper a decision that had already been made.
+
+Brackenridge also failed to pay Ms. Okafor-Reyes all wages due at termination. It paid her only 11.5 days of accrued, unused PTO, when she had 13.5 days accrued. We understand that, without telling her, the Company deducted two days (16 hours) of PTO in December 2024 for November 25 and 26, 2024, days on which she worked. She has the commit history and meeting records to prove it.
+
+Claims
+
+1. Retaliation (Cal. Lab. Code § 1102.5; Cal. Gov. Code § 12940(h)). Ms. Okafor-Reyes engaged in protected activity when she complained of age discrimination on October 21, 2024. The PIP followed fourteen days later, and her termination followed within three months. The timing, the reference to a fictitious prior warning and the shifting justifications establish causation and pretext. Under Labor Code § 1102.6, once she shows that her complaint was a contributing factor, the Company must prove by clear and convincing evidence that it would have taken the same actions for legitimate, independent reasons. It cannot. She is also entitled to a civil penalty of up to $10,000 under § 1102.5(f).
+
+2. Age Discrimination (Cal. Gov. Code § 12940(a); 29 U.S.C. § 621 et seq.). The age-related remarks by the decision-maker, the transfer of her responsibilities to a substantially younger employee and her removal from the Company's growth product are direct and circumstantial evidence of discrimination. The Company also failed to take all reasonable steps to prevent discrimination and retaliation (§ 12940(k)).
+
+3. Unpaid 2024 Bonus. Ms. Okafor-Reyes worked the entire 2024 plan year. Her 2024 bonus was earned by December 31, 2024. Her target bonus is 15% of her $181,000 salary, or $27,150.00. The Company cannot rely on a payment-date condition to avoid paying a bonus that was fully earned, particularly where it terminated her nine weeks before the payment date in retaliation for protected activity.
+
+4. Unpaid PTO and Waiting-Time Penalties (Cal. Lab. Code §§ 201, 203, 227.3). Vested vacation cannot be forfeited. The Company owes her 16 hours of PTO at her hourly rate of $80.77, or $1,292.31. Because the Company willfully failed to pay all wages due at termination, she is entitled to waiting-time penalties of thirty days' wages, 30 x $646.15 = $19,384.62.
+
+5. Damages. Ms. Okafor-Reyes has suffered lost wages and benefits, including the loss of her unvested equity, and continues to suffer economic loss while she looks for comparable work. She has also suffered significant emotional distress. FEHA permits recovery of compensatory and punitive damages and of her attorneys' fees and costs.
+
+Demand
+
+Ms. Okafor-Reyes is prepared to resolve all of her claims for a total payment of $475,000, inclusive of attorneys' fees and costs, in exchange for a mutually acceptable separation and release agreement. This offer will remain open for twenty-one (21) days from the date of this letter, that is, until February 24, 2025. If it is not accepted, we are instructed to file a complaint with the California Civil Rights Department, obtain a right-to-sue notice and file suit in the Superior Court of California, County of Santa Clara. We are aware of the arbitration provision in Ms. Okafor-Reyes's Employment Agreement and reserve all rights to challenge its enforceability.
+
+Preservation of Evidence
+
+The Company is on notice of potential litigation and must preserve all documents and electronically stored information relating to Ms. Okafor-Reyes, including: emails, chat and other messages to, from or about her (including Mr. Albright's and Ms. Venkataraman's); team and out-of-office calendars; timesheets, PTO requests and records, payroll registers and any correction entries; her personnel file, PIP drafts and check-in notes; the HR investigation file, interview notes and drafts; Atlas staffing and headcount planning documents; repository and code-review data; and the 2024 bonus plan and calibration materials. Any automatic deletion settings that could affect these materials should be suspended immediately.
+
+Records Requests
+
+Please treat this letter as Ms. Okafor-Reyes's written request, through counsel, for (a) a copy of her personnel records under Cal. Lab. Code § 1198.5; (b) her payroll records under Cal. Lab. Code § 226(b); and (c) copies of all instruments she signed relating to obtaining or holding employment under Cal. Lab. Code § 432. Please send them to my attention within the time required by statute.
+
+Nothing in this letter is intended as a complete statement of the facts or of Ms. Okafor-Reyes's claims, and she reserves all rights and remedies. I look forward to hearing from you.
+
+Very truly yours,
+
+OSTROWSKI & LAM LLP
+
+[[sign: Jakub Ostrowski]]
+Jakub Ostrowski
+
+cc: Vivian Lam, Esq.
+Ms. Daniela Okafor-Reyes
+
+[[hand: HQ / AM (C&W) - pls call me today. Bonus: 3/14 condition? PTO 16 hrs - check Dec correction w/ Lucas. TA NOT to contact DOR. Hold notice out 1/13. - OT 2/4]]

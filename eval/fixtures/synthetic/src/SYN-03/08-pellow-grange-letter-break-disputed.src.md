@@ -1,0 +1,86 @@
+---
+file: Pellow Grange letter 17.10.25 - break disputed.pdf
+title: Pellow Grange letter 17 October 2025 - break disputed
+kind: correspondence
+status: received
+render: pdf
+style: letter
+font: serif
+letterhead: Pellow Grange LLP | 3 Quayhead Chambers, Tanner's Slip | Bristol BS1 4RD | 01632 960214 | pellowgrange.example
+---
+
+Our ref: HV/OT/CAR.112/3
+Your ref: SM/LB/ASH.0007
+
+17 October 2025
+
+Calder & Wynne LLP
+40 Aldgate Wharf
+London EC3N 4QT
+
+For the attention of Sofia Marchetti
+
+By email (s.marchetti@calderwynne.example) and by post
+
+Dear Sirs
+
+**Unit 4, Merrow Arcade, 18-24 Kingsgate Street, Bath BA1 2JX**
+**Lease dated 24 June 2016, as varied by a Deed of Variation dated 15 October 2020 ("the Lease")**
+**Your client: Ashdown & Pryce Retail Limited**
+**Our client: Carrow Hill Property Holdings Limited**
+
+1. We are instructed by Carrow Hill Property Holdings Limited (formerly Carrow Hill Estates Limited), the landlord under the Lease ("our client"). We refer to the document headed "Notice to Determine" dated 28 August 2025 and signed by your firm on behalf of your client (the "Purported Notice"), and to your covering letter of the same date.
+
+2. Our client does not accept that the Purported Notice was validly served, or that the Lease will determine on 24 June 2026. Our client's position is that the Lease continues and will continue until the expiry of the contractual term on 23 June 2031. We set out the reasons below.
+
+**The Purported Notice was not served at a permitted address**
+
+3. Clause 21.3 of the Lease provides that a notice to the Landlord may be served at its registered office or at any other address in England and Wales that the Landlord has notified to the Tenant in writing for the service of notices. Since 1 June 2024 our client's registered office has been 9 Tolcarne Place, Bristol BS1 6QE. By letter dated 3 May 2024, a copy of which is enclosed, our client notified your client that with effect from 1 June 2024 all notices to be served on the landlord must be sent to the Company Secretary at that address.
+
+4. The Purported Notice was addressed and sent by recorded delivery to Carrow House, 11 Ashgrove Terrace, Bath. Our client vacated Carrow House on 31 May 2024. That building is now occupied by a business which has no connection with our client. On 28 August 2025 Carrow House was neither our client's registered office nor an address notified for the service of notices. Nor was it our client's last-known place of business for the purposes of section 196(4) of the Law of Property Act 1925 (which clause 21.2 of the Lease incorporates), your client having been told in writing more than a year earlier of our client's new address.
+
+5. The original of the Purported Notice was eventually handed to our client by the current occupier of Carrow House on 6 October 2025, by which time the period for service of a Break Notice under clause 9.1 of the Lease, as varied, had expired. Clause 9.4 of the Lease makes time of the essence. No valid Break Notice has therefore been served, and none can now be served for the Break Date.
+
+6. We note that a copy of the Purported Notice was sent by email to our client's managing agent, Quarrington Lake Property Management, on 28 August 2025. Clause 21.4 of the Lease provides that a notice sent by email is not validly given or served. In any event Quarrington Lake is our client's managing agent; it is not our client, and your covering letter itself described the email copy as being sent for Quarrington Lake's information.
+
+**The Purported Notice was addressed to a company of a different name**
+
+7. The Purported Notice is addressed to "Carrow Hill Estates Limited", a name which our client ceased to use on 6 November 2023, some twenty-one months before the date of the Purported Notice. The change of name was notified to your client in the same letter of 3 May 2024, and every invoice your client has received since January 2024 has borne our client's current name. While we accept that our client's company number appears in the Purported Notice, the use of a superseded name at a superseded address compounds the defect in service described above and is a further indication that your client did not take the care that a break clause in which time is of the essence demands.
+
+**The break conditions have not been and will not be satisfied**
+
+8. In any event, the conditions in clause 9.2 of the Lease have not been satisfied. Clause 9.2(a) requires that, on the Break Date, the Tenant "has paid the Rents due under this Lease up to the Break Date". "The Rents" are defined in clause 1.1 of the Lease to include the Service Charge and the Insurance Rent. Your client has failed to pay:
+
+(a) the balancing charge of £7,342.18 for the service charge year ended 24 March 2025, certified and demanded on 30 June 2025 and payable within 21 days after service of the Certificate under paragraph 5 of Part 1 of Schedule 4 to the Lease; and
+
+(b) Insurance Rent of £1,906.40 demanded on 18 August 2025 and payable within 14 days of demand under clause 7.2 of the Lease,
+
+a total of £9,248.58. Your client's query about the atrium roof works does not entitle it to withhold payment: paragraph 7.2 of Part 1 of Schedule 4 to the Lease requires the Tenant to pay the sum certified pending the resolution of any dispute. Interest is accruing on both sums at the Default Rate under clause 3.4 of the Lease.
+
+9. We note also that your client has a history of late payment under the Lease, including the rent due on the June 2023 quarter day, and our client reserves the right to rely on your client's payment record in any proceedings.
+
+**Other matters**
+
+10. Our client's rights in respect of dilapidations, the reinstatement of the works carried out under the Licence for Alterations dated 7 March 2022, and the review of the Annual Rent as at 24 June 2026 are fully reserved. Our client's surveyors, Brannock Moss Building Consultancy, have been instructed to inspect the Premises and to prepare an interim schedule of dilapidations, which will be served without prejudice to our client's position that the Lease continues.
+
+11. Nothing in this letter, and no acceptance by our client or its agents of any payment from your client, whether before or after the Break Date, is to be taken as a waiver of any of our client's rights or as an acceptance that the Lease has been or will be determined.
+
+**What we require**
+
+12. Please confirm within 14 days of the date of this letter, that is by 31 October 2025, that your client accepts that the Purported Notice is of no effect and that the Lease will continue after 24 June 2026.
+
+13. Please also arrange for your client to pay the sum of £9,248.58, together with interest at the Default Rate from the respective due dates, to our client's managing agent by the same date.
+
+14. If we do not receive a satisfactory response by 31 October 2025, our client will consider applying to the court for a declaration that the Lease has not been determined, and will refer to this letter on the question of costs.
+
+Yours faithfully
+
+Pellow Grange LLP
+
+Contact: Harriet Voss, Partner
+Direct line: 01632 960215
+Email: hvoss@pellowgrange.example
+
+Enc. Copy letter from Carrow Hill Property Holdings Limited dated 3 May 2024
+
+cc. Quarrington Lake Property Management (Karen Pilcher)

@@ -1,0 +1,352 @@
+---
+file: Brackenridge Employee Handbook 2024.pdf
+title: Brackenridge Analytics Employee Handbook 2024 (rev. 2024-01)
+kind: other
+status: final
+render: pdf
+style: policy
+font: sans
+header: Brackenridge Analytics - Employee Handbook (rev. 2024-01)
+footer: Internal - do not distribute outside Brackenridge
+---
+
+# Brackenridge Analytics, Inc. Employee Handbook
+
+Revision 2024-01 - effective January 1, 2024
+
+Owner: People team (people@brackenridge-analytics.example)
+Approved by: Denise Arbogast, VP People, and Owen Thackeray, General Counsel
+
+## Revision history
+
+| Revision | Effective | Summary of changes |
+|---|---|---|
+| rev. 2022-03 | March 1, 2022 | First consolidated handbook after the move to 77 Almaden Crossing; remote and hybrid work policy added. |
+| rev. 2023-01 | January 1, 2023 | Bereavement leave (Policy 5.5) updated for Gov. Code § 12945.7; pay transparency language added to Policy 2.2; expense policy clarified. |
+| rev. 2024-01 | January 1, 2024 | Paid sick leave increased to 40 hours / 5 days (Policy 5.3); PTO section reformatted into a single table (Policy 5.2); Legal approval step added for certain PIPs (Policy 6.3); payroll correction notice rule added (Policy 7.3); workplace violence prevention plan reference added (Policy 9.2, effective July 1, 2024). |
+
+## Contents
+
+1. Introduction (1.1 - 1.4)
+2. The Employment Relationship (2.1 - 2.6)
+3. Code of Conduct (3.1 - 3.6)
+4. Raising Concerns (4.1 - 4.4)
+5. Time Off and Leaves (5.1 - 5.6)
+6. Performance and Conduct Management (6.1 - 6.4)
+7. Pay and Expenses (7.1 - 7.5)
+8. Benefits (8.1 - 8.4)
+9. Workplace (9.1 - 9.4)
+
+<<<PAGE>>>
+
+## 1. INTRODUCTION
+
+### 1.1 Welcome
+
+Welcome to Brackenridge Analytics. We build analytics software that helps finance and operations teams understand what is happening in their business and what is likely to happen next. Our products, including the Ledgerline dashboards that many of our customers have used for years and the Atlas forecasting platform we are building now, depend on people who are curious, careful with data and generous with colleagues. This handbook explains how we work together and what you can expect from the Company.
+
+### 1.2 Purpose and Scope of this Handbook
+
+This handbook summarizes the Company's principal employment policies, practices and benefits. It applies to all employees of Brackenridge Analytics, Inc. working in the United States, and it is written primarily for employees based in California. Where state or local law in another place of work gives employees greater rights, the Company will comply with that law. Specific benefit plans, equity plans and bonus plans are governed by their own plan documents, which control over any summary in this handbook.
+
+This handbook replaces all earlier versions of the handbook and any inconsistent policies, memoranda or practices. If you have questions about any policy, contact your HR Business Partner or email people@brackenridge-analytics.example.
+
+### 1.3 Handbook Is Not a Contract
+
+This handbook is not a contract of employment, express or implied, and it does not create any contractual rights. Nothing in this handbook guarantees employment for any period of time or any particular procedure before discipline or termination. Where you have a written employment agreement signed by the Company, the agreement governs the matters it covers. Your employment remains at will as described in Policy 2.1.
+
+### 1.4 Changes to Policies
+
+The Company may revise, supplement or rescind any policy or benefit described in this handbook at any time, with or without notice, except the at-will policy, which may be changed only as described in Policy 2.1. The current version of the handbook is posted on BrackNet, the Company's HR self-service portal. The People team will announce material revisions by email, and employees are asked to acknowledge each new revision in BrackNet within thirty (30) days.
+
+## 2. THE EMPLOYMENT RELATIONSHIP
+
+### 2.1 At-Will Employment
+
+Employment with Brackenridge is at will. You may resign at any time, for any reason, with or without notice, and the Company may end your employment at any time, with or without cause and with or without notice. Nothing in this handbook, in any performance review, performance improvement plan or progressive discipline step, or in any statement by a manager changes the at-will relationship. Only a written agreement signed by the Chief Executive Officer that expressly changes the at-will relationship can do so.
+
+### 2.2 Equal Employment Opportunity
+
+Brackenridge is an equal opportunity employer. We make employment decisions on the basis of merit and business need. We do not discriminate on the basis of race (including traits historically associated with race, such as hair texture and protective hairstyles), color, religion (including religious dress and grooming practices), creed, sex, gender, gender identity, gender expression, sexual orientation, pregnancy, childbirth, breastfeeding or related medical conditions, national origin, ancestry, citizenship, age (40 and over), physical or mental disability, medical condition, genetic information, marital status, registered domestic partner status, military or veteran status, reproductive health decision-making, or any other characteristic protected by federal, state or local law, including the California Fair Employment and Housing Act ("FEHA"), Cal. Gov. Code § 12940.
+
+This policy applies to all aspects of employment, including recruiting, hiring, assignments, promotions, compensation, training, discipline and termination. Job postings include a good-faith pay scale as required by California law, and employees may request the pay scale for their current position from the People team.
+
+### 2.3 Reasonable Accommodation
+
+The Company provides reasonable accommodation to qualified employees and applicants with disabilities, to employees affected by pregnancy or related conditions, and for sincerely held religious beliefs and practices, unless doing so would create an undue hardship. To request an accommodation, contact your HR Business Partner. The Company will engage in a timely, good-faith interactive process with you to identify an effective accommodation.
+
+### 2.4 Employee Classifications
+
+Each employee is classified as exempt or non-exempt under federal and California wage and hour law, and as full-time (regularly scheduled to work 30 or more hours per week), part-time (fewer than 30 hours per week) or temporary. Exempt employees are paid a salary and are not eligible for overtime. Non-exempt employees are paid for all hours worked, including overtime, and must record their time accurately under Policy 7.2. Your classification is shown in BrackNet; ask your HR Business Partner if you believe it is incorrect.
+
+### 2.5 Personnel Files and Payroll Records
+
+The Company maintains a personnel file for each employee. Current and former employees may inspect and receive a copy of their personnel records under Cal. Lab. Code § 1198.5, request a copy of their payroll records under Cal. Lab. Code § 226(b), and request a copy of any instrument they signed relating to obtaining or holding employment under Cal. Lab. Code § 432. Requests should be made in writing to the People team. The Company will respond within the time required by law.
+
+Managers do not maintain separate personnel files. Documents relating to performance, coaching and discipline, including documented verbal warnings, must be recorded in BrackNet so that they form part of the personnel file.
+
+### 2.6 Outside Employment and Conflicts of Interest
+
+You may hold outside employment or engage in outside business activities only if they do not compete with the Company, do not interfere with your work, and do not use Company time, equipment or Confidential Information. Report any potential conflict of interest, including a financial interest in a customer, vendor or competitor or a close personal relationship with someone you supervise, to your HR Business Partner or the Legal Department. Board service and paid advisory roles require the prior written approval of the General Counsel.
+
+## 3. CODE OF CONDUCT
+
+### 3.1 Standards of Conduct
+
+We expect every employee to act with honesty, respect and professionalism. Examples of conduct that may result in discipline, up to and including termination, include: dishonesty or falsification of records (including timesheets, PTO records and expense reports); unauthorized access to or disclosure of customer data; harassment, discrimination or retaliation; threats or violence; theft; working under the influence of alcohol or drugs; and repeated failure to meet reasonable performance expectations. This list is illustrative, not exhaustive.
+
+### 3.2 Policy Against Harassment, Discrimination and Retaliation
+
+The Company prohibits harassment, discrimination and retaliation based on any characteristic listed in Policy 2.2. Harassment includes verbal conduct such as epithets, derogatory comments, slurs, jokes or remarks about a person's protected characteristic; visual conduct such as derogatory images or messages; and physical conduct. Comments about an employee's age, or stereotypes about older or younger workers (for example, assumptions about a person's ability or willingness to learn new technology, energy, or plans to retire), are covered by this policy even when meant as a joke.
+
+This policy applies to all employees, managers, contractors and others who work with us, in the office, at remote locations, on Company messaging and video platforms, and at Company events. Managers who observe or learn of possible harassment, discrimination or retaliation must report it to their HR Business Partner promptly. All employees complete harassment prevention training as required by Cal. Gov. Code § 12950.1 (two hours for supervisors and one hour for non-supervisory employees, every two years).
+
+Complaints are handled under Policy 4.3.
+
+### 3.3 Confidential Information and Customer Data
+
+Our customers trust us with their financial data. You must handle customer data only in approved systems and for authorized purposes, follow the Company's data classification and security standards, and never copy customer data to personal devices, personal email or unapproved cloud storage. Your obligations regarding Confidential Information and inventions are set out in your Employment Agreement. Nothing in this handbook restricts your right to discuss wages or working conditions, to report possible violations of law to a government agency, or to discuss or disclose information about unlawful acts in the workplace.
+
+### 3.4 Use of Company Systems and Monitoring
+
+Company laptops, email, messaging, code repositories and other systems are provided for business use. Limited personal use is permitted if it does not interfere with work or violate any policy. To the extent permitted by law, the Company may access and review information stored in or transmitted through Company systems for legitimate business purposes, including security, compliance, investigations and litigation holds. Do not delete business records that are subject to a litigation hold notice from the Legal Department.
+
+### 3.5 Social Media
+
+Use good judgment when posting online. Do not disclose Confidential Information or customer data, do not speak on behalf of the Company unless authorized, and do not post content that would violate Policy 3.2. This policy does not restrict employees from discussing wages, hours or other terms and conditions of employment or engaging in other concerted activity protected by law.
+
+### 3.6 Drugs and Alcohol
+
+You may not work under the influence of alcohol, cannabis or illegal drugs, or possess or distribute illegal drugs on Company premises or while performing Company business. Moderate consumption of alcohol at Company-sponsored events is permitted when approved by a VP. Consistent with California law, the Company does not discriminate against an applicant or employee based on the use of cannabis off the job and away from the workplace.
+
+## 4. RAISING CONCERNS
+
+### 4.1 Open Door
+
+We want to hear about problems early. You are encouraged to raise questions and concerns with your manager, your manager's manager, your HR Business Partner, any member of the People team, or the Legal Department. You do not need to raise a concern with your manager first, and you should not do so if the concern is about your manager.
+
+### 4.2 Whistleblower Protection
+
+The Company prohibits retaliation against any employee who discloses, or who the Company believes disclosed or may disclose, information to a government or law enforcement agency, to a person with authority over the employee, or to another employee who has authority to investigate, discover or correct the violation, where the employee has reasonable cause to believe that the information discloses a violation of a federal, state or local law, rule or regulation, regardless of whether disclosing the information is part of the employee's job duties (Cal. Lab. Code § 1102.5). The Company also prohibits retaliation against employees who refuse to participate in an activity that would result in a violation of law. A notice of whistleblower rights, including the California whistleblower hotline number, is posted in the workplace and on BrackNet.
+
+### 4.3 Complaint Procedure and Non-Retaliation
+
+(a) How to complain. If you believe you have been subjected to, or have witnessed, harassment, discrimination, retaliation or any other violation of law or Company policy, report it as soon as possible. You may report orally or in writing to your HR Business Partner, any member of the People team, the General Counsel, or the Ethics Line at (408) 555-0177, which accepts anonymous reports. Managers who receive a complaint must forward it to the People team the same day.
+
+(b) Acknowledgment. The People team will acknowledge a complaint within two (2) business days of receipt and explain the next steps.
+
+(c) Investigation. The Company will conduct a prompt, thorough and impartial investigation by a trained investigator who is not involved in the matter, which may be a member of the People team or an outside investigator. The investigator will interview the complainant, the person complained about and relevant witnesses, and review relevant documents and messages. The Company aims to complete investigations within thirty (30) calendar days of receipt of the complaint. If an investigation will take longer, the investigator will tell the complainant the reason and the expected completion date. Interim measures, such as changes in reporting lines or schedules, may be taken during an investigation, but will not be imposed on the complainant as a penalty.
+
+(d) Confidentiality. Information about complaints and investigations is shared only with those who need to know it to investigate, resolve the matter or comply with law. The Company cannot promise complete confidentiality.
+
+(e) Outcome. At the end of the investigation the investigator will reach a conclusion that the allegations are substantiated, unsubstantiated or inconclusive, and will inform the complainant and the person complained about of the outcome in writing, to the extent appropriate. If misconduct is found, the Company will take appropriate corrective action, which may range from coaching or training to termination. A finding that a complaint is unsubstantiated does not mean that the complaint was made in bad faith.
+
+(f) Non-retaliation. The Company strictly prohibits retaliation against anyone who makes a complaint in good faith, participates in an investigation, or opposes conduct they reasonably believe is unlawful. Retaliation includes any adverse action that would discourage a reasonable employee from raising a concern, such as discipline, a negative change in duties, assignments or schedule, exclusion from meetings or projects, a reduction in pay or bonus, or termination. Any proposed adverse employment action affecting an employee who has a complaint open under this Policy 4.3 (including a written warning, performance improvement plan, change of role, or termination) must be reviewed in advance by the People team and the Legal Department. Anyone who retaliates will be subject to discipline, up to and including termination.
+
+(g) Outside agencies. You also have the right to file a complaint with the California Civil Rights Department, the U.S. Equal Employment Opportunity Commission, the California Labor Commissioner or other government agencies.
+
+### 4.4 Ethics Line
+
+The Ethics Line, (408) 555-0177, is available 24 hours a day and is operated by an independent service. Reports may be made anonymously. Reports are routed to the General Counsel and, where they concern the General Counsel or an executive officer, to the Chair of the Audit Committee.
+
+<<<PAGE>>>
+
+## 5. TIME OFF AND LEAVES
+
+### 5.1 Company Holidays
+
+The Company observes the following paid holidays in 2024:
+
+| Holiday | 2024 date |
+|---|---|
+| New Year's Day | Monday, January 1 |
+| Martin Luther King Jr. Day | Monday, January 15 |
+| Presidents' Day | Monday, February 19 |
+| Memorial Day | Monday, May 27 |
+| Juneteenth | Wednesday, June 19 |
+| Independence Day | Thursday, July 4 |
+| Labor Day | Monday, September 2 |
+| Thanksgiving Day | Thursday, November 28 |
+| Day after Thanksgiving | Friday, November 29 |
+| Christmas Eve | Tuesday, December 24 |
+| Christmas Day | Wednesday, December 25 |
+| New Year's Day 2025 | Wednesday, January 1, 2025 |
+
+Holidays that fall during a period of PTO are not charged as PTO. Non-exempt employees who are required to work on a holiday are paid for hours worked in addition to holiday pay.
+
+### 5.2 Paid Time Off (PTO)
+
+(a) Purpose. PTO may be used for vacation, personal business, or any other purpose. Paid sick leave is provided separately under Policy 5.3.
+
+(b) Accrual. PTO accrues each biweekly pay period, beginning on the first day of employment, as follows:
+
+| Employee category | Annual accrual | Accrual rate | Maximum balance (cap) |
+|---|---|---|---|
+| Regular full-time, exempt | 15 days (120 hours) per year | 5.77 hours per biweekly pay period | 22.5 days (180 hours) |
+| Regular full-time, non-exempt | 15 days (120 hours) per year at 40 hours/week | 0.0577 hours per hour worked (excluding overtime) | 180 hours |
+| Regular part-time (20-29 hours/week) | Prorated | 0.0577 hours per hour worked | 1.5 x annual accrual |
+| Temporary | Not eligible | - | - |
+
+Regular full-time exempt employees accrue PTO at the rate of fifteen (15) days per year (5.77 hours per biweekly pay period). One day of PTO equals eight (8) hours for full-time employees.
+
+(c) Accrual cap. PTO stops accruing when an employee's balance reaches one and one-half (1.5) times the employee's annual accrual (22.5 days, or 180 hours, for a regular full-time employee). Accrual resumes in the pay period after the balance falls below the cap. No accrued PTO is forfeited when the cap is reached; you simply do not accrue more until you use some.
+
+(d) Requesting PTO. Submit PTO requests in BrackNet as far in advance as possible, and at least two (2) weeks in advance for absences of three (3) or more consecutive working days. Your manager will approve or decline requests based on business needs. Managers should not unreasonably deny requests and should treat requests consistently across the team.
+
+(e) Recording PTO. Employees are responsible for recording PTO taken in their biweekly timesheet in BrackNet, and managers approve timesheets each pay period. The team out-of-office calendar is a scheduling tool and is not a record of PTO taken. If plans change and you work on a day you had marked as out of office, update the calendar and do not record PTO for that day.
+
+(f) Advances and negative balances. PTO may not be used before it accrues, except with VP approval for up to forty (40) hours.
+
+(g) Payment at separation. When employment ends for any reason, all accrued and unused PTO is paid to the employee at the employee's final rate of pay, together with final wages, in accordance with Cal. Lab. Code § 227.3 and Policy 6.4. Accrued PTO is a form of wages and is never forfeited.
+
+(h) Balances. Your current PTO balance is shown on each pay statement and in BrackNet. If you believe your balance is wrong, contact Payroll (see Policy 7.3).
+
+### 5.3 Paid Sick Leave
+
+All employees receive forty (40) hours or five (5) days, whichever is greater, of paid sick leave at the beginning of each calendar year (prorated in the first year and available after the 90th day of employment), which may be used for the diagnosis, care or treatment of an existing health condition of, or preventive care for, the employee or a family member, or for purposes related to domestic violence, sexual assault or stalking. Unused paid sick leave does not carry over and is not paid out at separation. The Company will not retaliate against any employee for using paid sick leave.
+
+### 5.4 Leaves of Absence
+
+Eligible employees may take job-protected leave under the California Family Rights Act, the federal Family and Medical Leave Act, California Pregnancy Disability Leave law, and other applicable laws, including leave for military service, organ or bone marrow donation, crime victim matters, school activities and reproductive loss. Contact your HR Business Partner as soon as you anticipate the need for leave. Benefits continue during protected leave as required by law.
+
+### 5.5 Bereavement Leave
+
+Employees may take up to five (5) days of bereavement leave upon the death of a family member, as provided in Cal. Gov. Code § 12945.7. The first three days are paid at the employee's regular rate; the remaining days may be taken as PTO or unpaid leave.
+
+### 5.6 Jury Duty, Witness and Voting Time
+
+Employees summoned for jury duty or subpoenaed as a witness will be given time off. Exempt employees receive full salary for any week in which they perform work. Employees who do not have sufficient time outside working hours to vote in a statewide election may take up to two hours of paid time off to vote, with advance notice to their manager.
+
+## 6. PERFORMANCE AND CONDUCT MANAGEMENT
+
+### 6.1 Progressive Discipline
+
+(a) Purpose. The Company generally uses progressive discipline to give employees a fair opportunity to correct performance or conduct problems. Progressive discipline is a management tool; it does not change the at-will nature of employment (Policy 2.1) and does not create any right to a particular process.
+
+(b) Typical steps. The usual steps are:
+
+Step 1 - Documented verbal warning. The manager discusses the issue with the employee, explains the expected improvement, and records the discussion (date, issue and expectations) in BrackNet within five (5) business days, with a copy to the HR Business Partner. A verbal warning that is not recorded in BrackNet is treated as coaching and not as a disciplinary step.
+
+Step 2 - Written warning. A written warning, reviewed by the HR Business Partner before delivery, describes the issue, previous discussions, expected improvement and possible consequences. The employee signs to acknowledge receipt and may add comments.
+
+Step 3 - Performance Improvement Plan. See Policy 6.3.
+
+Step 4 - Termination of employment.
+
+(c) Flexibility. The Company may begin at any step, skip steps, repeat steps or terminate employment without prior discipline, depending on the seriousness of the issue, the employee's history and business needs. Serious misconduct may result in immediate termination.
+
+### 6.2 Performance Reviews and Ratings
+
+The Company conducts an annual performance review cycle for the calendar year. Employees complete a self-review in December; managers prepare a written review and a proposed rating; and ratings are calibrated across each department in January of the following year. The rating scale is: Exceeds Expectations ("Exceeds"); Meets Expectations ("Meets"); Partially Meets Expectations ("Partially Meets"); and Does Not Meet Expectations ("Does Not Meet"). Ratings are used, among other things, to determine individual multipliers under the Company's annual bonus plan. A mid-year check-in, which does not produce a formal rating, takes place in July.
+
+### 6.3 Performance Improvement Plans
+
+(a) A performance improvement plan ("PIP") sets out specific, measurable objectives, the support the Company will provide, and a defined period for improvement, normally between thirty (30) and ninety (90) days.
+
+(b) Every PIP must be reviewed by the HR Business Partner before it is delivered. The HR Business Partner will check that the PIP is consistent with the employee's documented performance history and with this handbook, and may require changes.
+
+(c) Where the employee has a complaint open under Policy 4.3 concerning the manager proposing the PIP or that manager's reporting line, the PIP must also be approved in advance by the Legal Department.
+
+(d) The manager will hold check-in meetings with the employee at least every two weeks during the PIP and will record each check-in in BrackNet. The HR Business Partner may attend.
+
+(e) The employee may add written comments to the PIP, and those comments become part of the personnel file. The employee is asked to sign the PIP to acknowledge receipt; signing does not mean the employee agrees with it.
+
+(f) At the end of the PIP period the manager, with the HR Business Partner, will determine whether the objectives were met. Outcomes may include successful completion, extension, or further action up to and including termination.
+
+### 6.4 Separation from Employment
+
+(a) Resignation. We ask employees who resign to give at least two (2) weeks' notice. The Company may accept a resignation effective immediately and will pay any wages required by law.
+
+(b) Final pay. If the Company ends an employee's employment, all final wages, including accrued and unused PTO, are paid at the time of termination (Cal. Lab. Code § 201). If an employee resigns without giving at least 72 hours' notice, final wages are paid within 72 hours; if the employee gives at least 72 hours' notice, final wages are paid on the last day of work (Cal. Lab. Code § 202). Payroll prepares final pay in a separate off-cycle run.
+
+(c) Notices. Departing employees receive the EDD pamphlet "For Your Benefit" (DE 2320), a written notice of change in employment relationship (Cal. Unemp. Ins. Code § 1089), and information about continuation of health coverage (Policy 8.2).
+
+(d) Return of property and expenses. Employees must return all Company property on or before the last day of work. Outstanding business expenses should be submitted within thirty (30) days after the last day of work.
+
+(e) Equity and bonus. The effect of separation on stock options, other equity awards and bonuses is governed by the applicable plan documents and grant agreements.
+
+<<<PAGE>>>
+
+## 7. PAY AND EXPENSES
+
+### 7.1 Pay Periods and Paydays
+
+Employees are paid biweekly. Each pay period runs for two weeks, from Sunday through the second following Saturday, and wages for the period are paid on the Friday after the period ends. If a payday falls on a holiday, employees are paid on the preceding business day. Pay statements are available in BrackNet and show gross and net pay, deductions, hours (for non-exempt employees), and PTO accrued, used and available.
+
+### 7.2 Timekeeping and PTO Recording
+
+Non-exempt employees must record all hours worked, including meal periods, accurately and contemporaneously. Off-the-clock work is prohibited. Exempt employees do not record hours worked but must record PTO, sick leave and other leave taken in their biweekly timesheet, which their manager approves. Falsifying a timesheet, or approving a timesheet you know to be inaccurate, violates Policy 3.1.
+
+### 7.3 Payroll Errors and Corrections
+
+(a) If you believe there is an error in your pay or your PTO balance, notify Payroll (payroll@brackenridge-analytics.example) promptly. Underpayments will be corrected no later than the next regular payday.
+
+(b) If Payroll or a manager identifies an error that has resulted in an overpayment or an overstated PTO balance, Payroll will correct it in the next available pay run. Any correction that reduces an employee's PTO balance requires (i) documentation supporting the correction, such as an approved PTO request or timesheet, and (ii) written notice to the employee before or at the time the correction is processed, stating the dates and hours affected. The employee may dispute the correction within fourteen (14) days of the notice, and Payroll and the HR Business Partner will review any dispute before the correction is treated as final.
+
+(c) The Company will not make deductions from wages to recover an overpayment except as permitted by California law.
+
+### 7.4 Expense Reimbursement
+
+(a) The Company reimburses employees for all necessary business expenses incurred in the performance of their duties, as required by Cal. Lab. Code § 2802. Expenses must be submitted with receipts through BrackNet within sixty (60) days after they are incurred, and are reimbursed in the next regular payroll after approval.
+
+(b) Remote and hybrid stipend. To cover the business use of home internet and personal mobile phones, eligible hybrid and remote employees receive a stipend of $75.00 per month, paid as a non-taxable reimbursement with the first regular payday of each month. Employees whose actual business-related expenses exceed the stipend may submit them for reimbursement under paragraph (a).
+
+(c) Equipment. The Company provides a laptop and, for hybrid and remote employees, a monitor, keyboard and headset. Other home-office equipment may be reimbursed with manager approval.
+
+### 7.5 Incentive Compensation and Equity
+
+Bonuses, commissions and equity awards are governed by the terms of the applicable plan documents and award agreements, which control over anything in this handbook or any oral statement. Eligibility conditions in those plans, including any requirement to be employed on a payment date, apply as written. This handbook does not create any entitlement to a bonus or award.
+
+## 8. BENEFITS
+
+### 8.1 Health and Welfare Benefits
+
+Regular employees scheduled to work 30 or more hours per week, and their eligible dependents, may enroll in the Company's medical, dental and vision plans beginning on the first day of the month after their start date. The Company also provides basic life insurance, short- and long-term disability insurance, and a flexible spending account program. Details are in the plan documents and the summary plan descriptions, which control.
+
+### 8.2 Continuation Coverage (COBRA / Cal-COBRA)
+
+Group health coverage ends on the last day of the month in which employment ends. Employees and covered dependents who lose coverage may be eligible to continue it at their own expense under the federal Consolidated Omnibus Budget Reconciliation Act ("COBRA") and, after federal COBRA ends, under Cal-COBRA, for a combined period of up to thirty-six (36) months in certain cases. The Company's COBRA administrator will mail an election notice to the employee's home address within forty-four (44) days after coverage ends. Qualified beneficiaries have sixty (60) days from the later of the loss of coverage or the date of the notice to elect continuation coverage. The premium for continuation coverage is up to 102% of the full cost of coverage.
+
+### 8.3 401(k) Retirement Savings Plan
+
+Eligible employees may contribute to the Company's 401(k) plan from their first payroll. The Company matches 50% of the first 6% of eligible compensation contributed, and matching contributions vest over three years of service. The plan document controls.
+
+### 8.4 Employee Assistance Program
+
+The Employee Assistance Program offers free, confidential counseling and referral services to employees and their household members, available 24 hours a day. Contact details are on BrackNet.
+
+## 9. WORKPLACE
+
+### 9.1 Remote and Hybrid Work
+
+(a) Work arrangements. Each position is designated as on-site, hybrid or remote. Hybrid employees work from the San Jose headquarters on Tuesdays and Thursdays and may work remotely on other days. Remote arrangements require the approval of the employee's VP and the People team.
+
+(b) Location. Remote work must be performed from within California unless the People team and the Legal Department approve another location in advance, because working from another state can affect payroll taxes and the laws that apply to your employment.
+
+(c) Expectations. Remote and hybrid employees are expected to be reachable during core collaboration hours (10:00 a.m. to 3:00 p.m. Pacific Time), to attend scheduled meetings with video on where practical, to keep their status and the team out-of-office calendar current, and to protect Confidential Information in their home workspace.
+
+(d) Expenses. Business expenses related to remote and hybrid work are reimbursed under Policy 7.4, including the monthly stipend.
+
+(e) Changes. The Company may change an employee's work arrangement based on business needs, with reasonable notice.
+
+### 9.2 Workplace Safety and Violence Prevention
+
+The Company maintains an Injury and Illness Prevention Program and, from July 1, 2024, a Workplace Violence Prevention Plan under Cal. Lab. Code § 6401.9. Report any injury, unsafe condition, threat or act of violence immediately to your manager, the People team or Facilities, or, in an emergency, call 911. Weapons are prohibited on Company premises to the extent permitted by law.
+
+### 9.3 Travel
+
+Business travel must be approved in advance by your manager and booked in accordance with the Company's travel guidelines. Non-exempt employees are paid for travel time as required by law. Travel expenses are reimbursed under Policy 7.4.
+
+### 9.4 Handbook Acknowledgment
+
+Please read this handbook and acknowledge it in BrackNet within thirty (30) days of receiving it or of the effective date of a new revision. By acknowledging, you confirm that you have received the handbook, that you understand that it is not a contract and that it may be changed by the Company, and that your employment is at will.
+
+EMPLOYEE ACKNOWLEDGMENT (to be completed in BrackNet)
+
+I acknowledge that I have received the Brackenridge Analytics Employee Handbook, revision 2024-01, and that I will read it and comply with the policies it contains. I understand that the handbook is not a contract of employment, that the Company may revise its policies at any time, and that my employment is at will and may be ended by me or by the Company at any time, with or without cause or notice.
+
+Employee name: ____________________
+
+Employee ID: ____________________
+
+Date acknowledged: ____________________

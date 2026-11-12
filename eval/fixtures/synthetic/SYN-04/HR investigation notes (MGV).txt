@@ -1,0 +1,81 @@
+CASE HR-INV-2024-031  -  CONFIDENTIAL / ATTORNEY-CLIENT PRIVILEGED (prepared at direction of OT from 10/25)
+Complainant: Daniela Okafor-Reyes (DOR), Sr Data Scientist IC4, ID 10487
+Respondent: Trevor Albright (TA), Dir Data Science
+Investigator: Marisol Gutierrez-Vance (MGV), HRBP Eng
+Policy: 4.3 (complaint), 3.2 (harassment/discrim), 2.2 (EEO)
+
+10/21/24 16:47 - Complaint rec'd by email from DOR. Allegations:
+  (1) age comments by TA: 8/14 1:1 "not exactly a digital native"; 9/5 team mtg "our resident veteran ... spreadsheets"; 9/19 1:1 "glide path"; 9/20 chat DM "next chapter ... no pressure :)"
+  (2) 9/23 Atlas tech lead -> Kevin Strand (KS); DOR moved to Ledgerline maint
+  (3) off Atlas design review invites since 9/30
+  DOR age 41. KS age 29 (per HRIS).
+  Opened case. 30-day target date = 11/20/24 (Policy 4.3(c)).
+
+10/22/24 - Ack email to DOR (within 2 bus days). Explained process, confidentiality limits, non-retaliation. She asked TA not be told it was her - explained he has to be told to respond.
+
+10/23/24 - Intake interview DOR (45 min, video call). Consistent w/ email. Adds: TA "jokes about the old guard" generally. Led Atlas forecasting prototype Q2 (confirmed - Q2 OKR doc lists DOR as owner). Gave me chat screenshot 9/20 + her 1:1 notes (dated, typed same day she says). Witnesses: Mei-Lin Ocampo (MLO) 9/5; Raj Dutta (RD) on call 9/5. Asked about prior perf issues - she said none raised formally; mid-year "Meets", TA said "be faster on Atlas onboarding". Atlas staging access - requested Aug, ticket still open.
+
+10/24/24 - Notified TA of complaint + investigation (call, 15 min). Reminded him Policy 4.3(f): no retaliation, no adverse action re DOR w/o People + Legal review. TA: "understood." Said he was "surprised". Scheduled interview 11/1.
+
+10/25/24 - Notified PV (TA's mgr) and OT per policy. OT: privileged from here, route draft findings to him.
+
+10/30/24 - PV called me. TA had proposed "restructure" of DS team for Q1 incl DOR's role. PV asked what she can do. Told her: not now - open 4.3 complaint, any change to DOR role/comp/duties needs People + Legal review in advance. PV: TA says there are perf issues. Told her if so, needs documentation; I'll review any PIP. Checked file after call: NO documented verbal or written warnings for DOR in BrackNet. 2023 annual review: Meets. 2024 mid-year: Meets, comment "some concerns re Atlas adoption pace".
+
+11/01/24 a.m. - TA sent draft PIP. Reviewed. Edits requested:
+  - remove "lack of energy" (Obj 2 narrative)
+  - remove ref to "verbal warning 9/12" - no record in file. TA says it was verbal in 1:1, "I told her straight". Told him a verbal warning not in BrackNet = coaching only (6.1(b)). TA to revise.
+  - add staging access + pairing to support section
+  - objectives OK, measurable
+  Approved from HR side subject to edits (6.3(b)). Policy 6.3(c) - open complaint against TA -> Legal approval needed. Sent draft to OT 17:10. No response today.
+
+11/01/24 p.m. - Interview TA (60 min, conf room 4B). Notes:
+  - Knew of complaint since 10/24 (my call).
+  - "digital native": said it, joking, about tooling not age. "She's the first to joke about it herself."
+  - "resident veteran": meant tenure on Ledgerline. Doesn't recall "spreadsheets" part.
+  - "glide path": about Ledgerline project wind-down not career. Chat msg 9/20 "next chapter" = which product she wants next. Shown screenshot - "that's what I meant."
+  - Atlas lead: KS built the streaming prototype, knows Rust. DOR "resistant to the new stack", "slow to retool".
+  - Asked re restructure: says has been thinking about team shape "since Q3". Asked if anything in writing before 10/28 - "no, just in my head / whiteboard". (Note: PV call 10/30.)
+  - Asked: plans to change DOR role? "No. Not at this point."
+  - Denies any connection betw PIP and complaint. "Performance issues predate all this."
+
+11/04/24 09:40 - PV says OT ok'd PIP "verbally" this a.m. Did not confirm directly w/ OT (he's in board prep). Proceeded per PV.
+
+11/04/24 10:00 - PIP delivered (TA, MGV present, 35 min). 60 days, ends 1/3/25. DOR upset, said "this is retaliation for my complaint". Added written comments to PIP. Declined to sign - noted on form. Told her PIP and investigation are separate processes; 4.3 protections still apply. NB: final PIP still has "verbal warning" sentence in Background - not removed. Raised w/ TA after mtg - TA: "it's accurate." Flagged in file.
+
+11/06/24 - Interview MLO (30 min). Heard "resident veteran" 9/5; doesn't recall "spreadsheets" exactly but "something like that". Room laughed. Thought it was "about tenure, kind of". Says TA "jokes about the old guard a lot", "not just Daniela". Did not hear other comments.
+
+11/08/24 - Interview RD (25 min). On video 9/5, audio bad, didn't hear remark. Atlas: KS picked "because he built the prototype pipeline"; DOR "had more ML depth, did the model work". No other info.
+
+11/12/24 - Interview KS (20 min). TA offered Atlas lead 9/23 in 1:1. Not aware of comments. Gets along w/ DOR. Agreed to weekly pairing per PIP.
+
+11/14/24 - Chat export TA<->DOR DMs Aug-Oct rec'd from IT (ticket IT-88214, requested 10/28). Confirms 9/20 msg verbatim. No other age-related msgs. Nothing re 8/14 or 9/19 (verbal, 1:1).
+
+11/18/24 - PIP check-in 1 (TA, DOR; I did not attend). TA notes: Obj 1 on track, Obj 2 behind.
+
+11/19/24 - Will not meet 11/20 target - chat export delay, KS/RD availability, Thanksgiving. Emailed DOR: new target 12/6/24, reason given (4.3(c)). She replied "ok".
+
+11/22/24 - Follow-up interview DOR (20 min). Ledgerline move = "career demotion". Asked whether PIP on hold during investigation - told no. Mentioned she cancelled her Thanksgiving-week trip today because of PIP deadlines.
+
+12/02/24 - PIP check-in 2 (attended). LDG-412 not yet merged (due 11/22). DOR: scope grew + pulled onto customer escalation by TA 11/12-11/15. TA agrees escalation happened, says "minor". Draft findings to OT.
+
+12/06/24 - CONCLUSION: UNSUBSTANTIATED.
+  - Comments: 3 of 4 admitted in substance (digital native, veteran, next chapter); TA explanations plausible but remarks inappropriate. Insufficient evidence comments were based on age or that Atlas staffing was age-motivated (KS prototype, Rust skills).
+  - Action: written coaching for TA re inappropriate jokes / Policy 3.2; refresher harassment training by 1/31/25.
+  - Outcome letter to DOR + TA 12/06. DOR call 15:30: disagrees, "I'll be talking to a lawyer." Reminded of 4.3(f).
+  - Retaliation re PIP not in scope of original complaint; DOR's PIP comment noted; referred to OT 12/06.
+
+12/16/24 - PIP check-in 3 (attended). LDG-412 merged 12/4. LDG-418 not done (due 12/13). Atlas modules 1-3 done, 4 not. DOR: still no staging access (ticket open since Aug). TA: "will chase".
+
+12/17/24 - TA asked me re DOR PTO 11/25-11/26 - team OOO calendar showed her out, no PTO in timesheet. Told him payroll needs documentation and EE must get written notice before any PTO correction (7.3(b)); don't do it informally. TA said he'd "already sent it to Lucas". Staging access granted today (IT).
+
+01/03/25 - PIP period end. DOR written response rec'd by email: LDG-418 blocked by schema change; staging access only 12/17, 3 days before Obj 2 deadline; weekly updates all posted.
+
+01/06/25 - TA final PIP assessment rec'd: Obj 1 NOT MET (LDG-412 merged 12/4, 12 days late; LDG-418 not merged); Obj 2 NOT MET (module 4 incomplete; pipeline not in staging); Obj 3 MET; Obj 4 NOT MET (avg review response 3.6 bus days). Reviewed against BrackNet + repo data - figures match. Note DOR's staging access point.
+
+01/07/25 - Decision mtg PV, TA, MGV; OT by phone (10 min). Decision: terminate, eff 1/10/25. OT: final pay same day (201), incl PTO; letter to cite PIP only. PV approved.
+
+01/10/25 10:00 - Termination mtg (TA, MGV; 20 min). Letter + final pay stmt handed over. Final pay incl PTO 92.00 hrs (11.5 days). DOR said her PTO is wrong: she WORKED 11/25-26 (commits + 11/26 standup), cancelled trip 11/22 and forgot to clear the team calendar - nobody told her about a correction. Said will look into it. Laptop + badge collected 10:25.
+
+01/14/25 - Asked Lucas F. re PTO: correction -16.00 hrs keyed 12/18, in 12/27 run, per TA email 12/16. No written notice sent to DOR - LF thought TA would tell her. Policy 7.3(b) not followed. Asked LF to add a scenario to the PTO calc sheet. Flagged to OT.
+
+Case closed 12/06/24 (complaint). File remains open re PTO question.  - MGV

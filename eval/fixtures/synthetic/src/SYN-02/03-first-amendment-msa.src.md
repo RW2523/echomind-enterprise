@@ -1,0 +1,89 @@
+---
+file: First Amendment to MSA (eff. 7.1.2023).pdf
+title: First Amendment to Master Services Agreement (effective July 1, 2023)
+kind: contract
+status: executed
+render: pdf
+style: contract
+font: serif
+footer: Contract No. LHP-OBS-2022-01 - Amendment No. 1
+---
+
+# FIRST AMENDMENT TO MASTER SERVICES AGREEMENT
+
+This FIRST AMENDMENT TO MASTER SERVICES AGREEMENT (this "Amendment") is entered into effective as of July 1, 2023 (the "Amendment Effective Date") by and between LARKSPUR HEALTH PARTNERS, INC., a New York corporation ("Client"), and OSTRANDER BILLING SOLUTIONS LLC, a Delaware limited liability company ("Vendor").
+
+## RECITALS
+
+WHEREAS, Client and Vendor are parties to a Master Services Agreement, Contract No. LHP-OBS-2022-01, dated as of February 1, 2022 (the "Agreement");
+
+WHEREAS, following Client's 2023 vendor risk review, the Parties wish to shorten the period for notice of Security Incidents and to establish a specific limitation of liability for data security matters; and
+
+WHEREAS, in consideration of those changes and of the addition of prior authorization support services, the Parties wish to revise the Fees set out in Exhibit A;
+
+NOW, THEREFORE, the Parties agree as follows:
+
+1. AMENDMENT OF SECTION 9.4 (NOTICE OF SECURITY INCIDENT)
+
+1.1 Section 9.4 of the Agreement is deleted in its entirety and replaced with the following:
+
+"9.4 Notice of Security Incident. Vendor shall notify Client in writing of any Security Incident without undue delay, and in any event within forty-eight (48) hours after discovery. Such notice shall be given in accordance with Section 20 and, in addition, by email to each of the Client contacts listed in Part 4 of Exhibit C. Telephone contact, conversations with Client personnel and postings on any status page do not constitute notice for purposes of this Section 9.4. The notice shall include, to the extent known at the time and supplemented promptly as further information becomes available: (a) the date and time of discovery and the date or estimated date of the Security Incident; (b) a description of the nature of the Security Incident and the Vendor Systems involved; (c) the categories and approximate volume of Client Data and the number of individuals involved or reasonably believed to be involved; (d) whether Client Data was or may have been acquired or exfiltrated; (e) the steps Vendor has taken and will take to contain, investigate and remediate the Security Incident; and (f) the name and contact information of a Vendor representative with authority to act for Vendor in respect of the Security Incident. Vendor shall not delay notice on the ground that its investigation is incomplete."
+
+2. AMENDMENT OF SECTION 12.2 (CAP)
+
+2.1 Section 12.2 of the Agreement is amended by inserting the words "EXCEPT AS PROVIDED IN SECTIONS 12.3 AND 12.4," at the beginning of that Section.
+
+3. NEW SECTION 12.4 (DATA BREACH CAP)
+
+3.1 Section 12.4 of the Agreement ("[Reserved.]") is deleted and replaced with the following:
+
+"12.4 Data Breach Cap. Notwithstanding Section 12.2, Vendor's total aggregate liability arising out of or relating to (a) any breach of Section 9 (Data Security) or of the BAA, and (b) Vendor's indemnification obligations under Section 11.1(c), shall not exceed Two Million United States Dollars (USD 2,000,000) (the "Data Breach Cap"). The Data Breach Cap applies in lieu of, and not in addition to, the limitation in Section 12.2, and amounts paid under the Data Breach Cap shall not reduce the amount available under Section 12.2 for other claims. Data Breach Costs constitute direct damages and shall not be excluded by Section 12.1. Section 12.3 continues to apply, and nothing in this Section 12.4 limits Vendor's liability for Losses arising from its gross negligence, fraud or willful misconduct. For purposes of this Agreement, "Data Breach Costs" means the costs described in Section 11.1(c)(i) through (vi), together with the costs of any notification required under the BAA."
+
+4. AMENDMENT OF SECTION 13.1(c) (CYBER INSURANCE)
+
+4.1 In Section 13.1(c) of the Agreement, the amount "USD 3,000,000" is deleted and replaced with "USD 5,000,000". Vendor shall deliver a certificate evidencing the increased coverage within thirty (30) days after the Amendment Effective Date.
+
+5. REPLACEMENT OF EXHIBIT A (FEES)
+
+5.1 The table in paragraph A.1 of Exhibit A to the Agreement is deleted and replaced with the following table, which applies to all Services performed on or after the Amendment Effective Date:
+
+| Service | Fee | Basis |
+|---|---|---|
+| Revenue Cycle Management Platform Fee (all clinics) | USD 38,750.00 | per month |
+| Claims creation, scrubbing and submission | USD 1.40 per claim | minimum USD 6,000.00 per month |
+| Patient statements, mailing and lockbox | USD 0.58 per statement | per statement mailed or e-delivered |
+| Denial management and appeals | 3.5% | of amounts recovered on appealed claims |
+| Provider credentialing support | USD 275.00 per provider | per credentialed provider per month |
+| Prior authorization support (new) | USD 4,200.00 | per month |
+
+5.2 The second sentence of paragraph A.1 of Exhibit A is replaced with: "Fees are fixed through January 31, 2026."
+
+5.3 Paragraphs A.2 and A.3 of Exhibit A are unchanged.
+
+6. GENERAL
+
+6.1 Effect. Except as expressly amended by this Amendment, the Agreement remains unchanged and in full force and effect, and is hereby ratified and confirmed. From the Amendment Effective Date, each reference in the Agreement to "this Agreement" means the Agreement as amended by this Amendment.
+
+6.2 Conflict. In the event of any conflict between this Amendment and the Agreement, this Amendment shall prevail, in accordance with Section 22.3(ii) of the Agreement.
+
+6.3 Definitions. Capitalized terms used but not defined in this Amendment have the meanings given in the Agreement.
+
+6.4 Counterparts. This Amendment may be executed in counterparts and by electronic signature, each of which is an original and all of which together are one instrument.
+
+IN WITNESS WHEREOF, the Parties have executed this First Amendment as of the Amendment Effective Date.
+
+LARKSPUR HEALTH PARTNERS, INC.
+
+[[sign: Paul Kowalczyk]]
+
+By: Paul Kowalczyk
+Title: Chief Financial Officer
+Date: June 21, 2023
+
+OSTRANDER BILLING SOLUTIONS LLC
+
+[[sign: Bryce Kettering]]
+
+By: Bryce Kettering
+Title: Chief Operating Officer
+Date: June 27, 2023

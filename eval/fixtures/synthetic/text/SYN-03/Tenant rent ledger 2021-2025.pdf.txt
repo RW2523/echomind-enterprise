@@ -1,0 +1,54 @@
+Tenant rent ledger 2021-2025 (Unit 4 Merrow Arcade)
+(file: Tenant rent ledger 2021-2025.pdf; pdf; other, final)
+
+Property ledger - Unit 4, Merrow Arcade, Bath (store 0412)
+
+Landlord: Carrow Hill Estates Ltd / Carrow Hill Property Holdings Ltd (co. no. 05928814) - managing agent QLPM
+Lease: 24/06/2016, 15 yrs from 24/06/2016; DoV 15/10/2020; rent review memo 11/01/2022
+Printed 04/11/2025 10:22 by D. Okafor - all amounts in GBP, net of VAT
+
+A. Annual Rent
+
+| Quarter day | Description | Due | Paid | Date paid | Notes |
+| 25/03/2021 | Rent qtr to 23/06/21 | 10,812.50 | 10,812.50 | 25/03/2021 | 50% per DoV cl 3.1; 10,812.50 deferred |
+| 24/06/2021 | Rent qtr to 28/09/21 | 21,625.00 | 21,625.00 | 23/06/2021 | Old rate - review pending |
+| 29/09/2021 | Rent qtr to 24/12/21 | 21,625.00 | 21,625.00 | 28/09/2021 | Old rate - review pending |
+| 24/12/2021 (by) | Deferred Rent (DoV cl 3.2) | 43,250.00 | 43,250.00 | 20/12/2021 | 4 x 10,812.50; remittance ref DEFRENT-U4 |
+| 25/12/2021 | Rent qtr to 24/03/22 | 21,625.00 | 21,625.00 | 23/12/2021 | Old rate - review pending |
+| 25/01/2022 (by) | Review Balancing Sum | 5,812.50 | 5,812.50 | 24/01/2022 | 3 x 1,937.50; interest waived (memo para 4) |
+| 25/03/2022 | Rent qtr to 23/06/22 | 23,562.50 | 23,562.50 | 24/03/2022 | New rate 94,250 pa |
+| 24/06/2022 | Rent qtr to 28/09/22 | 23,562.50 | 23,562.50 | 23/06/2022 |  |
+| 29/09/2022 | Rent qtr to 24/12/22 | 23,562.50 | 23,562.50 | 28/09/2022 |  |
+| 25/12/2022 | Rent qtr to 24/03/23 | 23,562.50 | 23,562.50 | 23/12/2022 |  |
+| 25/03/2023 | Rent qtr to 23/06/23 | 23,562.50 | 23,562.50 | 24/03/2023 |  |
+| 24/06/2023 | Rent qtr to 28/09/23 | 23,562.50 | 23,562.50 | 05/07/2023 | LATE 11 days - bank mandate change |
+| 29/09/2023 | Rent qtr to 24/12/23 | 23,562.50 | 23,562.50 | 28/09/2023 |  |
+| 25/12/2023 | Rent qtr to 24/03/24 | 23,562.50 | 23,562.50 | 22/12/2023 |  |
+| 25/03/2024 | Rent qtr to 23/06/24 | 23,562.50 | 23,562.50 | 22/03/2024 |  |
+| 24/06/2024 | Rent qtr to 28/09/24 | 23,562.50 | 23,562.50 | 21/06/2024 | Payee now Carrow Hill Property Holdings Ltd (same a/c) |
+| 29/09/2024 | Rent qtr to 24/12/24 | 23,562.50 | 23,562.50 | 27/09/2024 |  |
+| 25/12/2024 | Rent qtr to 24/03/25 | 23,562.50 | 23,562.50 | 23/12/2024 |  |
+| 25/03/2025 | Rent qtr to 23/06/25 | 23,562.50 | 23,562.50 | 24/03/2025 |  |
+| 24/06/2025 | Rent qtr to 28/09/25 | 23,562.50 | 23,562.50 | 23/06/2025 |  |
+| 29/09/2025 | Rent qtr to 24/12/25 | 23,562.50 | 23,562.50 | 26/09/2025 |  |
+| 25/12/2025 | Rent qtr to 24/03/26 | 23,562.50 | - | - | Not yet due |
+|  | Total Annual Rent paid 25/03/2021 - 29/09/2025 |  | 478,187.50 |  | Arrears: NIL |
+
+Interest on late payment (24/06/2023 qtr): QLPM inv QL/INT/2307-114 dated 18/07/2023, £23,562.50 x 9.00% (Base Rate 5.00% + 4%) x 11/365 = 63.91. Paid 02/08/2023.
+
+B. Service charge and insurance (from 25/03/2024)
+
+| Date | Description | Due | Paid | Date paid | Notes |
+| 25/03/2024 | SC on account 2024/25 Q1 | 7,055.50 | 7,055.50 | 22/03/2024 | Budget 412,000 x 6.85% / 4 |
+| 24/06/2024 | SC on account 2024/25 Q2 | 7,055.50 | 7,055.50 | 21/06/2024 |  |
+| 29/09/2024 | SC on account 2024/25 Q3 | 7,055.50 | 7,055.50 | 27/09/2024 |  |
+| 25/12/2024 | SC on account 2024/25 Q4 | 7,055.50 | 7,055.50 | 23/12/2024 |  |
+| 25/03/2025 | SC on account 2025/26 Q1 | 7,363.75 | 7,363.75 | 24/03/2025 | Budget 430,000 x 6.85% / 4 |
+| 24/06/2025 | SC on account 2025/26 Q2 | 7,363.75 | 7,363.75 | 23/06/2025 |  |
+| 30/06/2025 | SC balancing charge YE 24/03/2025 (QL/SC/2506-0388) | 7,342.18 | - | - | ON HOLD - DO query to QLPM 09/07/2025 (atrium works). Due 21/07/2025 |
+| 18/08/2025 | Insurance Rent 2025/26 - buildings and loss of rent (6.85% x 74,180.00) | 5,081.33 | 5,081.33 | 15/09/2025 |  |
+| 18/08/2025 | Insurance Rent - terrorism cover 29/09/2025-28/09/2026 (6.85% x 27,830.66) | 1,906.40 | - | - | ON HOLD - breakdown requested. Due 01/09/2025 |
+| 29/09/2025 | SC on account 2025/26 Q3 | 7,363.75 | 7,363.75 | 26/09/2025 |  |
+|  | Outstanding (SC balancing + terrorism insurance) |  |  |  | 9,248.58 |
+
+Prepared: D. Okafor (Property Manager) - Checked: I. Thackeray (FD) 04/11/2025

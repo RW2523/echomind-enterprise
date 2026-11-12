@@ -1,0 +1,247 @@
+Cobaltline Forensics - Final Forensic Report (v1.0, 30 May 2025)
+(file: Cobaltline Final Forensic Report.pdf; pdf; evidence, final)
+
+Final Forensic Report — Ostrander Billing Solutions Ransomware Incident (Larkspur Health Partners Data)
+
+Report reference: CF-2025-0317-FR-01
+Version: 1.0 FINAL
+Date: 30 May 2025
+
+Prepared for: Calder & Wynne LLP (Attn: Kenji Arai; Alice Moreno), counsel to Larkspur Health Partners, Inc.
+
+Prepared by: Imogen Thwaite, Principal Forensic Analyst, Cobaltline Forensics (UK) Ltd, Manchester
+Reviewed and approved by: Derek Solano, Managing Director, Cobaltline Forensics LLC, New York
+
+Supersession: This Final Report supersedes the Preliminary Report CF-2025-0317-PR-01 (draft v0.3, 4 April 2025) in its entirety. Where any figure, date or finding in this report differs from the Preliminary Report, the figure, date or finding in this report should be relied upon. Section 3 summarises the principal changes.
+
+Privilege notice: Prepared at the request and under the direction of Calder & Wynne LLP for the purpose of assisting counsel in advising Larkspur Health Partners, Inc. Distribution beyond Counsel and Larkspur is at Counsel's discretion.
+
+1. Executive summary
+
+1.1 Ostrander Billing Solutions LLC ("Ostrander" or "OBS") suffered a ransomware attack that culminated in the encryption of servers in its hosted revenue-cycle environment on 9 March 2025. The threat actor had been present in the environment for 20 days before the encryption and exfiltrated data, including Larkspur billing export files, before deploying the ransomware.
+
+1.2 Key findings:
+
+| Item | Finding |
+| Earliest intrusion | 17 February 2025, 07:41 UTC (02:41 EST) — exploitation of Ostrander's VPN appliance OBS-VPN-EDGE-01 |
+| Root cause | Unpatched pre-authentication remote code execution vulnerability in OBS-VPN-EDGE-01 (manufacturer advisory SA-2024-117, published 10 December 2024, CVSS 9.8) |
+| Dwell time before encryption | 20 days (17 February to 9 March 2025) |
+| Data exfiltrated (all Ostrander clients) | 43.6 GB, over two channels (41.0 GB + 2.6 GB) |
+| Larkspur-attributable data exfiltrated | 17.2 GB in 1,284 files |
+| Encryption (ransomware) | 9 March 2025, 09:58 UTC (05:58 EDT); variant self-identified as BLACKTARN |
+| Discovery by Ostrander | 9 March 2025, 10:14 UTC (06:14 EDT) — on-call engineer alerted; ransom notes observed on FS-BILL-03 and APP-RCM servers |
+| Encryption at rest, FS-BILL-03 | Not enabled. Larkspur billing exports were stored in plain text |
+| Affected individuals (Larkspur) | 23,912 unique individuals across all eight Larkspur clinics |
+| Larkspur's own systems | No evidence of compromise |
+| Publication of data | None identified on monitored leak sites as at 28 May 2025 |
+
+1.3 The FS-BILL-03 file server, which held Larkspur claim, statement and eligibility export files dating back to October 2023, did not have encryption at rest enabled. In Cobaltline's view this does not meet the encryption requirement in Section 9.2 of the Master Services Agreement (as provided to us by Counsel), which expressly extends to file servers, data exports and staging environments. Because the data was not encrypted, the files were readable by the threat actor. Whether these facts amount to a breach of contract is a matter for Counsel.
+
+2. Scope and evidence
+
+2.1 Scope is as set out in section 1 of the Preliminary Report. In summary: how and when the threat actor gained access; whether, and which, Larkspur data was exfiltrated; the individuals affected; and whether Larkspur's own systems were affected.
+
+2.2 In addition to the evidence listed in the Preliminary Report (E-01 to E-09), Cobaltline received and analysed the following after 4 April 2025:
+
+| Ref | Item | Provided by | Received |
+| E-10 | Written confirmation and configuration export: FS-BILL-03 volume encryption status | Ostrander | 16/04/2025 |
+| E-11 | Perimeter firewall egress logs, 14/02/2025 to 12/03/2025 | Ostrander | 22/04/2025 |
+| E-12 | Patch and change records for OBS-VPN-EDGE-01, including change record CHG-24-1187 | Ostrander | 24/04/2025 |
+| E-13 | VPN appliance logs forwarded to central log platform, 01/02/2025 to 20/02/2025 | Ostrander | 24/04/2025 |
+| E-14 | Remaining EDR telemetry (39 servers) | Ostrander | 29/04/2025 |
+| E-15 | Ostrander data inventory and retention schedule (v2.3, 2024) | Ostrander | 25/04/2025 |
+| E-16 | Larkspur master patient index extract (for reconciliation only) | Larkspur | 12/05/2025 |
+| E-17 | Ironvale Response Group draft findings memorandum (redacted to Larkspur-relevant content) | Ostrander | 19/05/2025 |
+
+2.3 ARCH-06 to ARCH-08 were fully parsed on 02/05/2025. Reconciliation of the parsed records against the Larkspur master patient index was completed on 21/05/2025.
+
+3. Changes from the Preliminary Report
+
+| Item | Preliminary Report (4 April 2025) | Final Report | Reason for change |
+| Earliest intrusion | 21 February 2025, 14:22 UTC | 17 February 2025, 07:41 UTC | Forwarded VPN logs (E-13) and firewall logs (E-11) show exploitation of the appliance four days before the first svc_rcmsync session |
+| Initial access vector | Working hypothesis: compromised credentials for svc_rcmsync | Exploitation of unpatched VPN appliance (SA-2024-117); svc_rcmsync credentials were harvested from the appliance after exploitation | Patch records (E-12), appliance logs (E-13) |
+| Exfiltrated volume (all clients) | approx. 41 GB | 43.6 GB | Second channel (2.6 GB on 8 March 2025) identified in firewall logs (E-11) |
+| Larkspur-attributable volume | Not determined | 17.2 GB in 1,284 files | Attribution of archive contents |
+| Affected individuals | approx. 18,400 (estimate) | 23,912 | ARCH-06 to ARCH-08 parsed; full de-duplication; master patient index reconciliation |
+| FS-BILL-03 encryption at rest | Under review | Not enabled | Configuration export (E-10) |
+
+3.1 The earlier figure of approximately 18,400 should not be used for any purpose.
+
+4. Timeline
+
+Dates are day/month/year. UTC with US Eastern time in brackets (EST, UTC-5, until 07:00 UTC on 09/03/2025; EDT, UTC-4, thereafter).
+
+| Date/time (UTC) | US Eastern | Event | Source |
+| 10/12/2024 | — | Appliance manufacturer publishes advisory SA-2024-117 (critical, CVSS 9.8) and fixed firmware | Public advisory; E-12 |
+| 16/12/2024 | — | Ostrander change record CHG-24-1187 raised to apply fixed firmware; scheduled for "Q1 2025 maintenance window" | E-12 |
+| 17/02/2025 07:41 | 02:41 EST | Exploitation of OBS-VPN-EDGE-01 from 192.0.2.77; web shell written to appliance | E-11, E-13 |
+| 17/02/2025 08:03 | 03:03 EST | Appliance configuration file read by threat actor (contains stored credentials, including svc_rcmsync) | E-13 |
+| 19/02/2025 04:26 | 23:26 EST (18/02) | Test authentication with harvested credentials | E-13 |
+| 21/02/2025 14:22 | 09:22 EST | First interactive VPN session as svc_rcmsync (the earliest event in the Preliminary Report) | E-04 |
+| 22/02/2025 03:17 | 22:17 EST (21/02) | Credential-dumping tool run on APP-RCM-02; domain administrator credentials obtained | E-02 |
+| 24/02/2025 02:40 | 21:40 EST (23/02) | First interactive logon to FS-BILL-03 with domain administrator account | E-01, E-03 |
+| 03/03/2025 to 07/03/2025 | — | Archives ARCH-01 to ARCH-08 created on FS-BILL-03 | E-01, E-06 |
+| 05/03/2025 01:10 to 07/03/2025 04:52 | — | Channel 1: 41.0 GB transferred from FS-BILL-03 to 203.0.113.47 | E-01, E-11 |
+| 08/03/2025 22:31 to 23:58 | 17:31 to 18:58 EST | Channel 2: 2.6 GB uploaded over HTTPS from APP-RCM-03 to 198.51.100.23 | E-11, E-14 |
+| 09/03/2025 09:58 | 05:58 EDT | BLACKTARN ransomware launched via scheduled task from DC-01 | E-01, E-02, E-03 |
+| 09/03/2025 10:14 | 06:14 EDT | Ostrander on-call engineer alerted by file-integrity monitoring; ransom notes observed on FS-BILL-03 and APP-RCM-01 to APP-RCM-04, which process data of all Ostrander clients including Larkspur | E-08, E-17 |
+| 09/03/2025 15:05 | 11:05 EDT | Ostrander isolates hosted environment from the internet | E-08 |
+| 10/03/2025 20:15 (approx.) | 16:15 EDT | N. Okafor (Ostrander) telephones T. Wierzbicki (Larkspur CISO) | E-08 |
+| 11/03/2025 | — | Fixed firmware applied to OBS-VPN-EDGE-01; appliance later replaced | E-12 |
+| 12/03/2025 | — | Ironvale memorandum records Larkspur folder on FS-BILL-03 as "confirmed impacted" | E-17 |
+| 13/03/2025 | — | Revenue-cycle platform restored for Larkspur; Larkspur disables its SFTP account used by Ostrander | E-07, E-08 |
+| 14/03/2025 | — | Ostrander written notice to Larkspur | Counsel |
+
+4.1 Note on the date of discovery: the ransom notes observed at 10:14 UTC on 09/03/2025 were on servers that hold or process Larkspur data, including the Larkspur folder on FS-BILL-03. Ostrander's statement that it "determined" on 12/03/2025 that Larkspur systems were affected reflects the date of Ironvale's written memorandum, not the date on which the encryption of those servers was first observed.
+
+5. Findings
+
+5.1 Initial access
+
+5.1.1 OBS-VPN-EDGE-01 was running firmware vulnerable to the pre-authentication remote code execution flaw described in advisory SA-2024-117. On 17/02/2025 at 07:41 UTC the threat actor exploited the flaw from 192.0.2.77 and wrote a web shell to the appliance. At 08:03 UTC it read the appliance configuration file, which contained stored credentials for several accounts including the service account svc_rcmsync.
+
+5.1.2 The svc_rcmsync account was permitted to establish VPN sessions and was not subject to multi-factor authentication, contrary to Exhibit C, item 2.2 of the Master Services Agreement (service accounts not to have interactive remote access). After a test authentication on 19/02/2025, the threat actor used the account for its first interactive session on 21/02/2025.
+
+5.1.3 The Preliminary Report treated the 21/02/2025 session as the first intrusion because VPN logs before 20/02/2025 had not then been produced. The forwarded logs (E-13) and the firewall logs (E-11) establish that the intrusion began on 17/02/2025.
+
+5.2 Privilege escalation and lateral movement
+
+5.2.1 The threat actor obtained domain administrator credentials on 22/02/2025 and from 24/02/2025 used them to access FS-BILL-03, DC-01 and the application servers. Endpoint detection and response tooling was installed on 47 of Ostrander's 61 servers; FS-BILL-03 was one of the 14 servers without it.
+
+5.3 Exfiltration
+
+5.3.1 Channel 1. Between 05/03/2025 01:10 UTC and 07/03/2025 04:52 UTC the threat actor used a renamed copy of an open-source file synchronisation utility on FS-BILL-03 to transfer 41.0 GB to 203.0.113.47.
+
+5.3.2 Channel 2. On 08/03/2025 between 22:31 and 23:58 UTC the threat actor uploaded a further 2.6 GB over HTTPS from APP-RCM-03 to 198.51.100.23. This channel was not visible in the evidence available for the Preliminary Report.
+
+5.3.3 Total exfiltration from the Ostrander environment was therefore 43.6 GB. Of this, Cobaltline attributes 17.2 GB, in 1,284 files, to Larkspur:
+
+| File type | Files | Larkspur volume |
+| Claim files (ANSI X12 837P) | 612 | 9.8 GB |
+| Patient statement files (CSV) | 438 | 5.1 GB |
+| Eligibility response files (X12 271) | 234 | 2.3 GB |
+| Total | 1,284 | 17.2 GB |
+
+5.3.4 The Larkspur files range in date from 02/10/2023 to 08/03/2025.
+
+5.4 Encryption and detection
+
+5.4.1 At 09:58 UTC on 09/03/2025 (05:58 EDT) the threat actor launched BLACKTARN ransomware through a scheduled task distributed from DC-01. Ransom notes (BLACKTARN_README.txt) were written to each affected directory. Ostrander's on-call engineer was alerted by file-integrity monitoring at 10:14 UTC (06:14 EDT) and observed the ransom notes on FS-BILL-03 and the APP-RCM servers. Ostrander isolated the environment at 15:05 UTC.
+
+5.4.2 Communications between Ostrander and the threat actor were outside Cobaltline's scope and have not been reviewed.
+
+5.5 Larkspur environment
+
+5.5.1 No indicators of compromise were found in Larkspur's SFTP server logs, firewall logs or EDR telemetry for the period 01/02/2025 to 14/03/2025. The threat actor's activity was confined to the Ostrander environment.
+
+6. Root cause
+
+6.1 The root cause of the incident was Ostrander's failure to apply the fixed firmware for advisory SA-2024-117 to its internet-facing VPN appliance OBS-VPN-EDGE-01.
+
+6.2 The advisory and fixed firmware were published on 10/12/2024. Ostrander raised change record CHG-24-1187 on 16/12/2024 but scheduled the update for a "Q1 2025 maintenance window". The appliance was still unpatched when it was exploited on 17/02/2025, 69 days after the fix was available. The fixed firmware was applied on 11/03/2025, 91 days after publication and two days after the encryption.
+
+6.3 Exhibit C, item 2.4(a) of the Master Services Agreement requires critical vulnerabilities to be patched within fourteen (14) days of patch availability, which in this case was by 24/12/2024. The appliance was exploited 55 days after that date. Cobaltline has seen no written exception approved by Ostrander's security liaison or notified to Larkspur's CISO.
+
+6.4 Contributing factors:
+
+(a) Stored credentials in the VPN appliance configuration, including for a service account permitted to use the VPN without multi-factor authentication.
+
+(b) No encryption at rest on FS-BILL-03 (section 7).
+
+(c) Retention of Larkspur export files for up to 17 months, against a 30-day retention requirement (Exhibit C, item 2.9) and Ostrander's own retention schedule (E-15), which also states 30 days.
+
+(d) EDR coverage gaps (14 of 61 servers, including FS-BILL-03).
+
+(e) Insufficient segmentation between the VPN landing zone, the application servers and the file server.
+
+7. Encryption at rest
+
+7.1 Ostrander's configuration export (E-10) and written confirmation of 16/04/2025 establish that volume-level encryption was not enabled on FS-BILL-03 at any time between its commissioning in August 2023 and the incident. File-level encryption was not used. The database servers DB-RCM-01 and DB-RCM-02 used transparent database encryption and were not affected by the exfiltration.
+
+7.2 Ostrander's data inventory (E-15) classifies FS-BILL-03 as a "staging" server. The classification did not change the nature of the data held: the Larkspur folder held complete claim, statement and eligibility files, stored in plain text, for the period stated at 5.3.4.
+
+7.3 Because the Larkspur files were not encrypted, they were not rendered unusable, unreadable or indecipherable to unauthorised persons. Cobaltline understands from Counsel that the data is therefore "unsecured" for the purposes of 45 C.F.R. § 164.402.
+
+8. Affected individuals and data elements
+
+8.1 After parsing all eight archives and both exfiltration channels, de-duplicating across file types and reconciling with the Larkspur master patient index, Cobaltline has identified 23,912 unique individuals whose information was contained in the exfiltrated Larkspur files. This figure supersedes the preliminary estimate of approximately 18,400.
+
+8.2 Data elements, all clinics:
+
+| Data element | Individuals |
+| Name and address | 23,912 |
+| Date of birth | 23,828 |
+| Social Security number | 10,763 |
+| Health insurance member ID | 21,478 |
+| Diagnosis and procedure codes (ICD-10 diagnosis and procedure codes) | 19,490 |
+| Payment card or bank account details (from statement files) | 1,186 |
+| Total unique individuals | 23,912 |
+
+8.3 Payment card details are limited to card type, the last four digits and expiry date in 1,038 cases; 148 records contain full bank routing and account numbers for patients enrolled in automatic payment plans (1,038 + 148 = 1,186). No card security codes were found.
+
+8.4 A breakdown by clinic is in Appendix B. Each individual is counted once, at the clinic of their most recent encounter.
+
+9. Publication and misuse
+
+9.1 Cobaltline has monitored known ransomware leak sites and criminal forums from 18/03/2025. As at 28/05/2025 we have not identified any publication of Larkspur data or any listing naming Ostrander or Larkspur. Absence of publication does not establish that the data has not been, or will not be, misused.
+
+10. Recommendations
+
+10.1 For Ostrander (to be pursued by Larkspur under Sections 9.5 and 9.7 of the Master Services Agreement):
+
+(a) Enable and evidence encryption at rest on every server that holds Client Data, including FS-BILL-03 and its replacement, and provide written confirmation to Larkspur.
+
+(b) Delete all Larkspur export files older than 30 days and certify deletion.
+
+(c) Remove stored credentials from remote access appliances; prohibit VPN access for service accounts; enforce MFA on all accounts.
+
+(d) Adopt a patch process that meets Exhibit C, item 2.4, with a register of exceptions notified to Larkspur.
+
+(e) Extend EDR coverage to all servers and verify coverage monthly.
+
+(f) Segment the VPN landing zone from application and file servers.
+
+(g) Deliver to Larkspur the final Ironvale report, unredacted as to Larkspur data.
+
+10.2 For Larkspur:
+
+(a) Reduce the data in nightly SFTP exports to the minimum necessary for billing (for example, omit Social Security numbers where payors do not require them).
+
+(b) Require Ostrander to evidence the remediation items above before restoring the SFTP account, and conduct an audit under Section 9.7.
+
+(c) Add to the vendor risk programme a requirement for vendors to report critical-patch exceptions.
+
+Appendix A — Indicators of compromise (summary)
+
+| Type | Indicator | Note |
+| IP address | 192.0.2.77 | Exploitation of OBS-VPN-EDGE-01, 17/02/2025 |
+| IP address | 192.0.2.188 | VPN sessions as svc_rcmsync, from 21/02/2025 |
+| IP address | 203.0.113.47 | Exfiltration channel 1 |
+| IP address | 198.51.100.23 | Exfiltration channel 2 |
+| File name | BLACKTARN_README.txt | Ransom note |
+| File name | ARCH-01.7z to ARCH-08.7z | Staging archives on FS-BILL-03 |
+
+File hashes are provided separately in CF-2025-0317-IOC.csv.
+
+Appendix B — Affected individuals by clinic
+
+| Clinic code | Clinic | Total individuals | Name/address | Date of birth | SSN | Health insurance ID | Diagnosis/procedure codes | Payment card/bank |
+| LHP-01 | Flatbush (Brooklyn) | 4,318 | 4,318 | 4,301 | 1,942 | 3,876 | 3,512 | 214 |
+| LHP-02 | Bay Ridge (Brooklyn) | 3,207 | 3,207 | 3,198 | 1,410 | 2,915 | 2,640 | 167 |
+| LHP-03 | Williamsburg (Brooklyn) | 2,954 | 2,954 | 2,940 | 1,288 | 2,611 | 2,398 | 141 |
+| LHP-04 | Astoria (Queens) | 3,671 | 3,671 | 3,660 | 1,733 | 3,302 | 2,987 | 188 |
+| LHP-05 | Jamaica (Queens) | 2,489 | 2,489 | 2,481 | 1,105 | 2,204 | 2,011 | 122 |
+| LHP-06 | Fordham (Bronx) | 3,102 | 3,102 | 3,090 | 1,467 | 2,833 | 2,560 | 156 |
+| LHP-07 | St. George (Staten Island) | 1,876 | 1,876 | 1,870 | 802 | 1,690 | 1,522 | 93 |
+| LHP-08 | Yonkers (Westchester) | 2,295 | 2,295 | 2,288 | 1,016 | 2,047 | 1,860 | 105 |
+|  | Total | 23,912 | 23,912 | 23,828 | 10,763 | 21,478 | 19,490 | 1,186 |
+
+Signed for Cobaltline Forensics LLC:
+
+[signature: Imogen Thwaite]
+
+Imogen Thwaite, Principal Forensic Analyst — 30 May 2025
+
+[signature: Derek Solano]
+
+Derek Solano, Managing Director — 30 May 2025

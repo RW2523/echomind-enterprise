@@ -1,0 +1,737 @@
+---
+file: Lease - Unit 4 Merrow Arcade (2016) scanned.pdf
+title: Lease - Unit 4 Merrow Arcade, Bath (24 June 2016)
+kind: contract
+status: executed
+render: scan
+style: contract
+font: serif
+footer: Unit 4 Merrow Arcade Bath - Lease - PG/CAR.112 - Engrossment
+scan: skew=0.5 noise=0.35 dpi=200 mode=bw
+---
+
+[[stamp: COPY - Calder & Wynne LLP]]
+
+# LEASE
+
+relating to
+
+Unit 4, Merrow Arcade, 18-24 Kingsgate Street, Bath BA1 2JX
+
+CARROW HILL ESTATES LIMITED (1)
+
+ASHDOWN & PRYCE RETAIL LIMITED (2)
+
+Term: 15 years from and including 24 June 2016
+
+<<<PAGE>>>
+
+THIS LEASE is made the 24th day of June 2016
+
+BETWEEN:
+
+(1) CARROW HILL ESTATES LIMITED (company registration number 05928814) whose registered office is at Carrow House, 11 Ashgrove Terrace, Bath BA2 6LP ("the Landlord"); and
+
+(2) ASHDOWN & PRYCE RETAIL LIMITED (company registration number 07419385) whose registered office is at Pryce House, 6 Fennimore Way, Reading RG1 8TQ ("the Tenant").
+
+NOW THIS DEED WITNESSES as follows:
+
+1. DEFINITIONS AND INTERPRETATION
+
+1.1 In this Lease, unless the context otherwise requires, the following words and expressions shall have the following meanings:
+
+"the Act of 1954" means the Landlord and Tenant Act 1954;
+
+"the Act of 1995" means the Landlord and Tenant (Covenants) Act 1995;
+
+"the Annual Rent" means the yearly rent of EIGHTY SIX THOUSAND FIVE HUNDRED POUNDS (£86,500) and such other yearly rent as may become payable following any review in accordance with Schedule 5; for the avoidance of doubt references in this Lease to the Annual Rent are to the principal rent only and do not include the Service Charge, the Insurance Rent or any other sum reserved as rent by this Lease;
+
+"Base Rate" means the base rate from time to time of Wessex & Mercia Bank plc or, if that base rate ceases to be published, such other comparable rate of interest as the Landlord may reasonably specify;
+
+"the Centre" means the land and buildings known as Merrow Arcade, 18-24 Kingsgate Street, Bath shown for identification only edged blue on Plan 1, together with any additions or alterations to them and any adjoining land or buildings which the Landlord may from time to time designate as forming part of the Centre;
+
+"the Common Parts" means those parts of the Centre which are from time to time provided or designated by the Landlord for the common use and enjoyment of the tenants and occupiers of the Centre and their customers and visitors, including (without limitation) the malls, the atrium, the entrances, service yards, service corridors, loading bays, staircases, lifts, escalators, toilets and landscaped areas;
+
+"the Conduits" means all drains, sewers, pipes, wires, cables, ducts, gutters, flues, ventilation shafts and other conducting media together with all ancillary apparatus;
+
+"the Contractual Term" means the term of fifteen (15) years from and including the 24th day of June 2016;
+
+"the Default Rate" means the rate of four per cent (4%) per annum above Base Rate;
+
+"the end of the Term" means the end of the Term however it ends, whether by effluxion of time, by determination under clause 9, by forfeiture, by surrender or otherwise;
+
+"the Insurance Rent" means a fair and reasonable proportion, as determined by the Landlord, of (a) the premiums (including insurance premium tax) which the Landlord pays for insuring the Centre against the Insured Risks and for loss of rent in accordance with clause 7.1, (b) the premiums for any engineering, plate glass and property owner's liability insurance and (c) the cost of any professional valuation of the Centre for insurance purposes carried out not more than once in any period of three years;
+
+"the Insured Risks" means fire, lightning, explosion, aircraft and articles dropped from aircraft, riot, civil commotion, malicious damage, storm or tempest, flood, bursting or overflowing of water tanks, apparatus or pipes, impact by vehicles, subsidence, heave and landslip, terrorism (to the extent that cover is available at reasonable commercial rates) and such other risks as the Landlord may from time to time reasonably decide to insure against, subject in each case to such excesses, exclusions and limitations as the insurers may impose;
+
+"the Landlord" includes the person for the time being entitled to the reversion immediately expectant on the determination of the Term;
+
+"the Landlord's Surveyor" means any surveyor or managing agent appointed by the Landlord (who may be an employee of the Landlord or of a company in the same group);
+
+"the Lettable Units" means the parts of the Centre let or intended to be let for retail or other commercial purposes (excluding the Common Parts and the Retained Parts);
+
+"the Permitted Use" means use as a shop for the retail sale of homewares, furniture, kitchenware, textiles and gifts, together with an ancillary café occupying not more than ten per cent (10%) of the floor area of the Premises, within Class A1 of the Schedule to the Town and Country Planning (Use Classes) Order 1987 as at the date of this Lease;
+
+"the Plans" means the plans annexed to this Lease, Plan 1 showing the Centre and Plan 2 showing the Premises;
+
+"the Premises" means the premises described in Schedule 1;
+
+"the Quarter Days" means the 25th day of March, the 24th day of June, the 29th day of September and the 25th day of December in each year, and "Quarter Day" means any one of them;
+
+"the Regulations" means the regulations set out in Schedule 6 and such other or amended regulations as the Landlord may from time to time reasonably make for the management of the Centre and notify to the Tenant in writing;
+
+"the Rent Commencement Date" means the 25th day of December 2016;
+
+"the Rents" means the Annual Rent, the Service Charge, the Insurance Rent and all other sums reserved as rent by this Lease;
+
+"the Retained Parts" means all parts of the Centre other than the Lettable Units, including (without limitation) the Common Parts, the main structure, foundations and roofs of the Centre, the atrium roof and its glazing, the external walls (other than shopfronts) and the Conduits not exclusively serving a single Lettable Unit;
+
+"the Review Dates" means the 24th day of June 2021 and the 24th day of June 2026, and "Review Date" means either of them;
+
+"the Service Charge" means the Tenant's Share of the Service Costs payable in accordance with Schedule 4;
+
+"the Service Costs" means the costs, expenses and outgoings described in Part 3 of Schedule 4;
+
+"the Services" means the services described in Part 2 of Schedule 4;
+
+"the Tenant's Share" has the meaning given in paragraph 2 of Part 1 of Schedule 4;
+
+"the Term" means the Contractual Term together with any period of holding over or any extension or continuation of it, whether by statute or at common law;
+
+"VAT" means value added tax chargeable under the Value Added Tax Act 1994 and any similar replacement or additional tax;
+
+"Working Day" means any day other than a Saturday, a Sunday or a bank holiday in England.
+
+1.2 In this Lease:
+
+(a) the clause, schedule and paragraph headings do not affect its interpretation, and references to a clause or Schedule are to a clause of or Schedule to this Lease and references to a paragraph are to a paragraph of the Schedule in which the reference appears unless otherwise stated;
+
+(b) where a party comprises more than one person, the obligations of those persons are joint and several;
+
+(c) words importing one gender include all genders, and words in the singular include the plural and vice versa;
+
+(d) a reference to the Landlord includes, where the context permits, a reference to the Landlord's Surveyor and to any person authorised by the Landlord;
+
+(e) a reference to the Tenant includes its successors in title and, where the context permits, its undertenants, employees, agents and invitees;
+
+(f) a covenant by the Tenant not to do something includes an obligation not to permit or suffer it to be done;
+
+(g) a reference to a statute or statutory instrument includes any modification, extension or re-enactment of it for the time being in force, and any subordinate legislation made under it;
+
+(h) a reference to the consent or approval of the Landlord means the prior written consent or approval of the Landlord and, where the Landlord is bound by the terms of any superior interest or mortgage, the consent of the person entitled to give it;
+
+(i) a reference to the end of the Term is to be read in accordance with the definition in clause 1.1;
+
+(j) the words "include" and "including" are to be read without limitation; and
+
+(k) references to "the last six months of the Term" are to the last six months of the Term however it ends, and where the Term ends otherwise than by effluxion of time, to the six months immediately preceding the end of the Term.
+
+2. DEMISE
+
+2.1 In consideration of the Rents and of the covenants on the part of the Tenant contained in this Lease, the Landlord with full title guarantee DEMISES to the Tenant the Premises TOGETHER WITH the rights set out in Part 1 of Schedule 2 EXCEPT AND RESERVING to the Landlord and all others authorised by it the rights set out in Part 2 of Schedule 2 TO HOLD the Premises to the Tenant for the Contractual Term SUBJECT TO all rights, easements, covenants and other matters affecting the Centre as at the date of this Lease so far as they relate to the Premises YIELDING AND PAYING to the Landlord the Rents at the times and in the manner set out in this Lease.
+
+3. RENTS AND OTHER PAYMENTS
+
+3.1 The Tenant shall pay the Annual Rent to the Landlord by equal quarterly payments in advance on the Quarter Days, the first payment (being for the period from and including the Rent Commencement Date to and including the 24th day of March 2017) to be made on the Rent Commencement Date.
+
+3.2 The Tenant shall pay the Service Charge in accordance with Schedule 4.
+
+3.3 The Tenant shall pay the Insurance Rent in accordance with clause 7.2.
+
+3.4 If any of the Rents or any other sum payable by the Tenant under this Lease is not paid on the date on which it is due (or, where no date is specified, within fourteen days after written demand), the Tenant shall pay to the Landlord interest on that sum at the Default Rate from and including the date on which it was due to but excluding the date of payment, both before and after any judgment, and such interest shall be recoverable as rent.
+
+3.5 The Rents and all other sums payable under this Lease shall be paid without any deduction, counterclaim or set-off whatsoever (save only as required by law), and, if the Landlord so requires, by banker's standing order or other electronic transfer to such bank account as the Landlord may from time to time notify.
+
+3.6 All sums payable by the Tenant under this Lease, whether or not described as rent, are reserved as rent and the Landlord shall have the same remedies for their recovery as for rent in arrear.
+
+4. TENANT'S COVENANTS
+
+4.1 The Tenant covenants with the Landlord to observe and perform the covenants on the part of the Tenant set out in Schedule 3 throughout the Term or until released from them in accordance with the Act of 1995.
+
+5. LANDLORD'S COVENANTS
+
+5.1 The Landlord covenants with the Tenant that, so long as the Tenant pays the Rents and observes and performs its covenants in this Lease, the Tenant shall peaceably hold and enjoy the Premises during the Term without any lawful interruption by the Landlord or any person lawfully claiming under or in trust for it.
+
+5.2 Subject to the Tenant paying the Service Charge, the Landlord shall use reasonable endeavours to provide the Services in accordance with the principles of good estate management.
+
+5.3 The Landlord shall not be liable to the Tenant for any failure or interruption in the provision of any of the Services caused by any matter beyond the Landlord's reasonable control, provided that the Landlord uses reasonable endeavours to remedy it as soon as reasonably practicable.
+
+6. RENT REVIEW
+
+6.1 The Annual Rent shall be reviewed on each of the Review Dates in accordance with Schedule 5, and from and including each Review Date the Annual Rent shall be the rent ascertained in accordance with that Schedule.
+
+[[hand: 2021 review agreed £94,250 - see memo 11.1.22]]
+
+7. INSURANCE
+
+7.1 The Landlord shall (subject to the insurance being obtainable on reasonable terms and to any vitiation by the Tenant) insure the Centre (other than tenants' fixtures and fittings and plate glass in Lettable Units) with an insurance office or underwriters of repute against loss or damage by the Insured Risks for its full reinstatement cost (including site clearance, professional fees and VAT where irrecoverable) and shall also insure against loss of the Annual Rent, the Service Charge and the Insurance Rent for a period of three years.
+
+7.2 The Tenant shall pay the Insurance Rent to the Landlord within fourteen days of written demand, such demand to be accompanied by reasonable evidence of the premiums and of the proportion attributable to the Premises.
+
+7.3 The Tenant shall not do anything which may render any insurance of the Centre void or voidable or which may cause any increased or additional premium to be payable (and shall pay any such increased premium on demand), and shall comply with all reasonable requirements of the insurers notified to it.
+
+7.4 If the Centre or any part of it is damaged or destroyed by any of the Insured Risks, the Landlord shall, subject to obtaining all necessary consents and to the insurance not having been vitiated by any act or default of the Tenant, use reasonable endeavours to reinstate the damaged part as soon as reasonably practicable, but the Landlord shall not be obliged to reinstate in identical form.
+
+7.5 If the Premises or the Common Parts necessary for access to or use of the Premises are damaged or destroyed by an Insured Risk so as to make the Premises unfit for occupation or use, then (unless the insurance has been vitiated by the Tenant) the Annual Rent and the Service Charge, or a fair proportion of them according to the nature and extent of the damage, shall be suspended until the Premises are again fit for occupation and use or until the expiry of three years from the date of damage, whichever is the earlier.
+
+7.6 If the Premises have not been reinstated so as to be fit for occupation and use within three years after the date of the damage, either party may terminate this Lease by giving not less than one month's written notice to the other, and on such termination this Lease shall end without prejudice to any antecedent breach, and the insurance moneys shall belong to the Landlord absolutely.
+
+8. FORFEITURE
+
+8.1 If:
+
+(a) any of the Rents or any part of them shall be unpaid for twenty-one (21) days after becoming due, whether formally demanded or not; or
+
+(b) the Tenant shall fail to observe or perform any of the covenants or conditions on its part contained in this Lease; or
+
+(c) the Tenant (being a company) has a winding-up order made against it, passes a resolution for winding up (other than a solvent reconstruction), has an administrator or receiver appointed, enters into any voluntary arrangement with its creditors, or is struck off the register of companies; or
+
+(d) the Tenant (being an individual) has a bankruptcy order made against him or enters into an individual voluntary arrangement,
+
+then the Landlord may at any time afterwards re-enter the Premises or any part of them in the name of the whole, and upon such re-entry the Term shall absolutely determine, but without prejudice to any right or remedy of the Landlord in respect of any antecedent breach of covenant.
+
+8.2 No acceptance of rent by the Landlord after it has become aware of a breach of covenant shall operate as a waiver of that breach unless the Landlord so confirms in writing, and the Tenant shall not raise any such acceptance as a defence in any proceedings.
+
+9. TENANT'S OPTION TO DETERMINE
+
+9.1 The Tenant may determine this Lease on the 24th day of June 2026 ("the Break Date") by giving to the Landlord not less than six (6) months' prior written notice ("a Break Notice").
+
+9.2 A Break Notice shall only be effective if, on the Break Date:
+
+(a) the Tenant has paid the Annual Rent due under this Lease up to the Break Date; and
+
+(b) the Tenant gives vacant possession of the whole of the Premises to the Landlord.
+
+9.3 Subject to clause 9.2, upon the Break Date this Lease shall determine and the Term shall end, but such determination shall be without prejudice to any right or remedy of either party in respect of any antecedent breach of any of the covenants or conditions contained in this Lease.
+
+9.4 Time shall be of the essence for the purposes of this clause 9.
+
+9.5 The Landlord may at any time before the Break Date waive any of the conditions in clause 9.2 by written notice to the Tenant.
+
+9.6 A Break Notice once served may not be withdrawn by the Tenant without the written consent of the Landlord.
+
+9.7 The right contained in clause 9.1 is personal to ASHDOWN & PRYCE RETAIL LIMITED and shall cease to have effect upon any assignment of this Lease.
+
+10. LANDLORD'S RIGHTS AND REGULATIONS
+
+10.1 The Landlord may from time to time make, amend or revoke regulations for the management of the Centre in addition to or in substitution for those set out in Schedule 6, provided that no such regulation shall be inconsistent with the rights granted by this Lease or shall materially prejudice the Tenant's use of the Premises for the Permitted Use.
+
+10.2 The Landlord may at any time alter, close or vary the layout of the Common Parts (or any of them) provided that reasonable means of access to and from the Premises for pedestrians and goods remain available.
+
+11. COMPENSATION ON VACATING
+
+11.1 Any right of the Tenant to claim compensation from the Landlord on leaving the Premises under the Act of 1954 or otherwise is excluded to the extent that the law allows.
+
+12. NO WARRANTY AS TO USE
+
+12.1 Nothing in this Lease or in any consent granted by the Landlord shall imply or warrant that the Premises may lawfully be used for the Permitted Use.
+
+13. ENTIRE AGREEMENT
+
+13.1 This Lease constitutes the whole agreement between the parties relating to its grant, and the Tenant has not relied on any representation other than the written replies of the Landlord's solicitors to the Tenant's solicitors' enquiries.
+
+14. NO IMPLIED RIGHTS
+
+14.1 The grant of this Lease does not confer any rights over the Centre or any other property except those expressly granted by this Lease, and section 62 of the Law of Property Act 1925 shall not apply to this Lease.
+
+15. DISPUTES AND EXPERT DETERMINATION
+
+15.1 Any dispute between the Landlord and the Tenant arising under paragraph 7 of Part 1 of Schedule 4, or which this Lease provides is to be determined by an independent surveyor, shall be referred to an independent chartered surveyor of not less than ten years' standing agreed between the parties or, failing agreement within fourteen days, nominated on the application of either party by the President for the time being of the Royal Institution of Chartered Surveyors.
+
+15.2 The independent surveyor shall act as an expert and not as an arbitrator, shall consider any written representations made to him within such time as he directs, and his decision shall (save in the case of manifest error) be final and binding. His fees shall be borne as he directs.
+
+16. VALUE ADDED TAX
+
+16.1 All sums payable by the Tenant under this Lease are exclusive of VAT, and the Tenant shall in addition pay any VAT chargeable on them on production of a valid VAT invoice.
+
+16.2 Where the Tenant is obliged to pay or reimburse any cost incurred by the Landlord, it shall also pay any VAT on that cost save to the extent that the Landlord is able to recover such VAT as input tax.
+
+17. RELEASE OF LANDLORD
+
+17.1 The Landlord shall be released from the landlord covenants of this Lease on an assignment of the reversion, and the Tenant shall not unreasonably withhold its consent to such release on an application made under section 8 of the Act of 1995.
+
+18. WAIVER
+
+18.1 No failure or delay by the Landlord in exercising any right or remedy under this Lease shall operate as a waiver of it, and no single or partial exercise of any right shall preclude any further exercise of it.
+
+19. SEVERANCE
+
+19.1 If any provision of this Lease is held to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.
+
+20. THIRD PARTY RIGHTS
+
+20.1 A person who is not a party to this Lease shall have no right under the Contracts (Rights of Third Parties) Act 1999 to enforce any of its terms.
+
+21. NOTICES
+
+21.1 Any notice, demand or other communication under or in connection with this Lease shall be in writing and shall be given by hand or sent by pre-paid first class post or by recorded delivery.
+
+21.2 Section 196 of the Law of Property Act 1925 (as amended by the Recorded Delivery Service Act 1962) shall apply to any notice served under or in connection with this Lease.
+
+21.3 Without prejudice to clause 21.2, any notice to be given to the Landlord may be served at its registered office or at any other address in England and Wales that the Landlord has notified to the Tenant in writing for the service of notices.
+
+21.4 A notice sent by fax, by email or by any other electronic means shall not be validly given or served for the purposes of this Lease.
+
+21.5 Any notice to be given to the Tenant may be served at the Premises or at its registered office.
+
+21.6 Any notice, demand or other communication given by the Landlord's Surveyor or managing agent on behalf of the Landlord shall be treated as given by the Landlord.
+
+22. GOVERNING LAW AND JURISDICTION
+
+22.1 This Lease and any dispute or claim arising out of or in connection with it shall be governed by and construed in accordance with the law of England and Wales, and the courts of England and Wales shall have exclusive jurisdiction.
+
+23. NEW TENANCY
+
+23.1 This Lease is a new tenancy for the purposes of section 1 of the Act of 1995.
+
+IN WITNESS whereof this Lease has been executed as a deed and is delivered on the date first above written.
+
+<<<PAGE>>>
+
+## SCHEDULE 1 - THE PREMISES
+
+1. The Premises are the ground floor retail unit known as Unit 4, Merrow Arcade, 18-24 Kingsgate Street, Bath BA1 2JX, shown for identification only edged red on Plan 2, having a net internal area of approximately 214.6 square metres (2,310 square feet), of which approximately 186 square metres comprises the sales floor and the remainder storage, staff and ancillary accommodation.
+
+2. The Premises include:
+
+2.1 the shopfront (including its frame, glazing, doors, fascia and any shutters), the internal plaster, rendering and other surface finishes of the walls bounding the Premises and of the columns within them;
+
+2.2 the floor screed and floor finishes, but not the structural slab beneath;
+
+2.3 the suspended ceilings (if any) and the voids between them and the structural soffits above, and the finishes of the ceilings;
+
+2.4 all doors, door frames, windows and window frames and the glass in them;
+
+2.5 the Conduits within and exclusively serving the Premises;
+
+2.6 all Landlord's fixtures and fittings and all plant and equipment exclusively serving the Premises (including the air conditioning units and their roof-mounted condensers); and
+
+2.7 all additions, alterations and improvements to the Premises.
+
+3. The Premises exclude:
+
+3.1 the main structure of the Centre, including the foundations, structural slabs, columns, beams and roofs;
+
+3.2 the external walls of the Centre, other than the shopfront;
+
+3.3 the Conduits in the Premises which do not exclusively serve the Premises; and
+
+3.4 the air space above and the ground below the Premises.
+
+## SCHEDULE 2 - RIGHTS GRANTED AND RIGHTS RESERVED
+
+### Part 1 - Rights granted to the Tenant
+
+1. The right, in common with the Landlord and all others authorised by it, for the Tenant and its employees and visitors to pass and repass on foot over the malls, entrances and other Common Parts designated for pedestrian use during the hours when the Centre is open to the public.
+
+2. The right, in common as aforesaid, to use the service yard, service corridors and loading bay for loading and unloading goods at such times as the Landlord may reasonably designate.
+
+3. The right to use such toilets in the Common Parts as the Landlord may designate for the use of tenants' staff.
+
+4. The right to the free passage of water, soil, gas, electricity and telecommunications through the Conduits now or during the Contractual Term serving the Premises.
+
+5. The right to use the fire escape routes from the Premises in an emergency.
+
+6. The right of support and protection for the Premises from other parts of the Centre so far as they now provide it.
+
+7. The right to display the Tenant's trading name on the Centre directory boards in a form approved by the Landlord.
+
+8. The right, on reasonable prior notice except in an emergency, to enter the Retained Parts so far as is necessary to carry out works to the Premises which the Tenant is obliged or permitted to carry out under this Lease, causing as little damage and inconvenience as possible and making good all damage caused.
+
+### Part 2 - Rights excepted and reserved to the Landlord
+
+1. The right of free passage of water, soil, gas, electricity and telecommunications through the Conduits in the Premises which serve other parts of the Centre.
+
+2. The right to install new Conduits in the Premises to serve other parts of the Centre, provided that they are installed within the ceiling void or behind wall surfaces wherever reasonably practicable.
+
+3. The right to enter the Premises on not less than two Working Days' prior notice (except in an emergency) to inspect, to carry out repairs and works to the Retained Parts or to other Lettable Units, to provide the Services and to exercise any of the rights reserved by this Lease.
+
+4. The right to erect scaffolding for repairing or cleaning the Centre, provided that it does not unreasonably restrict access to the Premises.
+
+5. The right to build on or alter any part of the Centre other than the Premises, notwithstanding that the access of light or air to the Premises may be affected.
+
+6. The rights of light, air, support and protection which the Retained Parts now enjoy from the Premises.
+
+7. The right to affix and maintain on the exterior of the shopfront any notices required by law.
+
+8. The right, during the last six months of the Term, to enter the Premises at reasonable times to show them to prospective tenants or purchasers.
+
+<<<PAGE>>>
+
+## SCHEDULE 3 - TENANT'S COVENANTS
+
+1. Rents
+
+1.1 To pay the Rents at the times and in the manner required by this Lease.
+
+2. Outgoings
+
+2.1 To pay all existing and future rates, taxes, assessments, duties, charges and outgoings assessed or imposed on the Premises or on the owner or occupier of them, excluding any tax payable by the Landlord on the receipt of the Rents or on any dealing with its reversion.
+
+2.2 Where any outgoing is assessed on the Premises together with other property, to pay a fair proportion of it.
+
+3. Utilities
+
+3.1 To pay for all gas, electricity, water, telecommunications and other utilities consumed at or supplied to the Premises, including any meter rents and standing charges.
+
+4. Repair
+
+4.1 To keep the Premises in good and substantial repair and condition, including (without limitation) the shopfront and its frame, the glazing, the doors and their automatic mechanisms, the floor finishes, the ceilings and all plant, machinery and equipment exclusively serving the Premises.
+
+4.2 To replace any Landlord's fixtures and fittings in the Premises which become beyond economic repair with others of similar kind and quality.
+
+4.3 The Tenant shall not be liable to repair damage caused by an Insured Risk, save to the extent that the insurance money is irrecoverable because of any act or default of the Tenant.
+
+4.4 To make good any want of repair or other breach of covenant of which the Landlord gives written notice to the Tenant within two months of that notice (or sooner in an emergency), failing which the Landlord may enter the Premises and carry out the works, and the cost of doing so (including professional fees) shall be a debt due from the Tenant to the Landlord payable on demand.
+
+5. Decoration
+
+5.1 To clean, prepare and paint or otherwise treat the exterior of the shopfront and all other external parts of the Premises usually decorated in every third year of the Term and also in the last six months of the Term.
+
+5.2 To decorate the inside of the Premises in a good and workmanlike manner, with good quality materials, in every fifth year of the Term and also in the last six months of the Term, however the Term ends.
+
+5.3 To carry out all decorations in the last six months of the Term in such colours and materials as the Landlord may reasonably require.
+
+6. Cleaning
+
+6.1 To keep the Premises clean, tidy and clear of rubbish, and to deposit refuse only in such receptacles in the service yard as the Landlord may designate.
+
+6.2 To clean both sides of the windows and the glazing of the shopfront as often as reasonably necessary and in any event at least once a month.
+
+7. Alterations
+
+7.1 Not to make any alteration or addition to the structure or exterior of the Premises (including the shopfront) or to unite the Premises with any adjoining premises without the consent of the Landlord, such consent not to be unreasonably withheld in the case of alterations to the shopfront.
+
+7.2 Not to make any internal non-structural alteration (including the installation of any mezzanine or raised floor) without the consent of the Landlord, such consent not to be unreasonably withheld or delayed.
+
+7.3 The Tenant may install, alter and remove demountable partitioning without consent, provided that it gives the Landlord drawings of the partitioning within one month of installation.
+
+7.4 Subject to the terms of any licence granted in respect of any alterations, at the end of the Term, if the Landlord so requires, to remove any alterations made by or on behalf of the Tenant and to reinstate the Premises to their condition before those alterations were made, making good all damage caused.
+
+7.5 Not to make any connection with the Conduits serving the Centre otherwise than in accordance with plans and specifications approved by the Landlord.
+
+8. Signs and advertisements
+
+8.1 Not to display any sign, advertisement or notice on the outside of the Premises or in the windows so as to be visible from outside, other than a fascia and projecting sign displaying the Tenant's trading name in a style approved by the Landlord (such approval not to be unreasonably withheld), and such window displays as are usual for a high quality retailer.
+
+9. Use
+
+9.1 Not to use the Premises otherwise than for the Permitted Use.
+
+9.2 Not to use the Premises for any illegal or immoral purpose, nor for any sale by auction, nor as a betting office, nor for any noisy, offensive or dangerous trade or business, nor so as to cause a nuisance or annoyance to the Landlord or to other tenants or occupiers of the Centre.
+
+9.3 To keep the Premises open for trade during the normal opening hours of the Centre, save where prevented by any cause beyond the Tenant's reasonable control or for a reasonable period of refitting.
+
+9.4 Not to overload the floors or the structure of the Premises.
+
+10. Alienation
+
+10.1 Not to assign, underlet, charge, part with or share possession or occupation of part only of the Premises.
+
+10.2 Not to assign the whole of the Premises without the consent of the Landlord, such consent not to be unreasonably withheld, and the Landlord may as a condition of its consent require the assigning Tenant to enter into an authorised guarantee agreement complying with section 16 of the Act of 1995.
+
+10.3 Not to underlet the whole of the Premises without the consent of the Landlord, such consent not to be unreasonably withheld, and then only at a rent not less than the open market rent, without a premium, and by an underlease which excludes sections 24 to 28 of the Act of 1954.
+
+10.4 Not to charge the whole of the Premises without the consent of the Landlord, such consent not to be unreasonably withheld.
+
+10.5 The Tenant may share occupation of the Premises with a company in the same group as the Tenant (within the meaning of section 42 of the Act of 1954) while it remains in that group, provided that no tenancy is created.
+
+10.6 Not to hold the Premises on trust for any other person.
+
+11. Registration of dispositions
+
+11.1 Within one month after any assignment, transfer, underlease, charge or devolution of the Premises or of this Lease, to give notice of it to the Landlord's solicitors with a certified copy of the relevant document and to pay a reasonable registration fee of not less than fifty pounds (£50) plus VAT.
+
+12. Statutory requirements
+
+12.1 To comply with all statutes, regulations and requirements of any competent authority relating to the Premises or their use, and to carry out all works required to comply with them, including keeping all plant and equipment serviced and certified as required.
+
+12.2 To keep the Premises equipped with such fire alarm, emergency lighting and fire-fighting equipment as may be required by law, by the insurers or by the Landlord acting reasonably, to maintain that equipment in efficient working order and to keep current certificates of its testing.
+
+13. Planning
+
+13.1 Not to make any application for planning permission relating to the Premises without the consent of the Landlord (save for advertisement consent for signs approved under paragraph 8), and to comply with all planning permissions affecting the Premises.
+
+14. Access
+
+14.1 To permit the Landlord and all persons authorised by it to enter the Premises in accordance with Part 2 of Schedule 2, including for the purpose of preparing any schedule of condition or of dilapidations.
+
+15. Costs
+
+15.1 To pay on demand the reasonable and proper costs and expenses (including legal and surveyors' fees) incurred by the Landlord in connection with:
+
+(a) any application for consent under this Lease, whether or not consent is granted (unless unreasonably refused);
+
+(b) the preparation and service of a notice under section 146 or 147 of the Law of Property Act 1925, even if forfeiture is avoided otherwise than by relief granted by the court;
+
+(c) the preparation and service of a schedule of dilapidations served during the Term or within three months after the end of the Term.
+
+16. Indemnity
+
+16.1 To keep the Landlord indemnified against all liabilities, costs, claims and demands arising from any breach of the Tenant's covenants in this Lease or from the use or occupation of the Premises.
+
+17. Regulations
+
+17.1 To observe the Regulations.
+
+18. Encroachments and easements
+
+18.1 Not to permit any encroachment on the Premises or the acquisition of any easement over them, and to give the Landlord prompt notice of any attempt to do so.
+
+19. Notices received
+
+19.1 To give the Landlord a copy of any notice, order or proposal affecting the Premises within seven days after receiving it, and to comply with it at the Tenant's cost so far as it relates to the Premises.
+
+20. Yielding up
+
+20.1 At the end of the Term to yield up the Premises to the Landlord with vacant possession, in the state of repair and condition required by this Lease, and decorated in accordance with paragraph 5.
+
+20.2 Before the end of the Term to remove all tenant's fixtures and fittings, trade fixtures, signs and goods from the Premises and to make good all damage caused by their removal, if the Landlord so requires.
+
+20.3 At the end of the Term to return all keys and security codes for the Premises to the Landlord.
+
+20.4 If the Tenant leaves any property in the Premises for more than ten Working Days after the end of the Term, the Landlord may dispose of it as the agent of the Tenant, and the Tenant shall indemnify the Landlord against any liability incurred by the Landlord in doing so.
+
+21. Reletting boards
+
+21.1 To permit the Landlord during the last six months of the Term to fix a notice board on the shopfront or in the window of the Premises announcing that the Premises are to let, without obscuring the Tenant's window display more than is reasonably necessary.
+
+22. Security and empty premises
+
+22.1 To keep the Premises secure when not open for trade and to notify the Landlord of two keyholders.
+
+22.2 To notify the Landlord if the Premises are to be left unoccupied for more than fourteen consecutive days.
+
+23. Insurance
+
+23.1 Not to do or omit anything which may render void or voidable any insurance of the Centre or which may cause any increased premium to be payable.
+
+24. Health and safety file
+
+24.1 To maintain, and to deliver to the Landlord at the end of the Term, the health and safety file for any works carried out to the Premises by the Tenant to which the Construction (Design and Management) Regulations apply.
+
+<<<PAGE>>>
+
+## SCHEDULE 4 - SERVICE CHARGE
+
+### Part 1 - Definitions and calculation
+
+1. Definitions
+
+1.1 In this Schedule:
+
+"Accounting Year" means the period from and including 25 March in each year to and including 24 March in the following year, or such other annual period as the Landlord may from time to time notify to the Tenant;
+
+"Certificate" means a certificate of the Service Costs for an Accounting Year given in accordance with paragraph 4; and
+
+"Estimated Service Charge" means the Landlord's reasonable estimate of the Service Charge for an Accounting Year.
+
+2. The Tenant's Share
+
+2.1 The Tenant's Share is six point eight five per cent (6.85%) of the Service Costs.
+
+2.2 If the total lettable floor area of the Centre is altered, or if for any other reason it would be fair and reasonable to do so, the Landlord may vary the Tenant's Share on a fair and reasonable basis by written notice to the Tenant, and the varied proportion shall apply from the start of the next Accounting Year.
+
+2.3 The Landlord may, acting reasonably, determine that a particular item of the Service Costs shall be apportioned amongst some only of the Lettable Units, in which case the Tenant's Share of that item shall be a fair and reasonable proportion determined by the Landlord.
+
+3. Payments on account
+
+3.1 The Tenant shall pay the Estimated Service Charge for each Accounting Year by equal quarterly instalments in advance on the Quarter Days, and the Landlord shall notify the Tenant of the Estimated Service Charge as soon as practicable before the start of each Accounting Year.
+
+3.2 If the Landlord has not notified the Estimated Service Charge by the start of an Accounting Year, the Tenant shall continue to pay instalments at the rate of the previous Accounting Year until it is notified.
+
+4. The Certificate
+
+4.1 As soon as practicable after the end of each Accounting Year the Landlord shall serve on the Tenant a Certificate, signed by the Landlord's Surveyor or by the Landlord's managing agent or accountant, showing the Service Costs for that Accounting Year and the Service Charge payable by the Tenant.
+
+4.2 The Certificate shall contain a fair summary of the Service Costs and shall, save in the case of manifest error or any dispute raised under paragraph 7, be conclusive as to the matters it certifies.
+
+5. Balancing payment
+
+5.1 If the Service Charge for an Accounting Year exceeds the payments made by the Tenant on account for that year, the Tenant shall pay the excess to the Landlord within twenty-one (21) days after service of the Certificate.
+
+5.2 If the payments on account exceed the Service Charge, the excess shall be credited to the Tenant against its next payments on account or, after the end of the Term, refunded to it.
+
+6. Omissions
+
+6.1 The omission of any item from the Service Costs for any Accounting Year shall not prevent the Landlord from including it in a later Accounting Year.
+
+7. Disputes and inspection
+
+7.1 The Tenant may, within three months after service of a Certificate, inspect the invoices and receipts relating to the Service Costs at the offices of the Landlord or of its managing agent, and may within that period dispute the Certificate by written notice to the Landlord giving reasonable particulars of the matters disputed, in which case the dispute shall be determined in accordance with clause 15.
+
+7.2 Pending the resolution of any dispute the Tenant shall pay the sum certified in the Certificate, and any adjustment found to be due on the resolution of the dispute shall be made within fourteen days after it is resolved.
+
+8. Sinking fund
+
+8.1 The Landlord may include in the Service Costs reasonable contributions to a reserve or sinking fund for anticipated expenditure on the replacement of plant and equipment and on major or periodic works to the Retained Parts, and shall hold those contributions on trust for the purposes for which they are collected.
+
+### Part 2 - The Services
+
+1. Cleaning, lighting and heating the Common Parts and keeping them reasonably free of litter.
+
+2. Providing security staff and closed circuit television for the Centre during such hours as the Landlord reasonably considers appropriate.
+
+3. Repairing, maintaining and, where beyond economic repair, renewing and replacing the Retained Parts, including the roofs, the atrium roof and its glazing, gutters and rainwater goods.
+
+4. Maintaining, servicing and, where necessary, renewing the lifts, escalators and other plant serving the Common Parts.
+
+5. Maintaining, testing and renewing the fire alarm, sprinkler, smoke ventilation and emergency lighting systems serving the Centre.
+
+6. Supplying water and electricity to the Common Parts.
+
+7. Providing waste collection and recycling facilities for the tenants of the Centre.
+
+8. Promoting and marketing the Centre, including seasonal events and decorations.
+
+9. Maintaining the landscaped areas, planters and signage of the Centre.
+
+10. Carrying out health and safety, fire and other risk assessments of the Common Parts.
+
+11. Providing a management office and centre manager for the Centre.
+
+12. Decorating the Common Parts as often as the Landlord reasonably considers appropriate.
+
+13. Complying with all statutory requirements relating to the Common Parts.
+
+14. Any other services which the Landlord, acting in accordance with good estate management, reasonably considers to be for the general benefit of the Centre.
+
+### Part 3 - The Service Costs
+
+1. The whole of the costs, charges and expenses incurred by the Landlord in providing the Services or any of them.
+
+2. The cost of employing (or of procuring the services of) security, cleaning, maintenance and management staff, including salaries, national insurance, pension contributions and uniforms.
+
+3. The fees of the Landlord's managing agent for the management of the Centre, not exceeding a reasonable and proper amount, or (where the Landlord manages the Centre itself) a reasonable management fee.
+
+4. The fees of any surveyor, engineer, architect or other professional adviser engaged in connection with the Services, including the design and supervision of works.
+
+5. The cost of preparing and auditing the service charge accounts and the Certificate.
+
+6. The cost of any insurance of plant and equipment not included in the Insurance Rent.
+
+7. Contributions to a reserve or sinking fund under paragraph 8 of Part 1 of this Schedule.
+
+8. Any rates, taxes or other outgoings payable in respect of the Common Parts.
+
+9. Interest on money reasonably borrowed by the Landlord to fund the Services.
+
+10. Irrecoverable VAT on any of the above.
+
+<<<PAGE>>>
+
+## SCHEDULE 5 - RENT REVIEW
+
+1. Definitions
+
+1.1 In this Schedule:
+
+"the Open Market Rent" means the yearly rent at which the Premises might reasonably be expected to be let in the open market on the relevant Review Date, on the assumptions set out in paragraph 3 and disregarding the matters set out in paragraph 4;
+
+"the Revised Rent" means the rent ascertained in accordance with paragraph 2; and
+
+"the Surveyor" means an independent chartered surveyor appointed in accordance with paragraph 5.
+
+2. The Revised Rent
+
+2.1 The Annual Rent from and including each Review Date shall be the higher of the Annual Rent payable immediately before that Review Date (or which would then be payable but for any suspension under clause 7.5) and the Open Market Rent on that Review Date.
+
+3. Assumptions
+
+3.1 The Open Market Rent shall be ascertained on the following assumptions:
+
+(a) that the Premises are available to let by a willing landlord to a willing tenant as a whole, with vacant possession, without a premium, for a term equal to the unexpired residue of the Contractual Term at the Review Date or ten years, whichever is longer;
+
+(b) that the letting is on the terms of this Lease, other than the amount of the Annual Rent and the right contained in clause 9.1;
+
+(c) that the Premises are fit for immediate occupation and use and that any fitting out works required by the willing tenant have been completed at the willing landlord's expense;
+
+(d) that the covenants on the part of the Tenant and the Landlord have been fully performed;
+
+(e) that if the Premises or the Centre have been damaged or destroyed they have been fully reinstated; and
+
+(f) that no work has been carried out to the Premises which has diminished their rental value.
+
+4. Disregards
+
+4.1 There shall be disregarded:
+
+(a) any effect on rent of the fact that the Tenant has been in occupation of the Premises;
+
+(b) any goodwill attached to the Premises by reason of the business carried on there;
+
+(c) any increase in rental value attributable to any improvement carried out with the Landlord's consent by the Tenant, otherwise than in pursuance of an obligation to the Landlord, during the Term;
+
+(d) any rent concession or deferral agreed between the Landlord and the Tenant; and
+
+(e) any reduction in rental value attributable to any breach of covenant by the Tenant.
+
+5. Determination by the Surveyor
+
+5.1 If the Landlord and the Tenant have not agreed the Open Market Rent three months before the relevant Review Date, either of them may require it to be determined by the Surveyor, who shall be agreed between them or, failing agreement, nominated on the application of either of them by the President for the time being of the Royal Institution of Chartered Surveyors.
+
+5.2 The Surveyor shall act as an arbitrator under the Arbitration Act 1996 unless the Landlord, in its application for his nomination, elects that he shall act as an expert.
+
+6. Payment pending determination
+
+6.1 Until the Revised Rent has been ascertained, the Tenant shall continue to pay the Annual Rent at the rate payable immediately before the relevant Review Date.
+
+6.2 Within fourteen days after the Revised Rent has been ascertained, the Tenant shall pay to the Landlord the amount by which the instalments of the Annual Rent paid since the Review Date fall short of the instalments which would have been payable had the Revised Rent been ascertained on that Review Date ("the Balancing Sum"), together with interest on each part of the Balancing Sum at Base Rate from the Quarter Day on which the relevant instalment was due until the date of payment.
+
+7. Memorandum
+
+7.1 When the Revised Rent has been ascertained, the Landlord and the Tenant shall sign and exchange memoranda recording it, each party bearing its own costs.
+
+8. Statutory restrictions
+
+8.1 If on any Review Date any statutory restriction limits an increase in the Annual Rent, the Landlord may require a further review on the date on which the restriction is removed or relaxed.
+
+## SCHEDULE 6 - REGULATIONS
+
+1. Not to obstruct the malls, entrances, service corridors or fire escape routes of the Centre, nor to place any goods, displays, trolleys or advertising boards in the Common Parts.
+
+2. To load and unload goods only in the service yard and the loading bay and only during the hours designated by the Landlord, which as at the date of this Lease are 6.00 a.m. to 9.30 a.m. and 6.00 p.m. to 8.00 p.m.
+
+3. Not to permit any vehicle to remain in the service yard for longer than is necessary for loading and unloading.
+
+4. To deposit all refuse, cardboard and recyclable materials in the receptacles provided in the service yard, broken down and bagged as reasonably required by the centre manager.
+
+5. Not to play any music or use any loudspeaker in the Premises so as to be audible in the Common Parts or in other Lettable Units.
+
+6. Not to keep any animal in the Premises (other than an assistance dog).
+
+7. To keep the shop window display illuminated until at least 8.00 p.m. on each trading day.
+
+8. Not to permit any staff to smoke or vape in the Premises or in the Common Parts other than in a designated smoking area.
+
+9. To ensure that the shopfront shutters (if any) are not lowered while the Centre is open to the public.
+
+10. To co-operate in the Centre's security, fire and emergency procedures.
+
+11. Not to hold any closing down, fire or bankruptcy sale at the Premises.
+
+12. To comply with all reasonable directions of the centre manager relating to the management of the Centre.
+
+<<<PAGE>>>
+
+EXECUTED as a DEED by CARROW HILL ESTATES LIMITED acting by a director in the presence of:
+
+[[sign: G. Lambourne]]
+Director: Geoffrey Lambourne
+
+Witness signature: [[sign: P. Hollis]]
+Name: Patricia Hollis
+Address: 4 Orchard Rise, Combe Lacey, Bath BA2 9JS
+Occupation: Legal secretary
+
+EXECUTED as a DEED by ASHDOWN & PRYCE RETAIL LIMITED acting by a director in the presence of:
+
+[[sign: R. Pryce]]
+Director: Richard Pryce
+
+Witness signature: [[sign: C. Ferreira]]
+Name: Colin Ferreira
+Address: Pryce House, 6 Fennimore Way, Reading RG1 8TQ
+Occupation: Company secretary
+
+[[hand: Plans 1 and 2 not copied - see original deeds box 14]]
