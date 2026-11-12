@@ -1,0 +1,1075 @@
+{
+ "suite": "chat",
+ "label": "sub-base-1",
+ "commit": "22f4f21",
+ "base": "http://127.0.0.1:8131/api",
+ "summary": {
+  "passed": 17,
+  "items": 28,
+  "by_kind": {
+   "calculation": "12/16",
+   "follow_up": "5/12"
+  },
+  "by_matter": {
+   "M-101": "4/5",
+   "M-114": "4/7",
+   "M-301": "1/2",
+   "M-302": "1/2",
+   "M-303": "2/2",
+   "M-304": "0/2",
+   "M-305": "1/2",
+   "M-306": "1/2",
+   "MAT-1042": "3/4"
+  },
+  "p50_s": 16.0,
+  "p95_s": 41.5
+ },
+ "items": [
+  {
+   "id": "m101-04",
+   "matter": "M-101",
+   "kind": "calculation",
+   "source": "Service level report Q3 2026 (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Using the Q3 2026 service level report and the MSA, what service credit is Voss-Lindqvist owed for August 2026?",
+     "state": "partial",
+     "text": "The Master Services Agreement (DEMO) specifies the service credit Voss-Lindqvist is owed for August 2026 based on the availability in that month. According to the agreement, if Availability in a calendar month is below the Availability Target, Provider shall give Client a Service Credit equal to the following percentage of the Monthly Subscription Fee for that month: \"5% for 99.0% or more but below 99.5%, 10% for 98.0% or more but below 99.0%, 20% for 95.0% or more but below 98.0%, and 30% for below 95.0%\" [3].\n\nThe Q3 2026 service level report indicates that the Availability in August 2026 was 98.71%, which falls within the 98.0% to 99.0% range. This means the applicable Service Credit is 10% of the Monthly Subscription Fee for that month. The Monthly Subscription Fee is stated as USD 18,500 [9].\n\nCalculating the Service Credit: 10% of USD 18,500 equals USD 1,850. The agreement also states that the total Service Credits for any calendar month shall not exceed thirty percent (30%) of the Monthly Subscription Fee for that month [3]. Since USD 1,850 is within the 5% to 30% range of USD 18,500, the Service Credit is valid.\n\nTherefore, Voss-Lindqvist is owed a Service Credit of USD 1,850 for August 2026.",
+     "secs": 53.9,
+     "cards": [],
+     "cited": [
+      "Board minutes approving the renewal (DEMO)",
+      "Master Services Agreement (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_15c5e0bbf9f8c357d2c9becf34d37323"
+  },
+  {
+   "id": "m101-12",
+   "matter": "M-101",
+   "kind": "calculation",
+   "source": "Renewal proposal from Harrowgate (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "By how much, in dollars and as a percentage, would Harrowgate's proposed fee raise the monthly subscription fee?",
+     "state": "partial",
+     "text": "The monthly subscription fee would increase by USD 1,250. This is calculated as the difference between the proposed fee of USD 19,750 and the current fee of USD 18,500 [2].\n\nThe percentage increase is 6.76%, calculated as USD 1,250 divided by USD 18,500 and multiplied by 100. This figure is supported by the statement that the proposed fee of USD 19,750 is an increase of about 6.8% [1].",
+     "secs": 34.6,
+     "cards": [],
+     "cited": [
+      "Advice memo on the MSA (DEMO)",
+      "Renewal proposal from Harrowgate (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_adfda23c0add45abdc8e9b8569e22a00"
+  },
+  {
+   "id": "m101-16",
+   "matter": "M-101",
+   "kind": "calculation",
+   "source": "Consultancy Agreement (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How much headroom under the Fee Cap does Northbridge's estimate leave?",
+     "state": "partial",
+     "text": "The Fee Cap in the Consultancy Agreement is set at SEK 1,200,000 [3]. Northbridge's estimate of the total fees is SEK 914,500 [5].\n\nThe headroom under the Fee Cap is calculated as follows: SEK 1,200,000 (Fee Cap) minus SEK 914,500 (Northbridge's estimate) equals SEK 285,500.\n\nThis calculation is based on the numbers provided in the sources, as the documents do not explicitly state the headroom.",
+     "secs": 26.2,
+     "cards": [],
+     "cited": [
+      "Board minutes approving the renewal (DEMO)",
+      "Consultancy Agreement (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_a9e924f022254da88be3b27d6ff19d42"
+  },
+  {
+   "id": "m101-27",
+   "matter": "M-101",
+   "kind": "follow_up",
+   "source": "Master Services Agreement (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "When does the initial term of the Harrowgate MSA end?",
+     "state": "partial",
+     "text": "The initial term of the Harrowgate MSA ends on March 1, 2027. This is stated in multiple sources, including the Renewal proposal from Harrowgate, which notes that \"The Initial Term ends on March 1, 2027\" [4]. Additionally, the Advice memo on the MSA confirms this date, stating that \"the Initial Term therefore ends on March 1, 2027\" [5]. The Engagement request also confirms this date, stating, \"The initial term ends on March 1, 2027\" [9].\n\nThe MSA's Initial Term is twelve months from the Effective Date of March 2, 2026, as stated in Clause 2.1 of the MSA: \"This Agreement begins on the Effective Date and continues for an initial term of twelve (12) months\" [3].\n\nThe MSA also states that the Initial Term ends on March 1, 2027, which is twelve months from the Effective Date of March 2, 2026.",
+     "secs": 34.6,
+     "cards": [],
+     "cited": [
+      "Advice memo on the MSA (DEMO)",
+      "Engagement request (DEMO)",
+      "Master Services Agreement (DEMO)",
+      "Renewal proposal from Harrowgate (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "And by when must notice of non-renewal be given?",
+     "state": "answered",
+     "text": "The documents indicate that a notice of non-renewal must be given at least ninety (90) days before the end of the then-current term [2].\n\nThe initial term of the agreement ends on March 1, 2027, and the last day on which either party can give notice of non-renewal is December 1, 2026 [5].\n\nThe documents also state that Harrowgate could serve notice of non-renewal by December 1, 2026, to force a negotiation [3.4: \"Harrowgate could serve notice of non-renewal by December 1, 2026 to force a negotiation\" [1]].",
+     "secs": 11.9,
+     "cards": [],
+     "cited": [
+      "Advice memo on the MSA (DEMO)",
+      "Master Services Agreement (DEMO)"
+     ],
+     "notes": [
+      "The source adds a condition to “The initial term of the agreement ends on March 1, 2027, and the last day on which either party can give notice of non-renewal is December…”: “unless either party gives written notice of non-renewal at least ninety (90) days before the end of the”. Found by rule."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Has the board decided to give that notice?",
+     "state": "partial",
+     "text": "The documents do not state that the board has decided to give notice by December 1, 2026.\n\nThe documents mention that the deadline for giving notice of non-renewal is December 1, 2026 [3] and [5], but they do not indicate that the board has made a decision to give notice by that date.\n\nThe board's resolution was to approve the renewal of the agreement, either on its current terms or on amended terms, and to not serve notice of non-renewal [6].",
+     "secs": 15.3,
+     "cards": [],
+     "cited": [
+      "Advice memo on the MSA (DEMO)",
+      "Board minutes approving the renewal (DEMO)",
+      "Engagement request (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_d19b2e2b27a488fdf38c4a2f26193434"
+  },
+  {
+   "id": "m101-28",
+   "matter": "M-101",
+   "kind": "follow_up",
+   "source": "Service level report Q3 2026 (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What availability did Harrowgate report for August 2026?",
+     "state": "answered",
+     "text": "The documents state that Harrowgate reported an availability of 98.71% in August 2026 [1].\n\nThe Availability Target was 99.5% for that month, and the reported availability was below this target [5].",
+     "secs": 15.2,
+     "cards": [],
+     "cited": [
+      "Board minutes approving the renewal (DEMO)",
+      "Service level report Q3 2026 (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "What service credit does that give Voss-Lindqvist?",
+     "state": "partial",
+     "text": "The documents state that the reported availability of 98.71% in August 2026 gives Voss-Lindqvist a Service Credit.\n\nThe Service Credit is due under paragraph 3 of Schedule 2 because Availability in August 2026 was below the Availability Target [1].\n\nThe Service Credit is calculated as a percentage of the Monthly Subscription Fee based on the Availability in the calendar month. Since the Availability was 98.71%, which is between 98.0% and 99.0%, the Service Credit is 10% of the Monthly Subscription Fee [4].\n\nThe Service Credit will be credited against the next invoice issued after the report, which is scheduled to be issued on November 2, 2026 [1].",
+     "secs": 23.4,
+     "cards": [],
+     "cited": [
+      "Advice memo on the MSA (DEMO)",
+      "Master Services Agreement (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "1,850",
+       "1850"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "Does it also give a right to terminate for chronic failure?",
+     "state": "abstained",
+     "text": "The documents do not indicate that the reported availability of 98.71% in August 2026 gives a right to terminate for chronic failure.\n\nClause 6.4 of the Advice memo on the MSA states that \"The chronic-failure right in paragraph 6 of Schedule 2 requires Availability below 97.0% in two consecutive months, or in three months in any rolling twelve months. The Q3 figures do not meet that test, so no termination right arises.\"\n\nAdditionally, source 2 states that \"Availability in August 2026 was below the Availability Target. A Service Credit is due and should appear on the next invoice, but the shortfall does not give the client a right to terminate.\"\n\nTherefore, the documents indicate that the availability of 98.71% in August 2026 does not meet the criteria for termination due to chronic failure.",
+     "secs": 10.4,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_f6b45d4959ac4228e6e41b44b46c6461"
+  },
+  {
+   "id": "m114-03",
+   "matter": "M-114",
+   "kind": "calculation",
+   "source": "Register of members (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Do the holdings in the register of members add up to the stated total? Give the totals by class.",
+     "state": "partial",
+     "text": "The holdings in the register of members add up to the stated total.\n\nThe total ordinary shares are calculated as follows:  \n3,600,000 (Amélie Moreau) + 2,400,000 (Benedikt Lind) + 150,000 (Catherine Osei) + 2,250,000 (Hollins Seed Partners LP) + 70,000 (Tomasz Wierzbicki) + 50,000 (Grace Adeyemi) = 8,520,000 ordinary shares [9].\n\nThe total Series A preferred shares are calculated as follows:  \n1,800,000 (Brightwater Ventures Fund II LP) + 200,000 (Hollins Seed Partners LP) = 2,000,000 Series A preferred shares [9].\n\nThe total shares are 8,520,000 ordinary shares + 2,000,000 Series A preferred shares = 10,520,000 shares [9].\n\nThe total shares in the register match the stated total: 10,520,000 shares = 10,520,000 [9].\n\nThe total ordinary shares match the stated total: 8,520,000 shares = 8,520,000 [9].\n\nThe total Series A preferred shares match the stated total: 2,000,000 shares = 2,000,000 [9].",
+     "secs": 40.0,
+     "cards": [],
+     "cited": [
+      "Register of members (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ea025e8517a2f275dccc5e03e6b4b8ac"
+  },
+  {
+   "id": "m114-06",
+   "matter": "M-114",
+   "kind": "calculation",
+   "source": "Register of members (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How many shares does Hollins Seed Partners hold in total, and in which classes?",
+     "state": "partial",
+     "text": "Hollins Seed Partners holds a total of 2,450,000 shares, comprising 2,250,000 ordinary shares and 200,000 Series A preferred shares.\n\nThis is calculated from the following figures:  \n- 2,250,000 ordinary shares held by Hollins Seed Partners LP, as stated in [1].  \n- 200,000 Series A preferred shares held by Hollins Seed Partners LP, as stated in [1].\n\nThe total number of shares held by Hollins Seed Partners is therefore 2,250,000 + 200,000 = 2,450,000 shares.",
+     "secs": 23.8,
+     "cards": [],
+     "cited": [
+      "Register of members (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ffc6ffb5733691e6df6682427c065409"
+  },
+  {
+   "id": "m114-20",
+   "matter": "M-114",
+   "kind": "calculation",
+   "source": "Supply Agreement (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Would the Series B make Larchmont's stake a change of control under the Tidewater supply agreement?",
+     "state": "partial",
+     "text": "The question is whether the Series B investment would make Larchmont's stake a change of control under the Tidewater supply agreement.\n\nThe Tidewater supply agreement defines \"Change of Control\" as \"any person, alone or together with persons acting in concert with it, acquiring more than fifty percent (50%) of the voting shares of the Supplier\" [8] [8: \"Change of Control\" means any person, alone or together with persons acting in concert with it, acquiring more than fifty percent (50%) of the voting shares of the Supplier].\n\nThe Series B term sheet indicates that Larchmont Growth Partners LP invested GBP 10,500,000 for 3,000,000 Series B Shares [7]. The Series B Shares are preferred shares with a price of GBP 3.50 per share [7].\n\nThe pre-money valuation of the Company is GBP 38,500,000, and the post-money valuation is GBP 51,100,000 [7]. The Series B Shares represent approximately 21.2% of the issued shares and 20.5% on a fully diluted basis [7].\n\nSince Larchmont's stake is less than 50%, it does not meet the definition of a \"Change of Control\" in the Tidewater supply agreement.\n\nThe documents in this matter do not answer that.",
+     "secs": 31.9,
+     "cards": [],
+     "cited": [
+      "Series B term sheet (DEMO)",
+      "Supply Agreement (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "14,120,000"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_060c3af4668f14ff3110cc19f3e8219f"
+  },
+  {
+   "id": "m114-21",
+   "matter": "M-114",
+   "kind": "calculation",
+   "source": "Series B term sheet (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Check the Series B pre-money valuation against the price per share.",
+     "state": "partial",
+     "text": "The Series B pre-money valuation is GBP 38,500,000 [1]. The price per Series B Share is GBP 3.50 [1].\n\nThe pre-money valuation is calculated on 11,000,000 shares, which includes 10,520,000 shares in issue and 480,000 Ordinary Shares under outstanding options [1].\n\nThe Series B Shares are priced at GBP 3.50 per share, and the pre-money valuation is GBP 38,500,000.",
+     "secs": 11.7,
+     "cards": [],
+     "cited": [
+      "Series B term sheet (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_8325f3453aaf1bbc97193b759f98b7a0"
+  },
+  {
+   "id": "m114-23",
+   "matter": "M-114",
+   "kind": "calculation",
+   "source": "Disclosure letter (draft) (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What did replacing the failed Tidewater sensors cost Alder Finch?",
+     "state": "partial",
+     "text": "The documents state that Alder Finch replaced 312 failed Tidewater sensors at a cost of GBP 12,012. This is explicitly mentioned in the source: [1].",
+     "secs": 10.2,
+     "cards": [],
+     "cited": [
+      "Disclosure letter (draft) (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_f50da0f64c02dbc3a201228541fda779"
+  },
+  {
+   "id": "m114-27",
+   "matter": "M-114",
+   "kind": "follow_up",
+   "source": "Supply Agreement - Northwind (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Who signed the Northwind supply agreement for Alder Finch?",
+     "state": "answered",
+     "text": "The Northwind supply agreement for Alder Finch was signed by Amélie Moreau, Chief Executive Officer of Alder Finch Ltd [1].\n\nThe document states that the agreement was made between Alder Finch Ltd and Northwind Components Ltd [2].\n\nThe agreement was signed on 29 January 2026 [1].",
+     "secs": 14.5,
+     "cards": [],
+     "cited": [
+      "Supply Agreement - Northwind (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Was that within her signing authority?",
+     "state": "partial",
+     "text": "The signing of the Northwind supply agreement was done by Amélie Moreau, who is identified as the Chief Executive Officer of Alder Finch Ltd in the document [1].\n\nThe document states that the Supply Agreement is between Alder Finch Ltd (the Customer) and Northwind Components Ltd (the Supplier) [2].\n\nThe Supply Agreement was signed on 29 January 2026 [1].\n\nThe Board approved the Company entering into the supply agreement and authorised the Chief Executive Officer to sign it [5]. Since Amélie Moreau is the Chief Executive Officer, she had the authority to sign the agreement.",
+     "secs": 19.2,
+     "cards": [],
+     "cited": [
+      "Board minutes January 2026 (DEMO)",
+      "Supply Agreement - Northwind (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "1,000,000"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "When did the board approve it?",
+     "state": "answered",
+     "text": "The board approved the Supply Agreement (DEMO) on 20 January 2026, as stated in the minutes of the board meeting held on that date [6]. The document is dated 16 February 2026 [2].\n\nThe board approved the Supply Agreement - Northwind (DEMO) on 20 January 2026, as stated in the minutes of the board meeting held on that date [5]. The document is dated 29 January 2026 [7].",
+     "secs": 15.3,
+     "cards": [],
+     "cited": [
+      "Board minutes January 2026 (DEMO)",
+      "Supply Agreement (DEMO)",
+      "Supply Agreement - Northwind (DEMO)"
+     ],
+     "notes": [
+      "This matter has 2 documents that are a “supply agreement”. To ask about one alone, choose it below."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_657ee9f62d74f3cfbf65d0bc5bc90b95"
+  },
+  {
+   "id": "m114-28",
+   "matter": "M-114",
+   "kind": "follow_up",
+   "source": "Series B term sheet (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What is the Series B price per share?",
+     "state": "answered",
+     "text": "The Series B price per share is GBP 3.50 per Series B Share [2].",
+     "secs": 6.4,
+     "cards": [],
+     "cited": [
+      "Series B term sheet (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "How many Series B shares will Larchmont subscribe for?",
+     "state": "answered",
+     "text": "The documents state that Larchmont Growth Partners LP will subscribe for 3,000,000 Series B Shares. This is specified in the Series B term sheet, which states: \"Larchmont Growth Partners LP, GBP 10,500,000 for 3,000,000 Series B Shares\" [1].",
+     "secs": 7.8,
+     "cards": [],
+     "cited": [
+      "Series B term sheet (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "What share of the issued shares will that be after completion?",
+     "state": "partial",
+     "text": "The question asks for the share of the issued shares that 3,000,000 Series B Shares will represent after completion. The sources provide the following information:\n\nThe total number of issued shares after completion is 14,120,000, made up of 8,520,000 Ordinary Shares, 2,000,000 Series A Preferred Shares, and 3,600,000 Series B Shares [1].\n\nThe number of Series B Shares is 3,600,000 [1].\n\nTo calculate the share of the issued shares that the Series B Shares represent, we divide the number of Series B Shares by the total number of issued shares and multiply by 100:\n\n3,600,000 ÷ 14,120,000 × 100 = 25.5%.\n\nTherefore, the 3,000,000 Series B Shares will represent 25.5% of the issued shares after completion.",
+     "secs": 21.3,
+     "cards": [],
+     "cited": [
+      "Series B term sheet (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "21.2",
+       "21.25",
+       "about 21",
+       "approximately 21"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_00890352007222bd23ad8b3256bf08a3"
+  },
+  {
+   "id": "m301-06",
+   "matter": "M-301",
+   "kind": "calculation",
+   "source": "01 Logistics Services Agreement (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "If the service credit clause is applied correctly to the April, May and June 2026 figures, what should the service credits total?",
+     "state": "partial",
+     "text": "The service credits for April, May, and June 2026 are calculated as 5% of the monthly fee for each full percentage point below the 98% KPI. The monthly fee is GBP 140,000 [7].\n\nService credit for April 2026: 6 full percentage points below KPI × 5% × GBP 140,000 = GBP 42,000 [2].\n\nService credit for May 2026: 5 full percentage points below KPI × 5% × GBP 140,000 = GBP 35,000 [2].\n\nService credit for June 2026: 3 full percentage points below KPI × 5% × GBP 140,000 = GBP 21,000 [2].\n\nTotal service credits: GBP 42,000 + GBP 35,000 + GBP 21,000 = GBP 98,000 [2].\n\nThe maximum cap per month is 25% of the monthly fee, which is GBP 35,000 [2].\n\nTotal service credits adjusted for cap: min(GBP 98,000, GBP 35,000) = GBP 35,000 [2].\n\nTotal service credits are within the maximum cap of 25% of the monthly fee (GBP 35,000): GBP 35,000 ≤ GBP 35,000, which holds.",
+     "secs": 41.5,
+     "cards": [],
+     "cited": [
+      "01 Logistics Services Agreement (DEMO)",
+      "03 Notice of claim (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "91,000",
+       "91k",
+       "91000"
+      ]
+     ],
+     "leaked": [
+      "98,000"
+     ],
+     "ok": false
+    }
+   ],
+   "conv": "conv_af01bea385e2f4aa5ec8a5f652074c36"
+  },
+  {
+   "id": "m301-10",
+   "matter": "M-301",
+   "kind": "follow_up",
+   "source": "03 Notice of claim (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "When did Northwind serve its notice of claim on Calder?",
+     "state": "answered",
+     "text": "Northwind served its notice of claim on Calder on 28 July 2026. This is stated in the document titled \"03 Notice of claim (DEMO)\" [4].",
+     "secs": 6.3,
+     "cards": [],
+     "cited": [
+      "03 Notice of claim (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Was that in time for the April and May failures?",
+     "state": "partial",
+     "text": "The notice of claim for the April and May 2026 failures was not served in time. The notice was submitted on 28 July 2026, which is beyond the 30-day notice period specified in clause 12.1. Clause 12.1 requires that any claim must be notified within 30 days after the end of the month in which the failure occurred. The failure in April 2026 would have required notice by 30 May 2026, and the failure in May 2026 would have required notice by 30 June 2026 [1].\n\nThe notice of claim was late for April and May, as the failures occurred in those months and the notice was not submitted until after the 30-day window [3]. However, the notice was timely for June, as the failure occurred in June and the notice was submitted within 30 days [3].",
+     "secs": 14.1,
+     "cards": [],
+     "cited": [
+      "04 Calder Freight response (DEMO)",
+      "05 Internal note of call with operations (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_a11d15e09385fc01b40130f8bf21c864"
+  },
+  {
+   "id": "m302-05",
+   "matter": "M-302",
+   "kind": "calculation",
+   "source": "03 Grievance letter (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "At the policy rates, what would 83 nights and 12 weekend days actually come to? Does that match the GBP 18,400 Dr Rahman is claiming?",
+     "state": "partial",
+     "text": "At the policy rates, 83 nights on call would amount to 83 × GBP 220 = GBP 18,260 [2]. 12 weekend days on call would amount to 12 × GBP 90 = GBP 1,080 [2]. Adding these together, the total on-call allowance would be GBP 18,260 + GBP 1,080 = GBP 19,340.\n\nThe total claimed by Dr Rahman is GBP 18,400 [2]. This does not match the calculated total of GBP 19,340.\n\nThe HR investigation calculated GBP 14,080 based on 64 nights [3]. This is different from both the calculated total of GBP 19,340 and the claimed GBP 18,400.\n\nThe HR investigation also noted that the discrepancy between the claimed GBP 18,400 and the calculated GBP 14,080 arises from an overestimation of the number of on-call shifts [3].",
+     "secs": 30.4,
+     "cards": [],
+     "cited": [
+      "03 Grievance letter (DEMO)",
+      "04 HR investigation notes (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_418831d3d22c1ef9ea79d7e2cba526af"
+  },
+  {
+   "id": "m302-09",
+   "matter": "M-302",
+   "kind": "follow_up",
+   "source": "02 On-Call Allowance Policy v3 (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "If Dr Rahman disputes an on-call payment, how long does he have to raise a grievance?",
+     "state": "answered",
+     "text": "The documents state that if Dr Rahman disputes an on-call payment, he must raise a grievance within 14 days of receiving the payment or notice of non-payment. This is specified in the On-Call Allowance Policy, which states: \"Employees who wish to dispute a decision regarding their on-call allowance must submit a written grievance to the HR department within 14 days of receiving the payment or notice of non-payment\" [1].",
+     "secs": 7.5,
+     "cards": [],
+     "cited": [
+      "02 On-Call Allowance Policy v3 (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "And if he's unhappy with HR's response, where does it go next?",
+     "state": "partial",
+     "text": "The grievance procedure outlined in the On-Call Allowance Policy states that if an employee is dissatisfied with the HR department’s response, they may escalate the matter to the Chief Operations Officer (COO) for further review [1].\n\nDr Rahman has already submitted a formal grievance to the HR department, as evidenced by the grievance letter dated 19 June 2026 [5]. The HR investigation found that Dr Rahman was owed GBP 14,080, not GBP 18,400, due to an overestimation of on-call shifts [3].\n\nSince Dr Rahman disputes the HR department’s findings and has not received a resolution, the next step in the grievance process would be to escalate the matter to the COO for further review, as specified in the policy [1].",
+     "secs": 15.6,
+     "cards": [],
+     "cited": [
+      "02 On-Call Allowance Policy v3 (DEMO)",
+      "03 Grievance letter (DEMO)",
+      "04 HR investigation notes (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "final",
+       "binding"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_d5504be7fad6070c85661d649b9ace71"
+  },
+  {
+   "id": "m303-06",
+   "matter": "M-303",
+   "kind": "calculation",
+   "source": "03 Capitalisation table summary (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What's the post-money valuation, and what percentage of the company will Aldermoor hold after closing?",
+     "state": "partial",
+     "text": "The post-money valuation is USD 32,000,000. This is stated in source 1: \"The proposed Series A financing will be led by Aldermoor Ventures LP, with a pre-money valuation of USD 24,000,000. The Company is raising USD 8,000,000 in the Series A round, resulting in a post-money valuation of USD 32,000,000.\"\n\nAldermoor will hold 25% of the company after closing. This is calculated as USD 8,000,000 (the investment amount) divided by USD 32,000,000 (the post-money valuation), which equals 25%. This calculation is based on the figures provided in source 1: \"The Company is raising USD 8,000,000 in the Series A round\" [1] and \"resulting in a post-money valuation of USD 32,000,000.\" [1]",
+     "secs": 20.3,
+     "cards": [],
+     "cited": [
+      "03 Capitalisation table summary (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_8a2932ed0cfe95bc108bddb705811f01"
+  },
+  {
+   "id": "m303-10",
+   "matter": "M-303",
+   "kind": "follow_up",
+   "source": "01 Series A term sheet (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Which law governs the term sheet?",
+     "state": "partial",
+     "text": "The law that governs the term sheet is the law of the State of Delaware. This is stated in the term sheet, which provides: \"This Term Sheet shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to its conflict of laws principles\" [1].",
+     "secs": 6.4,
+     "cards": [],
+     "cited": [
+      "01 Series A term sheet (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "And which parts of it are binding?",
+     "state": "partial",
+     "text": "The term sheet includes both binding and non-binding provisions. Specifically, Sections 1 through 10 of the term sheet are binding upon execution, while all other terms and conditions are subject to negotiation and execution of definitive agreements [1].\n\nThe binding sections include the entire agreement clause and the non-binding nature clause, among others. The rest of the term sheet, including specific financial terms and conditions, is not binding until definitive agreements are executed.\n\nThe documents do not specify which exact sections within Sections 1 through 10 are binding, only that these sections are binding upon execution.",
+     "secs": 9.1,
+     "cards": [],
+     "cited": [
+      "01 Series A term sheet (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_38ce5b38026e0f5d8691c202d275b268"
+  },
+  {
+   "id": "m304-06",
+   "matter": "M-304",
+   "kind": "calculation",
+   "source": "04 Heads of terms for a new lease (draft) (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How much rent would Harbourview save over the six-month rent-free period in the draft heads of terms?",
+     "state": "partial",
+     "text": "The draft heads of terms propose a rent of GBP 110,000 per annum for the new 10-year lease [2]. The surveyor's note suggests that the market rate is between GBP 108,000 and GBP 112,000 per annum [1].\n\nThe rent-free period is six months, starting on 24 June 2027 [2].\n\nThe current rent under the existing lease is GBP 96,000 per annum [6].\n\nThe proposed rent of GBP 110,000 per annum is higher than the current rent of GBP 96,000 per annum. However, the rent-free period of six months would reduce the total rent paid during that period.\n\nThe total rent for the first six months under the new lease would be GBP 0, as the tenant is entitled to a rent-free period. The total rent for the same period under the existing lease would be GBP 48,000 (GBP 96,000 per annum divided by 2).\n\nTherefore, the tenant would save GBP 48,000 in the first six months of the new lease [2][6].",
+     "secs": 19.5,
+     "cards": [],
+     "cited": [
+      "01 Lease of Unit 12 Riverside Works (DEMO)",
+      "03 Surveyor's comparables note (DEMO)",
+      "04 Heads of terms for a new lease (draft) (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "55,000",
+       "55k",
+       "55000"
+      ]
+     ],
+     "leaked": [
+      "48,000"
+     ],
+     "ok": false
+    }
+   ],
+   "conv": "conv_9fabe6d3bfd5d195eeef1cd7f78eea5e"
+  },
+  {
+   "id": "m304-09",
+   "matter": "M-304",
+   "kind": "follow_up",
+   "source": "02 Landlord rent review proposal (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What rent does Pembroke want from the review date?",
+     "state": "answered",
+     "text": "The documents state that Pembroke Estates Ltd proposes a rent of GBP 128,000 per annum for Unit 12, Riverside Works, effective from 24 June 2026 [1].\n\nThe tenant's surveyor, however, suggests that the rent should be set within the range of GBP 108,000 to GBP 112,000 per annum, based on the four comparable lettings reviewed [3].\n\nThe proposed new lease includes a rent of GBP 110,000 per annum, which is to be reviewed in accordance with the provisions of the existing lease [2].\n\nThe existing lease provides for an upward-only open-market rent review on 24 June 2026 [7].",
+     "secs": 16.0,
+     "cards": [],
+     "cited": [
+      "01 Lease of Unit 12 Riverside Works (DEMO)",
+      "02 Landlord rent review proposal (DEMO)",
+      "03 Surveyor's comparables note (DEMO)",
+      "04 Heads of terms for a new lease (draft) (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "How much of an increase on what we pay now is that, in percentage terms?",
+     "state": "partial",
+     "text": "The proposed rent of GBP 128,000 per annum is based on a rent review proposal by the lessor, as stated in source 1: \"On 1 May 2026, the lessor proposed a rent increase to GBP 128,000 per annum.\" [1] The current rent, as referenced in the same source, is GBP 110,000 per annum: \"The proposed rent under the new lease is GBP 110,000 per annum.\" [1]\n\nThe increase in rent is calculated as GBP 128,000 − GBP 110,000 = GBP 18,000 [1][1].\n\nThe percentage increase on the current rent is calculated as GBP 18,000 ÷ GBP 110,000 × 100 = 16.36% [1][1].",
+     "secs": 21.0,
+     "cards": [],
+     "cited": [
+      "01 Lease of Unit 12 Riverside Works (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "32,000",
+       "32k"
+      ],
+      [
+       "33.3",
+       "33%",
+       "33 per cent",
+       "33 percent",
+       "one third",
+       "one-third",
+       "a third of",
+       "about a third",
+       "roughly a third"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_5059194113fa44f0ba083d3ba44316ce"
+  },
+  {
+   "id": "m305-06",
+   "matter": "M-305",
+   "kind": "calculation",
+   "source": "01 SaaS Agreement (Lumen draft) (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What's the most Orbis could get as a service credit for a single bad month?",
+     "state": "answered",
+     "text": "Monthly subscription fee, worked out from the documents' figures: GBP 360,000 ÷ 4 = GBP 90,000 [1].\n\nMaximum service credit for a single bad month, worked out from the documents' figures: 10% × GBP 90,000 = GBP 9,000 [1][3].",
+     "secs": 9.5,
+     "cards": [],
+     "cited": [
+      "01 SaaS Agreement (Lumen draft) (DEMO)",
+      "03 Orbis mark-up email (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "3,000",
+       "3k"
+      ]
+     ],
+     "leaked": [
+      "9,000"
+     ],
+     "ok": false
+    }
+   ],
+   "conv": "conv_efa72dcd4bdb94dd59fb058432f8f0a6"
+  },
+  {
+   "id": "m305-09",
+   "matter": "M-305",
+   "kind": "follow_up",
+   "source": "01 SaaS Agreement (Lumen draft) (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How long is the initial term of the SaaS Agreement?",
+     "state": "partial",
+     "text": "The initial term of the SaaS Agreement is 12 months. The Agreement shall commence on 8 September 2026 and shall continue for a period of 12 months, unless terminated earlier in accordance with the terms of this Agreement [1].",
+     "secs": 9.9,
+     "cards": [],
+     "cited": [
+      "01 SaaS Agreement (Lumen draft) (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "And how much notice does either side need to give to terminate it?",
+     "state": "partial",
+     "text": "The SaaS Agreement specifies that either party must give 30 days' written notice to terminate the agreement. The relevant text is: \"Either party may terminate this Agreement upon 30 days' written notice to the other\" [1].\n\nThere are no other terms related to notice periods for termination in the SaaS Agreement itself.\n\nThe documents in this matter do not answer that.",
+     "secs": 7.9,
+     "cards": [],
+     "cited": [
+      "01 SaaS Agreement (Lumen draft) (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_09afc17a979dcd46d6eefcccaaa5415d"
+  },
+  {
+   "id": "m306-04",
+   "matter": "M-306",
+   "kind": "calculation",
+   "source": "01 Authority information request (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Counting from the date of the Authority's letter, what's the last day for Meridian to respond?",
+     "state": "partial",
+     "text": "The last day for Meridian to respond to the Authority's request is 22 October 2026.\n\nThe Authority's letter was dated 1 October 2026 [3]. The request requires that all information be provided within 21 days of the date of the letter [1].\n\nAdding 21 days to 1 October 2026 results in 22 October 2026 [1].",
+     "secs": 16.0,
+     "cards": [],
+     "cited": [
+      "01 Authority information request (DEMO)",
+      "03 Internal compliance memo (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_029c9a9cd4d7f8db7601894b170db440"
+  },
+  {
+   "id": "m306-10",
+   "matter": "M-306",
+   "kind": "follow_up",
+   "source": "03 Internal compliance memo (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Which batches does the compliance memo want recalled?",
+     "state": "partial",
+     "text": "The compliance memo wants batches 4471 to 4479 of the Harvest Seeded Loaf recalled. The memo states, \"A precautionary recall of all batches of the Harvest Seeded Loaf produced between 1 January 2026 and 30 September 2026, specifically batches 4471 to 4479\" [1].\n\nThe memo also references a recommendation to initiate a precautionary recall of Harvest Seeded Loaf batches 4471 to 4479, as stated in the subject line of the memo [2].\n\nAdditionally, the memo recommends that the precautionary recall of Harvest Seeded Loaf batches 4471 to 4479 be initiated immediately [3].",
+     "secs": 17.4,
+     "cards": [],
+     "cited": [
+      "03 Internal compliance memo (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "How many batches is that, and what production period do they cover?",
+     "state": "answered",
+     "text": "The documents state that the batches in question are 4471 to 4479, which are specifically mentioned as part of a precautionary recall [1].\n\nThese batches cover the production period from 1 January 2026 to 30 September 2026 [1].",
+     "secs": 8.7,
+     "cards": [],
+     "cited": [
+      "03 Internal compliance memo (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "nine",
+       "9 batches",
+       "(9)"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_68204ac971d4ec3d09ad39385831f7d1"
+  },
+  {
+   "id": "mat1042-18",
+   "matter": "MAT-1042",
+   "kind": "calculation",
+   "source": "Notice of late delivery and claim (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How much can Morgan claim in liquidated damages for the late delivery? Show the working.",
+     "state": "partial",
+     "text": "The liquidated damages Morgan can claim for the late delivery are calculated as follows:\n\n- The Delivery Date was May 20, 2026, as amended by Amendment No. 1 [6].\n- Delivery was completed on June 10, 2026 [6].\n- The period of delay is 21 days, which is exactly 3 weeks [6].\n- The weekly liquidated damages rate is 1.5% of the Total Contract Price [5].\n- The Total Contract Price is USD 1,240,000 [6].\n- Weekly liquidated damages: 1.5% × USD 1,240,000 = USD 18,600 [6].\n- Total liquidated damages for 3 weeks: USD 18,600 × 3 = USD 55,800 [6].\n- The cap under clause 7.2 is 10% of the Total Contract Price [6].\n- The calculated amount of USD 55,800 does not exceed the cap of USD 124,000 [6].\n\nTherefore, Morgan can claim USD 55,800 in liquidated damages for the late delivery.",
+     "secs": 41.8,
+     "cards": [],
+     "cited": [
+      "Amendment No. 1 (DEMO)",
+      "Research memo with an unverified citation (DEMO)"
+     ],
+     "notes": [
+      "Clause 7.1 of Services Agreement (DEMO) was deleted and replaced by clause 2.1 of Amendment No. 1 (DEMO) (signed). It says: “This Amendment takes effect on May 14, 2026, the date on which it has been signed by both Parties.”"
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_dba49260191e98dc87e75b318cfbf31f"
+  },
+  {
+   "id": "mat1042-19",
+   "matter": "MAT-1042",
+   "kind": "calculation",
+   "source": "Notice of late delivery and claim (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "After the set-off, how much does Morgan say it will pay on invoice INV-2026-0518, and by when?",
+     "state": "answered",
+     "text": "Morgan says it will pay the undisputed amount of USD 936,200 on invoice INV-2026-0518 [1].\n\nThe payment is due by July 10, 2026 [1].",
+     "secs": 18.8,
+     "cards": [],
+     "cited": [
+      "Notice of late delivery and claim (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_f81664c640a4b923bb0a43d7fdfee34c"
+  },
+  {
+   "id": "mat1042-31",
+   "matter": "MAT-1042",
+   "kind": "follow_up",
+   "source": "Amendment No. 1 (DEMO)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What delivery date did the Services Agreement originally set?",
+     "state": "partial",
+     "text": "The Services Agreement (DEMO) originally set the Delivery Date as May 15, 2026. This is stated in clause 4.2 of the Services Agreement (DEMO) [2].\n\nAmendment No. 1 to the Services Agreement changed the Delivery Date to May 20, 2026. This amendment is documented in Amendment No. 1 (DEMO) [6].",
+     "secs": 13.3,
+     "cards": [],
+     "cited": [
+      "Amendment No. 1 (DEMO)",
+      "Services Agreement (DEMO)"
+     ],
+     "notes": [
+      "Clause 4.2 of Services Agreement (DEMO) was deleted and replaced by clause 1.1 of Amendment No. 1 (DEMO) (signed). It says: “This Amendment takes effect on May 14, 2026, the date on which it has been signed by both Parties.”",
+      "Clause 7.1 of Services Agreement (DEMO) was deleted and replaced by clause 2.1 of Amendment No. 1 (DEMO) (signed). It says: “This Amendment takes effect on May 14, 2026, the date on which it has been signed by both Parties.”"
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "Is that still the date?",
+     "state": "partial",
+     "text": "The documents confirm that May 20, 2026, is still the Delivery Date. Amendment No. 1, dated May 14, 2026, replaced the original date of May 15, 2026 in clause 4.2 of the Services Agreement [1]. Additionally, the amendment states that the Delivery Date for all purposes of the Agreement, including clauses 7 and 11.3 of the Agreement, is May 20, 2026 [3].\n\nThe documents also show that the Delivery Date was amended to May 20, 2026, and this change is in effect. The amendment was signed by both parties and took effect on May 14, 2026 [5].\n\nTherefore, May 20, 2026, remains the correct Delivery Date as per the amended agreement.",
+     "secs": 17.3,
+     "cards": [],
+     "cited": [
+      "Amendment No. 1 (DEMO)",
+      "Research memo with an unverified citation (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "What else did that amendment change?",
+     "state": "answered",
+     "text": "Amendment No. 1 changed clause 4.2 of the Services Agreement to set the Delivery Date as May 20, 2026 [2]. It also changed clause 7.1 to set the liquidated damages at 1.5% per week [3]. All other terms of the Services Agreement remained in force [2].",
+     "secs": 11.1,
+     "cards": [],
+     "cited": [
+      "Email thread on delivery timing (DEMO)",
+      "Research memo with an unverified citation (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_25f16c7291d6822f70b4463bccf855c1"
+  },
+  {
+   "id": "mat1042-32",
+   "matter": "MAT-1042",
+   "kind": "follow_up",
+   "source": "Shipment log (DEMO)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When did Apex dispatch the units?",
+     "state": "partial",
+     "text": "The documents state that Apex dispatched the units on May 10, 2026. This is indicated in the witness statement that mentions \"the planned dispatch date of May 10, 2026\" [6].\n\nAdditionally, the dispatch notice was sent on May 4, 2026, as noted in the email from Priya Raman, which stated the planned dispatch date of May 10, 2026 [6].\n\nThe delivery of the units to the Delivery Point occurred on May 15, 2026, as stated by Apex in its response to the claim [4].\n\nHowever, the documents also indicate that two units were rejected and replaced later. The replacement units arrived \"early June, about three or four weeks later,\" but the exact date is not specified [3].",
+     "secs": 19.8,
+     "cards": [],
+     "cited": [
+      "Apex response to the claim (DEMO)",
+      "Witness A interview (DEMO)",
+      "Witness B interview (DEMO)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    },
+    {
+     "question": "And when did they arrive?",
+     "state": "partial",
+     "text": "The replacement units arrived on June 10, 2026. According to the witness, the replacement units arrived \"early June, about three or four weeks later,\" and the exact date is confirmed in another source as June 10, 2026 [2].",
+     "secs": 11.7,
+     "cards": [],
+     "cited": [
+      "Witness B interview (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "may 15"
+      ],
+      [
+       "07:40",
+       "7:40"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    },
+    {
+     "question": "Does anyone remember it differently?",
+     "state": "partial",
+     "text": "The documents mention that the replacement units arrived on June 10, 2026. According to source 1, the two replacement units, IC450-1141 and IC450-1142, arrived in one crate on a single trailer, QFL-5602, and the trailer checked in at the gate on June 10, 2026 at 08:15. Source 6 also confirms that the replacement units were delivered on June 10, 2026.\n\nSource 4 states that the replacement units arrived \"early June, about three or four weeks later,\" [4] but Mr. Pell does not remember the exact date of the replacement delivery.\n\nSource 2 mentions that Apex claims the delivery took place on May 15, 2026, but this position does not fit the text of clause 4.4 of the Services Agreement. It states that delivery was complete only when the replacement units arrived on June 10, 2026.\n\nNo other specific details about the arrival of the replacement units on June 10, 2026 are provided in the sources.",
+     "secs": 16.1,
+     "cards": [],
+     "cited": [
+      "Witness A interview (DEMO)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "may 12"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_8a2f7c421d74216e4e5a97cae13e824d"
+  }
+ ]
+}

@@ -53,6 +53,63 @@ latest on this case" in the chat (section "Case management" below).
 | — | Content-Security-Policy | **Tested** (config) | `frontend/nginx.law.conf`: `default-src 'self'` …, validated with `nginx -t`; the built bundle references no CDN |
 | — | Strict TypeScript for new code | **Tested** | `tsconfig.counsel.json` (`strict`), also in CI |
 
+## The 2026-11-11 evaluation's fix list (2026-11-12)
+
+The end-to-end evaluation of 2026-11-11 ended with sixteen fixes and a UI "Fix first" / "Fix next" table; the owner asked
+for all of them, with two decisions: the "is it stated?" check keeps withdrawing on NOT GIVEN (it is improved, not
+softened), and the ten "what else to build" ideas wait. Measured on a private copy of the demo data, a new blind set of 50
+questions (written from the documents alone, kept out of the repository) and the seen sets; nothing was tuned on held-out
+items. Run noise is large: the chat set moved 121–128 between runs of comparable code, held-out 10 by 2 to 4 items.
+
+| Measure | Before (a806d6f) | After | Note |
+|---|---|---|---|
+| New blind set (50) | 36/50 | **41/50** | lists 4→6/7, follow-ups 3→4/5, not stated 6→7/7 |
+| Chat set (165) | 128 | **126** (121 on round 1) | within noise; lists 3→6/9, conflicts 9→11/14 |
+| "Partly supported" on written answers | 112/152 (86 correct) | **79/156 (54 correct)** | blind set 38→24 of 60 |
+| 12-turn conversation | 7/12 | 8–9/12 | `eval/fixtures/demo/thread_m101.jsonl` |
+| Golden | 67/68, 7/7 | 65/68, 7/7 | 63/68 on a first run; prompt narrowed after it (below) |
+| Held-out 10, two runs pooled | 36/56, declines 19/32 | 37/56, declines 17/32 | same day, same machine; the old code also gave 9/16 once |
+| Retrieval, final Recall@5 / MRR@10 | 0.631 / 0.497 | **0.667 / 0.514** | sparse 0.618→0.642 |
+| Prompt injection | 1 of 63 obeyed, flagged | 1 of 63, flagged | |
+| Backend suite | 1871 passed, 1 failed | **1987 passed, 0 failed** | |
+
+**Answers.**
+- *Item 1, search inside the named document* (`retrieval/terms.py`, `headings.py`, `search.py`): Porter stems for the matter
+  index and queries, each passage's section heading indexed twice and given to the cross-encoder; `search(documents=…)`
+  ranks those documents' passages among themselves instead of filtering the matter's top n. "How can the MSA be
+  terminated?" now reaches clause 12; Witness B's date 3 of 3 (was withdrawn 2 of 3).
+- *Item 2*: the check's reading and verdict are saved with the answer (migration 0044) and shown as "Why this was
+  withdrawn". Giving it the answer's quotes (`LEGAL_RESEARCH_STATED_QUOTED`) is built and **off**: the check now runs on
+  1–3 answers per 75-question set, too few to judge; `LEGAL_STATED_TRACE` records each check for that replay.
+- *Item 3*: an unmarked sentence is checked against its paragraph's (or, for a closing paragraph, the answer's) verified
+  quotes; a sentence of the working's own figures is not listed; a sentence about what the documents do not say always
+  stays listed. The support check now names each passage's document, and a parser bug that dropped every verdict after a
+  bare "SUPPORTED" line is fixed. A rule asking for "a marker on every sentence" was tried and dropped ("break clause"
+  declined 3 in 3).
+- *Items 4–7*: follow-ups search the last answer's documents first (the first answer's when the question goes "back to the
+  start", with the first turns given to the rewrite); "Correct" on the Answering line asks the wording as written; the
+  task register only for register questions, drafts only with a document to draft, ~100 phrasings in
+  `test_law_intent_phrasings.py`; lists get more of their document's passages and a list note; dates by rule (plus N
+  days, within, not less than, working days Monday to Friday with a holiday note, counts back as "−"), the person's own
+  figures labelled as theirs.
+- *Item 8, reranking*: scoring only the top 12 was measured and **not kept** (Recall@5 0.643 vs 0.667).
+- *Item 9, borrowed figures*: the stated check on confident answers with a figure ran in shadow on the chat and blind sets:
+  it would have withdrawn 4 correct answers to catch 2 wrong ones, so it stays in shadow
+  (`LEGAL_RESEARCH_STATED_CHECK=hedged+figures-shadow` to measure; default `hedged`).
+
+**Conversation, screens, release.** Asides (which model, today's date, what was asked first, code/jokes/weather) get their
+own replies; thanks and greetings in a few languages; a question in another language is answered in it; notes for a
+one-word question, a figure to confirm and an amendment question; a character count instead of a silent cut; progress
+for every stage and "Waiting for the model: N ahead" (`LEGAL_MODEL_CONCURRENCY`, research/llm.py); one calculation card;
+conflicts ranked by the kinds asked and by clause. `/auth/me` returns `can` and `display_name`; each role lands on its own
+work and the rail follows its permissions; voice is offered, not started; keyboard, phone and "Fix next" items (Obligations,
+Council, Security, Pipeline, Templates, Activity, Compare, reader, wording). The regulatory list shows the latest 50.
+`scripts/law/release_gate.sh` runs every check with one table; Playwright runs on a production build with traces kept.
+
+**Not done, and why:** the first-load 401 (`/auth/me?optional=1`) was left alone (a sign-in path change in a demo week
+for a console line); names stay sign-in handles wherever the app compares them to tell who is who; voice, a
+5–10-person load test and real client documents were not in scope.
+
 ## The external review's twelve points (2026-11-07)
 
 The owner shared an outside "Immediate fix list" of 12 points. Each was checked against the code, then fixed and measured.
