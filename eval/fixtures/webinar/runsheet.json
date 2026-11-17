@@ -1,5 +1,5 @@
 {
- "note": "The webinar's live chat steps (fictional firm Calder & Wynne LLP). Read by scripts/law/demo_runsheet.py (each step must pass 5 of 5 before the webinar), demo_health.py ('health') and webinar_preflight.sh. Text checks are case-insensitive substrings of the final answer and its cards.",
+ "note": "The webinar's live chat steps (fictional firm Calder & Wynne LLP). Read by scripts/law/demo_runsheet.py (each step must pass 5 of 5 before the webinar), demo_health.py ('health') and webinar_preflight.sh. Text checks are case-insensitive substrings of the final answer and its cards. Steps with the same act and matter are asked in one chat, in order (demo_runsheet.py --together). Act 2 uses two chats: the file (cards), then the contract, opened by the $500,000 question, whose answer gives the amended cap with its citation (the cap question alone is the health check).",
  "health": {
   "status_matter": "MAT-2101",
   "answer_question": "What is Brennan's liability cap under the Agreement as amended by the First Amendment?",
@@ -20,7 +20,7 @@
   },
   {
    "id": "status",
-   "act": "2 Litigation",
+   "act": "2 Litigation: the file",
    "matter": "MAT-2101",
    "question": "What's the latest on this matter?",
    "cards_any": [
@@ -30,7 +30,7 @@
   },
   {
    "id": "chronology",
-   "act": "2 Litigation",
+   "act": "2 Litigation: the file",
    "matter": "MAT-2101",
    "question": "Build a chronology of events",
    "cards_any": [
@@ -40,7 +40,7 @@
   },
   {
    "id": "conflicts",
-   "act": "2 Litigation",
+   "act": "2 Litigation: the file",
    "matter": "MAT-2101",
    "question": "Find conflicting dates or amounts",
    "cards_any": [
@@ -53,18 +53,8 @@
    "max_secs": 30
   },
   {
-   "id": "cap",
-   "act": "2 Litigation",
-   "matter": "MAT-2101",
-   "question": "What is Brennan's liability cap under the Agreement as amended by the First Amendment?",
-   "text_all": [
-    "1,500,000"
-   ],
-   "max_secs": 20
-  },
-  {
    "id": "misquote-cap",
-   "act": "2 Litigation",
+   "act": "2 Litigation: the contract",
    "matter": "MAT-2101",
    "question": "Brennan's lawyers say liability is capped at $500,000. Is that right?",
    "text_all": [
@@ -74,7 +64,7 @@
   },
   {
    "id": "misquote-notice",
-   "act": "2 Litigation",
+   "act": "2 Litigation: the contract",
    "matter": "MAT-2101",
    "question": "What does Section 9.3 of the Agreement actually require for notice of a claim, and was Hollis's June 9 notice in time?",
    "text_any": [
@@ -86,7 +76,7 @@
   },
   {
    "id": "credit",
-   "act": "2 Litigation",
+   "act": "2 Litigation: the contract",
    "matter": "MAT-2101",
    "question": "If Shipment HMS-26-0588 arrived on June 6 at 9:40 a.m., what late-delivery credit would come to under Section 7.4?",
    "text_all": [
@@ -96,7 +86,7 @@
   },
   {
    "id": "discovery",
-   "act": "2 Litigation",
+   "act": "2 Litigation: the contract",
    "matter": "MAT-2101",
    "question": "When does fact discovery close?",
    "text_all": [

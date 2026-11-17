@@ -72,6 +72,10 @@ Found and fixed:
 - The deal act's fee-cap question failed 4 times in 5 when asked after the valuation question in the same conversation
   (10 of 10 in a fresh one): it now opens the act, 5 of 5. The follow-up weakness itself is not fixed.
 - `demo_runsheet.py --together`: each act's questions in one conversation, as presented. Final: every step 5 of 5.
+- Re-recording the fallback clips with each answer checked found the act 2 chat's later questions failing 1 in 10 each
+  (the cap answered without its figure; the $500,000 question rewritten from the previous answer and declined). Act 2
+  now uses two chats: the file (cards), then the contract, opened by the $500,000 question, whose answer gives the amended
+  cap with its citation; the cap question alone stays the health check. The contract chat: 5 of 5 on every step.
 
 Still open: the spoken question's live words can show a misheard word for a moment ("map" for "matter"; the saved
 question is right); the demand letter's gap count varies by run (5 and 13); the recipient is not taken from "to Brennan
