@@ -47,6 +47,15 @@ function world(extra: Record<string, (b: any) => [number, unknown]> = {}) {
 describe('Compare', () => {
   afterEach(() => cleanup());
 
+  it('defaults from the earlier version to the newest when the list comes newest first and nothing is signed', async () => {
+    const drafts = [{ ...DOC.current_version, id: 'v2', number: 2, status: 'draft' }, { ...DOC.current_version, id: 'v1', number: 1, filename: 'msa-v1.md', status: 'draft' }];
+    world({ [`GET ${M}/documents/d1/versions`]: () => [200, { versions: drafts }] });
+    renderLaw('/m/M-101/compare');
+    await screen.findByRole('button', { name: 'Compare' });
+    await waitFor(() => expect((screen.getByLabelText('From: version') as HTMLSelectElement).value).toBe('v1'));
+    expect((screen.getByLabelText('To: version') as HTMLSelectElement).value).toBe('v2');
+  });
+
   it('compares the signed version with the latest draft, side by side, with changes marked', async () => {
     const calls = world();
     const { container } = renderLaw('/m/M-101/compare');

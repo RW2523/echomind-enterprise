@@ -97,10 +97,12 @@ export default function MatterCompare() {
 // ── Two versions ─────────────────────────────────────────────────────────────────
 interface Pick { doc: string; version: string }
 
-// Versions come newest first. "From" defaults to the latest signed version before the newest, else the oldest; "To" to
-// the newest, so a comparison reads from the earlier text to the current one (2026-11-17: both defaulted the other way).
-const OLDER = (vs: DocVersion[]) => { const older = vs.slice(1); return (older.find((v) => v.status === 'executed') ?? older.at(-1) ?? vs[0]).id; };
-const NEWEST = (vs: DocVersion[]) => vs[0].id;
+// "From" defaults to the latest signed version before the newest, else the oldest; "To" to the newest, so a comparison
+// reads from the earlier text to the current one. Ordered by version number, whatever order the list arrives in
+// (2026-11-17: the API lists newest first and both defaults came out the other way round).
+const byNewest = (vs: DocVersion[]) => [...vs].sort((a, b) => b.number - a.number);
+const OLDER = (vs: DocVersion[]) => { const all = byNewest(vs), older = all.slice(1); return (older.find((v) => v.status === 'executed') ?? older.at(-1) ?? all[0]).id; };
+const NEWEST = (vs: DocVersion[]) => byNewest(vs)[0].id;
 
 function VersionPicker({ legend, value, onChange, pick = NEWEST }: { legend: string; value: Pick; onChange: (p: Pick) => void; pick?: (vs: DocVersion[]) => string }) {
   const matter = useMatter();
