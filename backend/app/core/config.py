@@ -298,6 +298,9 @@ class Settings(BaseSettings):
     # The owner's open demo (2026-10-27): with demo sign-in on, the sign-in page enters as this demo person by itself, so a
     # visitor never sees a sign-in step. Empty (the default): the page lists the demo people to choose from.
     LEGAL_DEMO_AUTO: str = os.getenv("LEGAL_DEMO_AUTO", "").strip()
+    # The "Demo sign-in is on" line at the top of every page (on by default, so a firm that leaves demo sign-in on sees it).
+    # The owner's public demo turns it off for the webinar (2026-11-17); the sign-in page and every fictional document still say so.
+    LEGAL_DEMO_BANNER: bool = os.getenv("LEGAL_DEMO_BANNER", "1").strip().lower() not in ("0", "false", "no", "off")
     LEGAL_PASSWORD_MIN_LENGTH: int = int(os.getenv("LEGAL_PASSWORD_MIN_LENGTH", "12"))
     LEGAL_WS_RECHECK_SEC: float = float(os.getenv("LEGAL_WS_RECHECK_SEC", "60"))          # re-validate open WebSockets
     LEGAL_OBO_TTL_SEC: int = int(os.getenv("LEGAL_OBO_TTL_SEC", "300"))                   # voice → backend token lifetime

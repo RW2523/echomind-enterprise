@@ -102,7 +102,7 @@ export default function Shell() {
         </div>
       </aside>
       <main className="lw-main" id="main">
-        {me.features?.demo_signin && (
+        {me.features?.demo_signin && me.features.demo_banner !== false && (
           <div className="lw-demo-banner" role="status" aria-label="Demo sign-in">
             Demo sign-in is on: anyone who can open this page can enter as the demo's fictional people, without a password. Turn it off before real data goes in.
           </div>

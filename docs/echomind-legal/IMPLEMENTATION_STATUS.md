@@ -81,6 +81,11 @@ Still open: the spoken question's live words can show a misheard word for a mome
 question is right); the demand letter's gap count varies by run (5 and 13); the recipient is not taken from "to Brennan
 Freight Lines"; the meeting opens on its Consent tab, which shows 0 of 3 once consents are older than 12 hours.
 
+The "Demo sign-in is on" line at the top of every page can be hidden (owner's request, 2026-11-17): LEGAL_DEMO_BANNER
+(default on, so a firm that leaves demo sign-in on still sees it); `DEMO_BANNER=0 scripts/law/demo_up.sh api` sets it for the
+public demo and `demo_reset.sh` keeps it. Demo sign-in itself, the sign-in page's note and every document's "Fictional" footer
+are unchanged. Tests: test_law_demo_signin.py, signin-demo.test.tsx.
+
 ## A realistic synthetic dataset, and how the product does on it (2026-11-12)
 
 Owner, in the 2026-11-11 evaluation report: build a realistic synthetic dataset, load it and test it. `eval/fixtures/synthetic`

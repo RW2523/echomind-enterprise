@@ -21,7 +21,7 @@ public_url() { api_env PUBLIC_URL; }
 
 restart_api() {
   local url="$1"
-  DEMO_PUBLIC_URL="$url" DEMO_EXTRA_ORIGINS="$EXTRA" DEMO_FIRM_STYLE="${STYLE:-uk}" "$ROOT/scripts/law/demo_up.sh" api >/dev/null
+  DEMO_PUBLIC_URL="$url" DEMO_EXTRA_ORIGINS="$EXTRA" DEMO_FIRM_STYLE="${STYLE:-uk}" DEMO_BANNER="${BANNER:-1}" "$ROOT/scripts/law/demo_up.sh" api >/dev/null
   for _ in $(seq 1 60); do
     [[ "$(docker inspect -f '{{.State.Health.Status}}' "$API" 2>/dev/null)" == healthy ]] && { echo "demo API healthy at $url"; return 0; }
     sleep 2
@@ -32,7 +32,7 @@ restart_api() {
 
 case "${1:-}" in
   snapshot|restore)
-    URL="$(public_url)" EXTRA="$(api_env DEMO_EXTRA_ORIGINS)" STYLE="$(api_env LEGAL_FIRM_STYLE)"   # the API comes back as it was
+    URL="$(public_url)" EXTRA="$(api_env DEMO_EXTRA_ORIGINS)" STYLE="$(api_env LEGAL_FIRM_STYLE)" BANNER="$(api_env DEMO_BANNER)"   # the API comes back as it was
     [[ -n "$URL" ]] || { echo "no running $API to read its public address from" >&2; exit 2; }
     if [[ "$1" == restore && ! -f "$SNAP/echomind.sqlite" ]]; then echo "no snapshot in $SNAP; take one first" >&2; exit 2; fi
     docker stop "$API" >/dev/null

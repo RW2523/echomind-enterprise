@@ -61,6 +61,16 @@ def test_the_page_lists_the_demo_people_and_one_click_signs_in_fully(demo, fresh
     assert rows == [("allow", "alice", "10.0.0.42")]
 
 
+def test_the_pages_say_it_is_on_unless_the_owner_hides_that_line(demo, monkeypatch):
+    from app.core.config import settings
+    c = browser(demo)
+    assert c.post("/api/auth/demo/alice").status_code == 200
+    assert c.get("/api/auth/me").json()["features"]["demo_banner"] is True      # shown by default
+    monkeypatch.setattr(settings, "LEGAL_DEMO_BANNER", False)                  # the owner's webinar (DEMO_BANNER=0)
+    features = c.get("/api/auth/me").json()["features"]
+    assert features["demo_banner"] is False and features["demo_signin"] is True  # demo sign-in itself is unchanged
+
+
 def test_only_the_demo_people_never_the_administrator_or_anyone_added_later(demo):
     c = browser(demo)
     for name in ("admin2", "mp", "nobody"):

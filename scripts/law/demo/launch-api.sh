@@ -19,6 +19,7 @@ export ECHOMIND_ASR_DEVICE=cpu CUDA_VISIBLE_DEVICES=""          # the GPU is hel
 # Meeting transcription with the pilot's look-ahead (D-072: 11.5% word error against 24% with the default 6 / 560 ms).
 export ECHOMIND_ASR_ATT_CONTEXT_RIGHT="${DEMO_ASR_ATT_CONTEXT_RIGHT:-13}" TRANSCRIPT_NEMOTRON_CHUNK_MS="${DEMO_ASR_CHUNK_MS:-1120}"
 export LEGAL_PROFILE=demo LEGAL_DEMO_SIGNIN=1 LEGAL_DEMO_SIGNIN_FROM=anywhere LEGAL_DEMO_AUTO="${DEMO_AUTO:-alice}"
+export LEGAL_DEMO_BANNER="${DEMO_BANNER:-1}"                    # DEMO_BANNER=0 hides the "Demo sign-in is on" line (webinar)
 export LEGAL_TRUSTED_PROXIES="${DEMO_TRUSTED_PROXY:?}"
 export LEGAL_PANEL=1 LEGAL_CONVERSATION=1 LEGAL_SUMMARIES=1 LEGAL_TIME_ENTRIES=1 LEGAL_TRANSLATION=1 LEGAL_REGULATORY=1 LEGAL_INTAKE=1
 cd /repo/backend

@@ -90,6 +90,15 @@ describe('One-click demo sign-in (D-077)', () => {
     renderLaw('/home');
     expect((await screen.findByRole('status', { name: 'Demo sign-in' })).textContent).toMatch(/Demo sign-in is on/);
   });
+
+  it('hides that line when the server says so (the owner\'s webinar), and only that line', async () => {
+    const who: Me = { ...me(['attorney']), features: { intake: false, intake_links: false, demo_signin: true, demo_banner: false } };
+    mockApi({ 'GET /api/auth/me': () => [200, who], 'GET /api/legal/matters': () => [200, { matters: [] }], 'GET /api/legal/reviews': () => [200, { waiting: [], mine: [], count: 0 }] });
+    renderLaw('/home');
+    await screen.findByRole('main');
+    expect(screen.queryByRole('status', { name: 'Demo sign-in' })).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Demo sign-in is on/);
+  });
 });
 
 describe('A first visit over HTTPS without a session', () => {

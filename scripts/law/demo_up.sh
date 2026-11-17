@@ -6,6 +6,7 @@
 #   scripts/law/demo_up.sh tunnel                             # (re)create the named Cloudflare tunnel (scripts/law/demo_tunnel.sh)
 #   scripts/law/demo_up.sh status
 # DEMO_FIRM_STYLE=us gives the backend US legal wording (LEGAL_FIRM_STYLE: discovery, closing, demand letter); default uk.
+# DEMO_BANNER=0 hides the "Demo sign-in is on" line at the top of every page (the owner's webinar, 2026-11-17); default shown.
 # DEMO_EXTRA_ORIGINS (comma-separated) lets the API and voice also accept another public address, e.g. an old one while
 # people still have it.
 # DEMO_PREFIX / DEMO_API_PORT / DEMO_VOICE_PORT run a private copy beside the demo (another data folder; never the same names).
@@ -55,7 +56,7 @@ case "${1:-}" in
       --memory 12g --memory-swap 12g --pids-limit "${DEMO_PIDS_LIMIT:-2048}" \
       -e OMP_NUM_THREADS="${DEMO_CPU_THREADS:-8}" -e MKL_NUM_THREADS="${DEMO_CPU_THREADS:-8}" \
       ${DEMO_ENV_FILE:+--env-file "$DEMO_ENV_FILE"} \
-      -e LEGAL_FIRM_STYLE="${DEMO_FIRM_STYLE:-uk}" \
+      -e LEGAL_FIRM_STYLE="${DEMO_FIRM_STYLE:-uk}" -e DEMO_BANNER="${DEMO_BANNER:-1}" \
       -e PUBLIC_URL="$DEMO_PUBLIC_URL" -e DEMO_EXTRA_ORIGINS="${DEMO_EXTRA_ORIGINS:-}" -e DEMO_TRUSTED_PROXY="$GW" -e DEMO_TTS_URL="${DEMO_TTS_URL-http://$VOICE:8000/speak}" \
       -v "$ROOT/backend:/repo/backend:ro" -v "$DATA:/data" -v "$KEY:/run/secrets/master.key:ro" -v "$HF:/hf:ro" \
       -v "$ROOT/scripts/law/demo/launch-api.sh:/run/demo/launch-api.sh:ro" \

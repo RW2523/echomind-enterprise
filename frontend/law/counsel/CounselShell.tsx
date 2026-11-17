@@ -405,7 +405,7 @@ function ShellBody() {
       {drawer && <button type="button" className="qc-scrim qc-only-narrow" aria-label="Close menu" onClick={() => setDrawer(false)} />}
       <div className="qc-body">
         <main className="qc-main" id="main" tabIndex={-1}>
-          {me.features?.demo_signin && (
+          {me.features?.demo_signin && me.features.demo_banner !== false && (
             <div className="lw-demo-banner" role="status" aria-label="Demo sign-in">
               Demo sign-in is on: anyone who can open this page can enter as the demo's fictional people, without a password.
               {hasFirmRole(me, 'firm_admin') ? ' Turn it off before real data goes in.' : ' Do not enter real client information.'}
