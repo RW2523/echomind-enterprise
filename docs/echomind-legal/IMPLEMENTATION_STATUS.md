@@ -53,6 +53,30 @@ latest on this case" in the chat (section "Case management" below).
 | — | Content-Security-Policy | **Tested** (config) | `frontend/nginx.law.conf`: `default-src 'self'` …, validated with `nginx -t`; the built bundle references no CDN |
 | — | Strict TypeScript for new code | **Tested** | `tsconfig.counsel.json` (`strict`), also in CI |
 
+## Full webinar rehearsal on the public demo (2026-11-17)
+
+The US webinar firm (Calder & Wynne LLP, fictional; `eval/fixtures/webinar/`) rehearsed end to end in a real browser, in show
+order, as the presenter does it: the address opened (the demo enters as Alice by itself), each matter's chat opened from
+the matter, every run-sheet question typed, the citation opened, Pipeline, Drafts approval with the Word download, Compare,
+Matters, Council, the M-101 meeting and one spoken question through a fake microphone. Screen time for the whole show: 8 min
+15-27 s, leaving about 20 minutes of the 28-minute demo slot for talking. No browser or server errors.
+
+Found and fixed:
+- Carol's MAT-2105 engagement letter (run-sheet step 4.2) had 7 gaps, so it could not be approved on stage.
+  `webinar_enrich.py` draft_fill: the author fills the fields and rewrites the passage the model left with a gap
+  (`fill`, `passage` in enrich.json, values from the MAT-2105 fact sheet), through the product's own edit.
+- A US firm's letters were dated "17 November 2026": drafting dates follow LEGAL_FIRM_STYLE (`engine.long_date`).
+- The claimed-figure check (MAT-2102, "Does that match the $41,200 claimed?") said the claim matched in 1 ask of 10: the
+  calculation planner's reply could not be read and the planner gave up. An unreadable reply is now asked for again once;
+  the plan is checked as before. After the fix: 5 of 5 in conversation.
+- The deal act's fee-cap question failed 4 times in 5 when asked after the valuation question in the same conversation
+  (10 of 10 in a fresh one): it now opens the act, 5 of 5. The follow-up weakness itself is not fixed.
+- `demo_runsheet.py --together`: each act's questions in one conversation, as presented. Final: every step 5 of 5.
+
+Still open: the spoken question's live words can show a misheard word for a moment ("map" for "matter"; the saved
+question is right); the demand letter's gap count varies by run (5 and 13); the recipient is not taken from "to Brennan
+Freight Lines"; the meeting opens on its Consent tab, which shows 0 of 3 once consents are older than 12 hours.
+
 ## A realistic synthetic dataset, and how the product does on it (2026-11-12)
 
 Owner, in the 2026-11-11 evaluation report: build a realistic synthetic dataset, load it and test it. `eval/fixtures/synthetic`

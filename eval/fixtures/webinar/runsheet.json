@@ -146,6 +146,17 @@
    "max_secs": 20
   },
   {
+   "id": "fee-cap",
+   "act": "5 Deals",
+   "matter": "MAT-2103",
+   "question": "Do the term sheet and the SPA draft agree on how much of investor counsel's fees Northlake pays?",
+   "text_all": [
+    "50,000",
+    "45,000"
+   ],
+   "max_secs": 25
+  },
+  {
    "id": "economics",
    "act": "5 Deals",
    "matter": "MAT-2103",
@@ -159,17 +170,6 @@
     "6,666,667"
    ],
    "max_secs": 30
-  },
-  {
-   "id": "fee-cap",
-   "act": "5 Deals",
-   "matter": "MAT-2103",
-   "question": "Do the term sheet and the SPA draft agree on how much of investor counsel's fees Northlake pays?",
-   "text_all": [
-    "50,000",
-    "45,000"
-   ],
-   "max_secs": 25
   },
   {
    "id": "conditions",
