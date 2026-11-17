@@ -665,7 +665,7 @@
     radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.14), transparent) right / 10px 100% no-repeat scroll;
   padding: 12px 2px 16px; align-items: start; }
 [data-edition="law"] .lw-board-col { display: grid; gap: 8px; align-content: start; padding: 10px; border-radius: 14px; background: var(--fill-1); min-height: 120px; }
-[data-edition="law"] .lw-board-head { margin: 0 2px 2px; font-size: 13.5px; font-weight: 650; display: flex; justify-content: space-between; }
+[data-edition="law"] .lw-board-head { margin: 0 2px 2px; font-size: 13.5px; font-weight: 650; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 [data-edition="law"] .lw-board-empty { margin: 4px 2px; }
 [data-edition="law"] .lw-board-card { display: grid; gap: 5px; padding: 11px 12px; border-radius: 11px; background: var(--paper); box-shadow: var(--paper-shadow);
   border-left: 3px solid var(--accent); font-size: 13px; }

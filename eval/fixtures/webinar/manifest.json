@@ -699,7 +699,8 @@
    "lead": "kenji",
    "members": {
     "alice": "attorney",
-    "theo": "reviewer"
+    "theo": "reviewer",
+    "carol": "paralegal"
    },
    "parties": [
     [
@@ -718,7 +719,7 @@
      "import": true,
      "source": "src/MAT-2105/01-fda-warning-letter.src.md",
      "bytes": 643812,
-     "sha256": "f747b1cb5b8344c446f2ee57d48b4db24a1a2cf6fc4e9aa37f5bd3b7979583ef",
+     "sha256": "92033468c96a68ba13e72ea56c2b838096d62a49e61d1a4bc4450360ef1c73d8",
      "features": {
       "pages": 3,
       "scanned": true,
@@ -736,7 +737,7 @@
      "import": true,
      "source": "src/MAT-2105/02-qa-memo-sesame-cross-contact.src.md",
      "bytes": 41896,
-     "sha256": "2a56929cab965eeac3dc0af917216b99387ff4d3e2eb246fc71d8f8afbe65970",
+     "sha256": "5d4bf20eed14bc7de54837443e56714897f77d2af7e729543d82f4ddf8928d7b",
      "features": {
       "tables": 1
      }
@@ -750,7 +751,7 @@
      "import": true,
      "source": "src/MAT-2105/03-label-proof-harvest-grain.src.md",
      "bytes": 153896,
-     "sha256": "80ae40b5b44bed369efdbf0340f710359281c33fbe5ee4e00126a1b4ac3f1fcc",
+     "sha256": "72766a9e70364435b36bb950861a958aaa097e92c5812f5747270078d6a4a556",
      "features": {
       "tables": 2,
       "pages": 1,
@@ -768,7 +769,7 @@
      "import": true,
      "source": "src/MAT-2105/04-supplier-allergen-certificate-rs440.src.md",
      "bytes": 64611,
-     "sha256": "8147ed8b83f53e77e382fd24c1c87c5dfc397657d1a376b1af3c3a5635233ece",
+     "sha256": "c42a6f303a32d75408f7bebd995c639e51bc9825907c7a724b045b11157a907c",
      "features": {
       "tables": 2,
       "pages": 2
@@ -783,7 +784,7 @@
      "import": true,
      "source": "src/MAT-2105/05-draft-advice-memo-response.src.md",
      "bytes": 43524,
-     "sha256": "ccd3f06f2924a18d86fa0126697eee8e6cb3eb83a9e3cad7887fee4fd2b3efa8",
+     "sha256": "d3126cdc5121bf0372c259b7c25d94daa1083dd4f14d5701aa7e13d0554ffd05",
      "features": {
       "comments": 1
      }

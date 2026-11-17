@@ -1,7 +1,7 @@
 """The demo run-sheet's chat steps, each asked in a new conversation as alice; prints PASS/FAIL with what was looked for,
 the cards, the answer's state and the time, and deletes the conversations afterwards. Fictional demo data only.
 
-Usage: python3 -I scripts/law/demo_runsheet.py <base> [origin] [--steps FILE] [--repeat N] [--only ID,ID]
+Usage: python3 -I scripts/law/demo_runsheet.py <base> [origin] [--steps FILE] [--repeat N] [--only ID,ID] [--show]
   base: https://… or http://127.0.0.1:<private copy>
   --steps: a run-sheet file (eval/fixtures/webinar/runsheet.json: {"steps": [{"id", "matter", "question", "cards_any",
            "text_all", "text_any", "text_none", "max_secs"}]}). Without it, the webinar run-sheet is used when the instance
@@ -27,6 +27,7 @@ def opt(name, default=None):
 STEPS_FILE = opt("--steps")
 REPEAT = int(opt("--repeat", "1"))
 ONLY = {s for s in (opt("--only", "") or "").split(",") if s}
+SHOW = "--show" in args and not args.remove("--show")      # print a failed answer's text (rehearsal)
 BASE = args[0].rstrip("/")
 ORIGIN = args[1] if len(args) > 1 else BASE
 API = BASE if BASE.endswith("/api") else BASE + "/api"
@@ -105,6 +106,9 @@ for step in steps:
         passes += good
         print(f"{'PASS' if good else 'FAIL'}  {step['id']:<14} {step['matter']:9} {secs[-1]:5.1f}s {('SLOW ' if slow else '')}"
               f"cards={kinds} state={state} {'; '.join(why)}", flush=True)
+        if SHOW and not good:
+            ans = next((c.get("props", {}).get("answer") for c in fin.get("components", []) if c["type"] == "source_answer"), None)
+            print("      " + (ans or json.dumps(fin, ensure_ascii=False))[:700].replace("\n", " "), flush=True)
     bad += passes < REPEAT
     report.append((step["id"], passes, statistics.median(secs)))
 for conv in made:

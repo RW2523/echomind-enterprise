@@ -97,7 +97,12 @@ export default function MatterCompare() {
 // ── Two versions ─────────────────────────────────────────────────────────────────
 interface Pick { doc: string; version: string }
 
-function VersionPicker({ legend, value, onChange }: { legend: string; value: Pick; onChange: (p: Pick) => void }) {
+// Versions come newest first. "From" defaults to the latest signed version before the newest, else the oldest; "To" to
+// the newest, so a comparison reads from the earlier text to the current one (2026-11-17: both defaulted the other way).
+const OLDER = (vs: DocVersion[]) => { const older = vs.slice(1); return (older.find((v) => v.status === 'executed') ?? older.at(-1) ?? vs[0]).id; };
+const NEWEST = (vs: DocVersion[]) => vs[0].id;
+
+function VersionPicker({ legend, value, onChange, pick = NEWEST }: { legend: string; value: Pick; onChange: (p: Pick) => void; pick?: (vs: DocVersion[]) => string }) {
   const matter = useMatter();
   const docs = useDocuments(matter.id);
   const versions = useVersions(matter.id, value.doc || null);
@@ -105,9 +110,9 @@ function VersionPicker({ legend, value, onChange }: { legend: string; value: Pic
   const id = legend.toLowerCase().replace(/\W+/g, '-');
   useEffect(() => {
     if (value.doc && versions.data?.length && !versions.data.some((v) => v.id === value.version)) {
-      onChange({ doc: value.doc, version: versions.data[versions.data.length - 1].id });
+      onChange({ doc: value.doc, version: pick(versions.data) });
     }
-  }, [value.doc, value.version, versions.data, onChange]);
+  }, [value.doc, value.version, versions.data, onChange, pick]);
   return (
     <fieldset className="lw-compare-pick">
       <legend className="lw-eyebrow">{legend}</legend>
@@ -151,12 +156,6 @@ function VersionsCompare({ initial }: { initial: Comparison | null }) {
     if (ready[0]) setLeft({ doc: ready[0].id, version: '' });
     if (ready[1]) setRight({ doc: ready[1].id, version: '' });
   }, [docs.data, left.doc, right.doc]);
-  const leftVersions = useVersions(matter.id, left.doc || null);
-  useEffect(() => {                         // left defaults to the latest signed version, else the first
-    if (!left.doc || left.version || !leftVersions.data?.length) return;
-    const signed = [...leftVersions.data].reverse().find((v) => v.status === 'executed');
-    setLeft({ doc: left.doc, version: (signed ?? leftVersions.data[0]).id });
-  }, [left, leftVersions.data]);
 
   const run = async () => {
     setBusy(true); setError('');
@@ -201,7 +200,7 @@ function VersionsCompare({ initial }: { initial: Comparison | null }) {
         <h2 className="lw-h2" style={{ margin: 0 }}>Compare two versions</h2>
         <p className="lw-meta" style={{ margin: '2px 0 12px' }}>Clauses are matched by their wording, so a renumbered or moved clause is found where it went.</p>
         <div className="lw-compare-picks">
-          <VersionPicker legend="From" value={left} onChange={setLeft} />
+          <VersionPicker legend="From" value={left} onChange={setLeft} pick={OLDER} />
           <VersionPicker legend="To" value={right} onChange={setRight} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>

@@ -1,0 +1,1946 @@
+{
+ "suite": "chat",
+ "label": "webinar-r2",
+ "commit": "ae80a26",
+ "base": "http://127.0.0.1:8170/api",
+ "keys": [
+  "eval/fixtures/webinar/answer_key_mat2101.jsonl",
+  "eval/fixtures/webinar/answer_key_mat2102.jsonl",
+  "eval/fixtures/webinar/answer_key_mat2103.jsonl",
+  "eval/fixtures/webinar/answer_key_mat2104.jsonl",
+  "eval/fixtures/webinar/answer_key_mat2105.jsonl"
+ ],
+ "summary": {
+  "passed": 51,
+  "items": 71,
+  "by_kind": {
+   "amendment": "1/1",
+   "calculation": "5/6",
+   "chronology": "1/1",
+   "conflict": "3/7",
+   "cross_doc": "5/8",
+   "date": "1/1",
+   "definitions": "0/1",
+   "fact": "16/19",
+   "list": "2/4",
+   "not_stated": "8/10",
+   "other_matter": "5/5",
+   "role_party": "2/5",
+   "table": "1/1",
+   "version": "1/2"
+  },
+  "by_matter": {
+   "MAT-2101": "11/16",
+   "MAT-2102": "11/14",
+   "MAT-2103": "10/15",
+   "MAT-2104": "9/14",
+   "MAT-2105": "10/12"
+  },
+  "p50_s": 11.7,
+  "p95_s": 32.3
+ },
+ "items": [
+  {
+   "id": "w2101-01",
+   "matter": "MAT-2101",
+   "kind": "fact",
+   "source": "Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What was the temperature on the HMS-26-0588 load when it got to our Newark dock, and who received it?",
+     "state": "partial",
+     "text": "The temperature on the HMS-26-0588 load when it arrived at the Newark dock was 9.8 °C [1]. The shipment was received by Hollis, as stated in the document [1].",
+     "secs": 6.6,
+     "cards": [],
+     "cited": [
+      "Emails - notice of claim and Logger Data request, June 9 to July 24, 2026"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "Elena Ruiz",
+       "Ruiz"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_fe84b832badb597db4dcbd6d6efb4f3c"
+  },
+  {
+   "id": "w2101-02",
+   "matter": "MAT-2101",
+   "kind": "fact",
+   "source": "Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Per the logger, how long were the goods out of range and what was the peak temp?",
+     "state": "answered",
+     "text": "The documents state that the goods were out of range for a continuous period of 5 hours 40 minutes on June 2, 2026 [3]. The peak temperature recorded was 11.4 °C [3].",
+     "secs": 6.5,
+     "cards": [],
+     "cited": [
+      "Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_bb387402caad0518e72041c0dc0b0b8c"
+  },
+  {
+   "id": "w2101-03",
+   "matter": "MAT-2101",
+   "kind": "fact",
+   "source": "Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What did Brennan offer to settle in the Ostrow Kaplan letter?",
+     "state": "answered",
+     "text": "The Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026) states that Brennan offered to pay Hollis $150,000 in full and final settlement of all claims arising out of or relating to Shipment HMS-26-0588, in exchange for a mutual release in a form acceptable to both parties [1].\n\nThe letter also states that this offer is made for settlement purposes only, is subject to Delaware Rule of Evidence 408 and Federal Rule of Evidence 408, and may not be used for any other purpose [1].\n\nThe offer will remain open for fourteen (14) days from the date of this letter [1].",
+     "secs": 17.0,
+     "cards": [],
+     "cited": [
+      "Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_bb1ff21584d3087fed2f214dff90d7fe"
+  },
+  {
+   "id": "w2101-04",
+   "matter": "MAT-2101",
+   "kind": "fact",
+   "source": "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Where do we have to sue Brennan under the services agreement, and do we get a jury?",
+     "state": "answered",
+     "text": "The Warehousing and Distribution Services Agreement specifies that any action arising out of or relating to the Agreement must be brought in the Superior Court of the State of Delaware, Complex Commercial Litigation Division (CCLD) [10]. The Agreement also states that each party irrevocably consents to the personal jurisdiction of that court and waives any objection to venue there [10].\n\nThe Agreement further provides that each party knowingly, voluntarily, and irrevocably waives any right to a trial by jury in any action or proceeding arising out of or relating to the Agreement [10].",
+     "secs": 17.1,
+     "cards": [],
+     "cited": [
+      "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_b7e0e96f4c9c5c20bc11d63f34aedc6c"
+  },
+  {
+   "id": "w2101-05",
+   "matter": "MAT-2101",
+   "kind": "amendment",
+   "source": "First Amendment to the Warehousing and Distribution Services Agreement (January 15, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What's Brennan's liability cap now, after the First Amendment?",
+     "state": "partial",
+     "text": "The First Amendment to the Warehousing and Distribution Services Agreement, dated January 15, 2026, replaces Section 12.2 of the Agreement with the following term: \"Brennan's aggregate liability arising out of or relating to this Agreement shall not exceed One Million Five Hundred Thousand Dollars ($1,500,000) in any Contract Year\" [1].\n\nThe First Amendment also states that Section 12.2, as amended, applies to all claims arising on or after the Amendment Effective Date [1].\n\nAdditionally, the First Amendment clarifies that Sections 12.1 and 12.3 of the Agreement are not amended and continue in full force and effect [1].\n\nThe documents do not indicate any further amendments to the liability cap after the First Amendment.",
+     "secs": 19.9,
+     "cards": [],
+     "cited": [
+      "First Amendment to the Warehousing and Distribution Services Agreement (January 15, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_5c597389eb9067ea08b6886f5dcc4eb5"
+  },
+  {
+   "id": "w2101-06",
+   "matter": "MAT-2101",
+   "kind": "conflict",
+   "source": "Newark DC receiving log, June 1-7, 2026",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Brennan's paperwork says HMS-26-0588 was delivered June 3. When did it actually show up?",
+     "state": "partial",
+     "text": "The documents state that HMS-26-0588 was delivered on Saturday, June 6, 2026, at 9:40 a.m. [3]\n\nAccording to Brennan's records, the Shipment was delivered on June 3, 2026, at 2:15 p.m. [4]\n\nThe documents also mention that the Shipment did not arrive on June 2 or June 3, 2026. [1][2]",
+     "secs": 17.1,
+     "cards": [],
+     "cited": [
+      "Demand letter to Brennan Freight Lines (August 18, 2026)",
+      "Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026)",
+      "Privileged interview memo - Elena Ruiz, Receiving Manager (October 5, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_30a25ee586854886e7175cce577e730c"
+  },
+  {
+   "id": "w2101-07",
+   "matter": "MAT-2101",
+   "kind": "conflict",
+   "source": "Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Ostrow Kaplan says Brennan's exposure is capped at $500K under Section 12.2. Is that right?",
+     "state": "partial",
+     "text": "The documents indicate that Ostrow Kaplan claims Brennan's exposure is capped at $500,000 under Section 12.2. According to the source, Section 12.2 states: \"Brennan's aggregate liability arising out of or relating to this Agreement shall not exceed Five Hundred Thousand Dollars ($500,000) in any Contract Year\" [1].\n\nHowever, another source indicates that the original text of Section 12.2 was amended. The source states: \"the language quoted as Section 12.2 is the original text that the First Amendment deleted and replaced\" [4]. Additionally, a different source claims that the amended Section 12.2 limits Brennan's liability to $1,500,000 in any Contract Year [7].\n\nTherefore, the claim that Brennan's exposure is capped at $500,000 under Section 12.2 is not accurate according to the amended version of the agreement.",
+     "secs": 20.7,
+     "cards": [],
+     "cited": [
+      "Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)",
+      "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "12.3",
+       "breach of section 6"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_fba6a54594f420185118caf42cea702c"
+  },
+  {
+   "id": "w2101-08",
+   "matter": "MAT-2101",
+   "kind": "calculation",
+   "source": "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What late delivery credit do we have coming on HMS-26-0588?",
+     "state": "partial",
+     "text": "The documents indicate that Brennan Freight Lines issued a credit memo, BFL-CM-26-019, for $1,150.00, which reverses the freight charge for Shipment HMS-26-0588 [5]. This credit was issued as a customer accommodation and is not an admission of liability [5].\n\nAccording to the documents, Brennan denies that it is liable for any late delivery credit, stating that the shipment was delivered less than one full day after the end of the Delivery Window, and thus no Late Delivery Credit is due under Section 7.4 of the Agreement [2].\n\nThe Newark DC receiving log indicates that the shipment HMS-26-0588 was received on June 6, 2026, at 9:40 a.m. [6]. However, Brennan's records show that the shipment was delivered to Hollis's Newark DC on June 3, 2026, at 2:15 p.m. [2].",
+     "secs": 21.4,
+     "cards": [],
+     "cited": [
+      "Brennan credit memo BFL-CM-26-019 (July 20, 2026)",
+      "Newark DC receiving log, June 1-7, 2026",
+      "Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "3,750"
+      ],
+      [
+       "three full days",
+       "3 full days",
+       "three (3) full days",
+       "3 days",
+       "three days",
+       "3 x",
+       "3 ×"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_d01e973db679690840b2447ba937ab98"
+  },
+  {
+   "id": "w2101-09",
+   "matter": "MAT-2101",
+   "kind": "chronology",
+   "source": "Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Walk me through the timeline on Hollis v. Brennan, from pickup through the scheduling order.",
+     "state": null,
+     "text": "[{\"id\": \"cmp_6b91f5cb3940f2086d7ca9a669a711fb\", \"version\": 1, \"type\": \"timeline\", \"props\": {\"summary\": \"37 dated events about Hollis v. Brennan, from pickup (June 2,\\n2026) to scheduling order (November 30, 2026), from 6 documents in MAT-2101. The whole chronology has 114.\", \"events\": [{\"id\": \"ev1\", \"date\": \"2026-06-02\", \"date_text\": \"June 2,\\n2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"On June 2, 2026, Brennan's refrigeration unit failed while carrying 22 pallets of Hollis's insulin pens and vaccines.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"1\", \"page\": 1, \"value\": \"June 2,\\n2026\", \"context\": \"On June 2,\\n2026, Brennan's refrigeration unit failed while carrying 22 pallets of Hollis's insulin pens and vaccines.\", \"value_start\": 3, \"value_end\": 15, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=686-698\", \"stale\": false}}, {\"id\": \"ev2\", \"date\": \"2026-06-02\", \"date_text\": \"June 2, 2026\", \"certainty\": \"uncertain\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"At approximately 11:20 a.m. on June 2, 2026, the refrigeration unit on trailer BFL-R-204 alarmed while the trailer was on I-95.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"22\", \"page\": 3, \"value\": \"June 2, 2026\", \"context\": \"At approximately 11:20 a.m. on June 2, 2026, the refrigeration unit on trailer BFL-R-204 alarmed while\\nthe trailer was on I-95.\", \"value_start\": 31, \"value_end\": 43, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=6641-6653\", \"stale\": false}}, {\"id\": \"ev3\", \"date\": \"2026-06-02\", \"date_text\": \"June 2, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Shipment HMS-26-0588, 22 pallets of insulin pens and vaccines, was picked up at Brennan's Eddystone facility at 6:00 a.m. on Tuesday, June 2, 2026, on trailer BFL-R-204.\", \"notes\": [], \"source\": {\"document_id\": \"b23f4773-2332-4d54-b973-3a29ad30fcb1\", \"document_title\": \"Demand letter to Brennan Freight Lines (August 18, 2026)\", \"version_id\": \"41d5a9ae-7943-441c-8eee-c61e9e460679\", \"version_number\": 1, \"version_status\": \"final\", \"value\": \"June 2, 2026\", \"context\": \"Shipment HMS-26-0588, 22 pallets of insulin pens and vaccines, was picked up at Brennan's Eddystone facility at 6:00 a.m. on Tuesday, June 2, 2026, on trailer BFL-R-204.\", \"value_start\": 134, \"value_end\": 146, \"reader_path\": \"/m/MAT-2101/documents/b23f4773-2332-4d54-b973-3a29ad30fcb1/read?v=41d5a9ae-7943-441c-8eee-c61e9e460679&at=1178-1190\", \"stale\": false}}, {\"id\": \"ev4\", \"date\": \"2026-06-02\", \"date_text\": \"June 2, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Pickup Time: June 2, 2026 at 6:00 a.m. (per Brennan advance shipping notice)\", \"notes\": [], \"source\": {\"document_id\": \"8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1\", \"document_title\": \"Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)\", \"version_id\": \"6d630e5b-12fe-4231-a84b-6744682632bb\", \"version_number\": 1, \"version_status\": \"final\", \"page\": 1, \"value\": \"June 2, 2026\", \"context\": \"Pickup Time: June 2, 2026 at 6:00 a.m. (per Brennan advance shipping notice)\", \"value_start\": 13, \"value_end\": 25, \"reader_path\": \"/m/MAT-2101/documents/8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1/read?v=6d630e5b-12fe-4231-a84b-6744682632bb&at=554-566\", \"stale\": false}}, {\"id\": \"ev5\", \"date\": \"2026-06-03\", \"date_text\": \"June 3, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Under Section 7.1, Brennan was required to deliver the Shipment to the Newark DC by 6:00 a.m. on June 3, 2026.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"21\", \"page\": 3, \"value\": \"June 3, 2026\", \"context\": \"Under Section 7.1, Brennan was required to deliver the Shipment to the Newark DC by 6:00 a.m. on\\nJune 3, 2026.\", \"value_start\": 97, \"value_end\": 109, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=6590-6602\", \"stale\": false}}, {\"id\": \"ev6\", \"date\": \"2026-06-03\", \"date_text\": \"June 3, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"The Shipment was due by 6:00 a.m. on June 3, 2026 and was delivered at 9:40 a.m. on June 6, 2026, three full days after the end of the Delivery Window.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"43\", \"page\": 4, \"value\": \"June 3, 2026\", \"context\": \"The Shipment was due by 6:00 a.m. on June 3, 2026 and was delivered at 9:40 a.m. on\\nJune 6, 2026, three full days after the end of the Delivery Window.\", \"value_start\": 37, \"value_end\": 49, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=11772-11784\", \"stale\": false}}, {\"id\": \"ev7\", \"date\": \"2026-06-03\", \"date_text\": \"June 3, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Under Section 7.1, Brennan was required to deliver it to Hollis's Newark DC within twenty-four (24) hours, that is, by 6:00 a.m. on June 3, 2026.\", \"notes\": [], \"source\": {\"document_id\": \"b23f4773-2332-4d54-b973-3a29ad30fcb1\", \"document_title\": \"Demand letter to Brennan Freight Lines (August 18, 2026)\", \"version_id\": \"41d5a9ae-7943-441c-8eee-c61e9e460679\", \"version_number\": 1, \"version_status\": \"final\", \"value\": \"June 3, 2026\", \"context\": \"Under Section 7.1, Brennan was required to deliver it to Hollis's Newark DC within twenty-four (24) hours, that is, by 6:00 a.m. on June 3, 2026.\", \"value_start\": 132, \"value_end\": 144, \"reader_path\": \"/m/MAT-2101/documents/b23f4773-2332-4d54-b973-3a29ad30fcb1/read?v=41d5a9ae-7943-441c-8eee-c61e9e460679&at=1346-1358\", \"stale\": false}}, {\"id\": \"ev8\", \"date\": \"2026-06-03\", \"date_text\": \"June 3, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Brennan's Incident Report IR-26-0412, dated June 4, 2026 and sent to Hollis on July 24, states that the Shipment was delivered to the Newark DC on June 3, 2026 at 2:15 p.m. That statement is false.\", \"notes\": [\"Potential inconsistency with Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026) (“June 9, 2026”), not resolved.\"], \"source\": {\"document_id\": \"b23f4773-2332-4d54-b973-3a29ad30fcb1\", \"document_title\": \"Demand letter to Brennan Freight Lines (August 18, 2026)\", \"version_id\": \"41d5a9ae-7943-441c-8eee-c61e9e460679\", \"version_number\": 1, \"version_status\": \"final\", \"value\": \"June 3, 2026\", \"context\": \"Brennan's Incident Report IR-26-0412, dated June 4, 2026 and sent to Hollis on July 24, states that the Shipment was delivered to the Newark DC on June 3, 2026 at 2:15 p.m. That statement is false.\", \"value_start\": 147, \"value_end\": 159, \"reader_path\": \"/m/MAT-2101/documents/b23f4773-2332-4d54-b973-3a29ad30fcb1/read?v=41d5a9ae-7943-441c-8eee-c61e9e460679&at=2369-2381\", \"stale\": false}}, {\"id\": \"ev9\", \"date\": \"2026-06-03\", \"date_text\": \"June 3, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": true, \"superseded\": false, \"text\": \"Brennan's dispatch told Receiving on June 3, 2026 that the load had a \\\"reefer problem\\\".\", \"notes\": [], \"source\": {\"document_id\": \"8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1\", \"document_title\": \"Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)\", \"version_id\": \"6d630e5b-12fe-4231-a84b-6744682632bb\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"6\", \"page\": 2, \"value\": \"June 3, 2026\", \"context\": \"Brennan's dispatch told Receiving on June 3, 2026 that the load had\\na \\\"reefer problem\\\".\", \"value_start\": 37, \"value_end\": 49, \"reader_path\": \"/m/MAT-2101/documents/8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1/read?v=6d630e5b-12fe-4231-a84b-6744682632bb&at=2898-2910\", \"stale\": false}}, {\"id\": \"ev10\", \"date\": \"2026-06-04\", \"date_text\": \"June 4, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"On June 3 and again on June 4, 2026, Hollis's Receiving Manager called Brennan's dispatch office to ask where the Shipment was.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"23\", \"page\": 3, \"value\": \"June 4, 2026\", \"context\": \"On June 3 and again on June 4, 2026, Hollis's\\nReceiving Manager called Brennan's dispatch office to ask where the Shipment was.\", \"value_start\": 23, \"value_end\": 35, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=6934-6946\", \"stale\": false}}, {\"id\": \"ev11\", \"date\": \"2026-06-04\", \"date_text\": \"June 4, 2026\", \"certainty\": \"stated\", \"kind\": \"document_date\", \"reported\": false, \"superseded\": false, \"text\": \"Brennan's Incident Report IR-26-0412, dated June 4, 2026 and sent to Hollis on July 24, states that the Shipment was delivered to the Newark DC on June 3, 2026 at 2:15 p.m. That statement is false.\", \"notes\": [], \"source\": {\"document_id\": \"b23f4773-2332-4d54-b973-3a29ad30fcb1\", \"document_title\": \"Demand letter to Brennan Freight Lines (August 18, 2026)\", \"version_id\": \"41d5a9ae-7943-441c-8eee-c61e9e460679\", \"version_number\": 1, \"version_status\": \"final\", \"value\": \"June 4, 2026\", \"context\": \"Brennan's Incident Report IR-26-0412, dated June 4, 2026 and sent to Hollis on July 24, states that the Shipment was delivered to the Newark DC on June 3, 2026 at 2:15 p.m. That statement is false.\", \"value_start\": 44, \"value_end\": 56, \"reader_path\": \"/m/MAT-2101/documents/b23f4773-2332-4d54-b973-3a29ad30fcb1/read?v=41d5a9ae-7943-441c-8eee-c61e9e460679&at=2266-2278\", \"stale\": false}}, {\"id\": \"ev12\", \"date\": \"2026-06-06\", \"date_text\": \"June 6, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"The Shipment arrived at the Newark DC on Saturday, June 6, 2026 at 9:40 a.m., on trailer BFL-R-217.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"24\", \"page\": 3, \"value\": \"June 6, 2026\", \"context\": \"The Shipment arrived at the Newark DC on Saturday, June 6, 2026 at 9:40 a.m., on trailer BFL-R-217.\", \"value_start\": 51, \"value_end\": 63, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=7195-7207\", \"stale\": false}}, {\"id\": \"ev13\", \"date\": \"2026-06-06\", \"date_text\": \"June 6, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Hollis became aware of the Excursion on June 6, 2026.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"29\", \"page\": 3, \"value\": \"June 6, 2026\", \"context\": \"Hollis became aware of the Excursion on June 6, 2026.\", \"value_start\": 40, \"value_end\": 52, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=8505-8517\", \"stale\": false}}, {\"id\": \"ev14\", \"date\": \"2026-06-06\", \"date_text\": \"June 6, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"The Shipment was due by 6:00 a.m. on June 3, 2026 and was delivered at 9:40 a.m. on June 6, 2026, three full days after the end of the Delivery Window.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"43\", \"page\": 4, \"value\": \"June 6, 2026\", \"context\": \"The Shipment was due by 6:00 a.m. on June 3, 2026 and was delivered at 9:40 a.m. on\\nJune 6, 2026, three full days after the end of the Delivery Window.\", \"value_start\": 84, \"value_end\": 96, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=11819-11831\", \"stale\": false}}, {\"id\": \"ev15\", \"date\": \"2026-06-06\", \"date_text\": \"June 6, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Date and time received: June 6, 2026 at 9:40 a.m. .\", \"notes\": [], \"source\": {\"document_id\": \"8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1\", \"document_title\": \"Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)\", \"version_id\": \"6d630e5b-12fe-4231-a84b-6744682632bb\", \"version_number\": 1, \"version_status\": \"final\", \"page\": 1, \"value\": \"June 6, 2026\", \"context\": \"Date and time received: June 6, 2026 at 9:40 a.m. .\", \"value_start\": 24, \"value_end\": 36, \"reader_path\": \"/m/MAT-2101/documents/8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1/read?v=6d630e5b-12fe-4231-a84b-6744682632bb&at=783-795\", \"stale\": false}}, {\"id\": \"ev16\", \"date\": \"2026-06-09\", \"date_text\": \"June 9, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"On June 9, 2026, within five Business Days, Hollis's General Counsel gave Brennan written notice of Hollis's claim by email, followed by a confirmation copy by overnight courier, as Sections 9.3 and 19 require.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"29\", \"page\": 3, \"value\": \"June 9, 2026\", \"context\": \"On June 9, 2026, within five Business Days,\\nHollis's General Counsel gave Brennan written notice of Hollis's claim by email, followed by a\\nconfirmation copy by overnight courier, as Sections 9.3 and 19 require.\", \"value_start\": 3, \"value_end\": 15, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=8522-8534\", \"stale\": false}}, {\"id\": \"ev17\", \"date\": \"2026-06-09\", \"date_text\": \"June 9, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Hollis is entitled to a declaration that (a) Hollis's notice of June 9, 2026 was timely under Section 9.3; (b) Section 12.2 of the Agreement, as amended by the First Amendment, limits Brennan's aggregate liability to $1,500,000 in any Contract Year, not $500,000; and (c) under Section 12.3, neither Section 12.1 nor Section 12.2 applies to damages arising from Brennan's breach of Section 6.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"48\", \"page\": 5, \"value\": \"June 9, 2026\", \"context\": \"Hollis is entitled to a declaration that (a) Hollis's notice of June 9, 2026 was timely under Section 9.3; (b)\\nSection 12.2 of the Agreement, as amended by the First Amendment, limits Brennan's aggregate\\nliability to $1,500,000 in any Contract Year, not $500,000; and (c) under Section 12.3, neither Section\\n12.1 nor Section 12.2 applies to damages arising from Brennan's breach of Section 6.\", \"value_start\": 64, \"value_end\": 76, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=12849-12861\", \"stale\": false}}, {\"id\": \"ev18\", \"date\": \"2026-06-09\", \"date_text\": \"June 9, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Hollis gave written notice of its claim by email on June 9, 2026, within five (5) Business Days after it became aware of the Excursion on June 6, as Section 9.3 requires, and Brennan acknowledged that notice on June 11.\", \"notes\": [], \"source\": {\"document_id\": \"b23f4773-2332-4d54-b973-3a29ad30fcb1\", \"document_title\": \"Demand letter to Brennan Freight Lines (August 18, 2026)\", \"version_id\": \"41d5a9ae-7943-441c-8eee-c61e9e460679\", \"version_number\": 1, \"version_status\": \"final\", \"value\": \"June 9, 2026\", \"context\": \"Hollis gave written notice of its claim by email on June 9, 2026, within five (5) Business Days after it became aware of the Excursion on June 6, as Section 9.3 requires, and Brennan acknowledged that notice on June 11.\", \"value_start\": 52, \"value_end\": 64, \"reader_path\": \"/m/MAT-2101/documents/b23f4773-2332-4d54-b973-3a29ad30fcb1/read?v=41d5a9ae-7943-441c-8eee-c61e9e460679&at=2758-2770\", \"stale\": false}}, {\"id\": \"ev19\", \"date\": \"2026-06-09\", \"date_text\": \"June 9, 2026\", \"certainty\": \"stated\", \"kind\": \"deadline\", \"reported\": false, \"superseded\": false, \"text\": \"Section 9.3 of the Agreement requires the customer to give notice of any claim \\\"within forty-eight (48) hours of delivery.\\\" Hollis did not give notice until June 9, 2026, six days after the Shipment was delivered on June 3.\", \"notes\": [\"Potential inconsistency with Demand letter to Brennan Freight Lines (August 18, 2026) (“June 3, 2026”), not resolved.\"], \"source\": {\"document_id\": \"96d8b75a-f6b7-4529-970f-f5fd9097ac04\", \"document_title\": \"Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026)\", \"version_id\": \"d86c20a4-2399-4957-9b83-b5fbe12a880c\", \"version_number\": 1, \"version_status\": \"received\", \"clause\": \"9.3\", \"page\": 1, \"value\": \"June 9, 2026\", \"context\": \"Section 9.3 of the Agreement requires the customer to give notice of any claim \\\"within forty-eight (48) hours\\nof delivery.\\\" Hollis did not give notice until June 9, 2026, six days after the Shipment was delivered on June\\n3.\", \"value_start\": 157, \"value_end\": 169, \"reader_path\": \"/m/MAT-2101/documents/96d8b75a-f6b7-4529-970f-f5fd9097ac04/read?v=d86c20a4-2399-4957-9b83-b5fbe12a880c&at=1887-1899\", \"stale\": false}}, {\"id\": \"ev20\", \"date\": \"2026-06-10\", \"date_text\": \"June 10, 2026\", \"certainty\": \"stated\", \"kind\": \"document_date\", \"reported\": false, \"superseded\": false, \"text\": \"Report date: June 10, 2026\", \"notes\": [], \"source\": {\"document_id\": \"8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1\", \"document_title\": \"Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)\", \"version_id\": \"6d630e5b-12fe-4231-a84b-6744682632bb\", \"version_number\": 1, \"version_status\": \"final\", \"page\": 1, \"value\": \"June 10, 2026\", \"context\": \"Report date: June 10, 2026\", \"value_start\": 13, \"value_end\": 26, \"reader_path\": \"/m/MAT-2101/documents/8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1/read?v=6d630e5b-12fe-4231-a84b-6744682632bb&at=229-242\", \"stale\": false}}, {\"id\": \"ev21\", \"date\": \"2026-06-10\", \"date_text\": \"June 10, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Thomas Akers, Director of Quality Assurance - June 10, 2026\", \"notes\": [], \"source\": {\"document_id\": \"8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1\", \"document_title\": \"Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)\", \"version_id\": \"6d630e5b-12fe-4231-a84b-6744682632bb\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"6\", \"page\": 2, \"value\": \"June 10, 2026\", \"context\": \"Thomas Akers, Director of Quality Assurance - June 10, 2026\", \"value_start\": 46, \"value_end\": 59, \"reader_path\": \"/m/MAT-2101/documents/8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1/read?v=6d630e5b-12fe-4231-a84b-6744682632bb&at=3165-3178\", \"stale\": false}}, {\"id\": \"ev22\", \"date\": \"2026-06-10\", \"date_text\": \"June 10, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Marcus Bell, VP, Supply Chain - June 10, 2026 Copy.to P. Lowell (Legal) 6/10 - TA\", \"notes\": [], \"source\": {\"document_id\": \"8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1\", \"document_title\": \"Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)\", \"version_id\": \"6d630e5b-12fe-4231-a84b-6744682632bb\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"6\", \"page\": 2, \"value\": \"June 10, 2026\", \"context\": \"Marcus Bell, VP, Supply Chain - June 10, 2026\\nCopy.to P. Lowell (Legal) 6/10 - TA\", \"value_start\": 32, \"value_end\": 45, \"reader_path\": \"/m/MAT-2101/documents/8cf69c09-e488-4c8e-b37c-1ff6ba7f38c1/read?v=6d630e5b-12fe-4231-a84b-6744682632bb&at=3229-3242\", \"stale\": false}}, {\"id\": \"ev23\", \"date\": \"2026-06-11\", \"date_text\": \"June 11, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": true, \"superseded\": false, \"text\": \"Officer acknowledged the notice in writing on June 11, 2026 and stated that Brennan did not need to inspect the Goods.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"29\", \"page\": 3, \"value\": \"June 11, 2026\", \"context\": \"Officer acknowledged the notice in writing on June 11, 2026 and stated that Brennan did not need to\\ninspect the Goods.\", \"value_start\": 46, \"value_end\": 59, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=8802-8815\", \"stale\": false}}, {\"id\": \"ev24\", \"date\": \"2026-06-13\", \"date_text\": \"13\\nJune 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"13 June 2026 per schedule Refrigerated delivery to customer locations - New Jersey\", \"notes\": [], \"source\": {\"document_id\": \"0f32af5b-0fd3-4c74-958d-cd3a66e30ebf\", \"document_title\": \"Brennan invoice BFL-26-06-114 (June 30, 2026)\", \"version_id\": \"0c6def15-e5fc-4ac0-bf3c-43b2e4d4324c\", \"version_number\": 1, \"version_status\": \"received\", \"page\": 1, \"value\": \"13\\nJune 2026\", \"context\": \"13\\nJune 2026\\nper schedule\\nRefrigerated delivery to customer\\nlocations - New Jersey\", \"value_start\": 0, \"value_end\": 12, \"reader_path\": \"/m/MAT-2101/documents/0f32af5b-0fd3-4c74-958d-cd3a66e30ebf/read?v=0c6def15-e5fc-4ac0-bf3c-43b2e4d4324c&at=1701-1713\", \"stale\": false}}, {\"id\": \"ev25\", \"date\": \"2026-06-14\", \"date_text\": \"14\\nJune 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"14 June 2026 per schedule Refrigerated delivery to customer locations - Maryland\", \"notes\": [], \"source\": {\"document_id\": \"0f32af5b-0fd3-4c74-958d-cd3a66e30ebf\", \"document_title\": \"Brennan invoice BFL-26-06-114 (June 30, 2026)\", \"version_id\": \"0c6def15-e5fc-4ac0-bf3c-43b2e4d4324c\", \"version_number\": 1, \"version_status\": \"received\", \"page\": 1, \"value\": \"14\\nJune 2026\", \"context\": \"14\\nJune 2026\\nper schedule\\nRefrigerated delivery to customer\\nlocations - Maryland\", \"value_start\": 0, \"value_end\": 12, \"reader_path\": \"/m/MAT-2101/documents/0f32af5b-0fd3-4c74-958d-cd3a66e30ebf/read?v=0c6def15-e5fc-4ac0-bf3c-43b2e4d4324c&at=1810-1822\", \"stale\": false}}, {\"id\": \"ev26\", \"date\": \"2026-07-15\", \"date_text\": \"July 15, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"On July 15, 2026, Hollis requested the Logger Data for the Shipment.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"30\", \"page\": 3, \"value\": \"July 15, 2026\", \"context\": \"On July 15, 2026, Hollis requested the Logger Data for the Shipment.\", \"value_start\": 3, \"value_end\": 16, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=8884-8897\", \"stale\": false}}, {\"id\": \"ev27\", \"date\": \"2026-07-15\", \"date_text\": \"July 15, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Hollis requested the Logger Data for the Shipment on July 15, 2026.\", \"notes\": [], \"source\": {\"document_id\": \"b23f4773-2332-4d54-b973-3a29ad30fcb1\", \"document_title\": \"Demand letter to Brennan Freight Lines (August 18, 2026)\", \"version_id\": \"41d5a9ae-7943-441c-8eee-c61e9e460679\", \"version_number\": 1, \"version_status\": \"final\", \"value\": \"July 15, 2026\", \"context\": \"Hollis requested the Logger Data for the Shipment on July 15, 2026.\", \"value_start\": 53, \"value_end\": 66, \"reader_path\": \"/m/MAT-2101/documents/b23f4773-2332-4d54-b973-3a29ad30fcb1/read?v=41d5a9ae-7943-441c-8eee-c61e9e460679&at=3139-3152\", \"stale\": false}}, {\"id\": \"ev28\", \"date\": \"2026-07-20\", \"date_text\": \"July 20, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"On July 20, 2026, Brennan issued credit memo BFL-CM-26-019, crediting Hollis $1,150.00, the freight charge for the Shipment.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"31\", \"page\": 3, \"value\": \"July 20, 2026\", \"context\": \"On July 20, 2026, Brennan issued credit memo BFL-CM-26-019, crediting Hollis $1,150.00, the freight\\ncharge for the Shipment.\", \"value_start\": 3, \"value_end\": 16, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=9072-9085\", \"stale\": false}}, {\"id\": \"ev29\", \"date\": \"2026-07-24\", \"date_text\": \"July 24, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"July 24, 2026, seven Business Days after the request, in breach of Section 6.3.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"30\", \"page\": 3, \"value\": \"July 24, 2026\", \"context\": \"July 24, 2026, seven Business Days after the request, in breach of Section 6.3.\", \"value_start\": 0, \"value_end\": 13, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=8983-8996\", \"stale\": false}}, {\"id\": \"ev30\", \"date\": \"2026-07-24\", \"date_text\": \"July 24, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Brennan provided it on July 24, 2026, seven (7) Business Days after the request.\", \"notes\": [], \"source\": {\"document_id\": \"b23f4773-2332-4d54-b973-3a29ad30fcb1\", \"document_title\": \"Demand letter to Brennan Freight Lines (August 18, 2026)\", \"version_id\": \"41d5a9ae-7943-441c-8eee-c61e9e460679\", \"version_number\": 1, \"version_status\": \"final\", \"value\": \"July 24, 2026\", \"context\": \"Brennan provided it on July 24, 2026, seven (7) Business Days after the request.\", \"value_start\": 23, \"value_end\": 36, \"reader_path\": \"/m/MAT-2101/documents/b23f4773-2332-4d54-b973-3a29ad30fcb1/read?v=41d5a9ae-7943-441c-8eee-c61e9e460679&at=3250-3263\", \"stale\": false}}, {\"id\": \"ev31\", \"date\": \"2026-07-28\", \"date_text\": \"July 28, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"On July 28, 2026, within sixty days after its notice, Hollis submitted its full claim with supporting documents.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"32\", \"page\": 3, \"value\": \"July 28, 2026\", \"context\": \"On July 28, 2026, within sixty days after its notice, Hollis submitted its full claim with supporting\\ndocuments.\", \"value_start\": 3, \"value_end\": 16, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=9301-9314\", \"stale\": false}}, {\"id\": \"ev32\", \"date\": \"2026-07-28\", \"date_text\": \"July 28, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"Hollis submitted its full claim with supporting documents on July 28, 2026, well within sixty (60) days after its notice.\", \"notes\": [], \"source\": {\"document_id\": \"b23f4773-2332-4d54-b973-3a29ad30fcb1\", \"document_title\": \"Demand letter to Brennan Freight Lines (August 18, 2026)\", \"version_id\": \"41d5a9ae-7943-441c-8eee-c61e9e460679\", \"version_number\": 1, \"version_status\": \"final\", \"value\": \"July 28, 2026\", \"context\": \"Hollis submitted its full claim with supporting documents on July 28, 2026, well within sixty (60) days after its notice.\", \"value_start\": 61, \"value_end\": 74, \"reader_path\": \"/m/MAT-2101/documents/b23f4773-2332-4d54-b973-3a29ad30fcb1/read?v=41d5a9ae-7943-441c-8eee-c61e9e460679&at=2987-3000\", \"stale\": false}}, {\"id\": \"ev33\", \"date\": \"2026-08-18\", \"date_text\": \"August 18, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"On August 18, 2026, Hollis, through counsel, demanded payment of $1,228,900.00 within thirty days.\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"33\", \"page\": 4, \"value\": \"August 18, 2026\", \"context\": \"On August 18, 2026, Hollis, through counsel, demanded payment of $1,228,900.00 within thirty days.\", \"value_start\": 3, \"value_end\": 18, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=9624-9639\", \"stale\": false}}, {\"id\": \"ev34\", \"date\": \"2026-09-21\", \"date_text\": \"September 21, 2026\", \"certainty\": \"stated\", \"kind\": \"document_date\", \"reported\": false, \"superseded\": false, \"text\": \"Dated: September 21, 2026\", \"notes\": [], \"source\": {\"document_id\": \"c32c7761-407e-4530-b92b-c1f002db9313\", \"document_title\": \"Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)\", \"version_id\": \"edcdc067-0e52-4932-a60a-f0ff3291ccae\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"12.2(f)\", \"page\": 5, \"value\": \"September 21, 2026\", \"context\": \"Dated: September 21, 2026\", \"value_start\": 7, \"value_end\": 25, \"reader_path\": \"/m/MAT-2101/documents/c32c7761-407e-4530-b92b-c1f002db9313/read?v=edcdc067-0e52-4932-a60a-f0ff3291ccae&at=14124-14142\", \"stale\": false}}, {\"id\": \"ev35\", \"date\": \"2026-09-21\", \"date_text\": \"September 21, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"WHEREAS, Plaintiff Hollis Medical Supply, Inc. (\\\"Plaintiff\\\") filed its Complaint on September 21, 2026;\", \"notes\": [], \"source\": {\"document_id\": \"5262f251-a690-482c-a029-150985d3c66e\", \"document_title\": \"Scheduling Order (entered November 9, 2026)\", \"version_id\": \"4aea975a-9c18-481a-a1f1-97e3cb41e62c\", \"version_number\": 1, \"version_status\": \"final\", \"page\": 1, \"value\": \"September 21, 2026\", \"context\": \"WHEREAS, Plaintiff Hollis Medical Supply, Inc. (\\\"Plaintiff\\\") filed its Complaint on September 21, 2026;\", \"value_start\": 84, \"value_end\": 102, \"reader_path\": \"/m/MAT-2101/documents/5262f251-a690-482c-a029-150985d3c66e/read?v=4aea975a-9c18-481a-a1f1-97e3cb41e62c&at=262-280\", \"stale\": false}}, {\"id\": \"ev36\", \"date\": \"2026-10-26\", \"date_text\": \"October 26, 2026\", \"certainty\": \"stated\", \"kind\": \"event\", \"reported\": false, \"superseded\": false, \"text\": \"WHEREAS, Defendant Brennan Freight Lines, LLC (\\\"Defendant\\\") filed its Answer on October 26, 2026;\", \"notes\": [], \"source\": {\"document_id\": \"5262f251-a690-482c-a029-150985d3c66e\", \"document_title\": \"Scheduling Order (entered November 9, 2026)\", \"version_id\": \"4aea975a-9c18-481a-a1f1-97e3cb41e62c\", \"version_number\": 1, \"version_status\": \"final\", \"page\": 1, \"value\": \"October 26, 2026\", \"context\": \"WHEREAS, Defendant Brennan Freight Lines, LLC (\\\"Defendant\\\") filed its Answer on October 26, 2026;\", \"value_start\": 80, \"value_end\": 96, \"reader_path\": \"/m/MAT-2101/documents/5262f251-a690-482c-a029-150985d3c66e/read?v=4aea975a-9c18-481a-a1f1-97e3cb41e62c&at=363-379\", \"stale\": false}}, {\"id\": \"ev37\", \"date\": \"2026-11-30\", \"date_text\": \"November 30, 2026\", \"certainty\": \"stated\", \"kind\": \"deadline\", \"reported\": false, \"superseded\": false, \"text\": \"The parties shall exchange initial disclosures identifying the persons likely to have discoverable information, describing by category the relevant documents in their possession, custody or control, and setting out a computation of any damages claimed, by November 30, 2026.\", \"status\": \"Confirmed by a lawyer\", \"notes\": [], \"source\": {\"document_id\": \"5262f251-a690-482c-a029-150985d3c66e\", \"document_title\": \"Scheduling Order (entered November 9, 2026)\", \"version_id\": \"4aea975a-9c18-481a-a1f1-97e3cb41e62c\", \"version_number\": 1, \"version_status\": \"final\", \"clause\": \"1\", \"page\": 1, \"value\": \"November 30, 2026\", \"context\": \"The parties shall exchange initial disclosures identifying the persons likely to have\\ndiscoverable information, describing by category the relevant documents in their possession, custody or\\ncontrol, and setting out a computation of any damages claimed, by November 30, 2026.\", \"value_start\": 256, \"value_end\": 273, \"reader_path\": \"/m/MAT-2101/documents/5262f251-a690-482c-a029-150985d3c66e/read?v=4aea975a-9c18-481a-a1f1-97e3cb41e62c&at=1005-1022\", \"stale\": false}}], \"more\": 0, \"caution\": \"Dates are shown as the documents state them; nothing is inferred. Recollections and uncertain or partial dates are marked, and a deadline counts only once a lawyer confirms it.\"}}]",
+     "secs": 2.7,
+     "cards": [
+      "timeline"
+     ],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_9087ac013c9fa8989150aff7ebb7a3dc"
+  },
+  {
+   "id": "w2101-10",
+   "matter": "MAT-2101",
+   "kind": "cross_doc",
+   "source": "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Brennan's counsel says our June 9 notice was late because 9.3 only gives us 48 hours. Were we on time?",
+     "state": "partial",
+     "text": "The June 9 notice was sent by Hollis to Brennan. According to the documents, the notice was sent on June 9, 2026 [1], but the question is about the June 9 notice, which is not directly described in the sources provided.\n\nThe documents state that Brennan's counsel claims the June 9 notice was late because Section 9.3 only gives 48 hours [4]. However, the documents do not specify when the Shipment was delivered, making it impossible to determine if the notice was timely based on the 48-hour requirement.\n\nThe documents also state that the Shipment was delivered on June 3, 2026 [5]. Based on this, the June 9 notice was six days after the delivery, which would be late if the 48-hour requirement applied. However, the documents also state that Section 9.3 contains no forty-eight-hour requirement [5], which contradicts Brennan's counsel's claim.\n\nIn summary, the documents do not provide enough information to determine if the June 9 notice was timely. The sources indicate that Brennan's counsel claims the notice was late due to a 48-hour requirement, but the documents also state that Section 9.3 does not have such a requirement. [4][5].",
+     "secs": 27.5,
+     "cards": [],
+     "cited": [
+      "Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)",
+      "Emails - notice of claim and Logger Data request, June 9 to July 24, 2026",
+      "Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "five (5) business days",
+       "5 business days",
+       "five business days"
+      ],
+      [
+       "aware"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_e420d801dfb426503dbddc983cb48849"
+  },
+  {
+   "id": "w2101-11",
+   "matter": "MAT-2101",
+   "kind": "cross_doc",
+   "source": "Emails - notice of claim and Logger Data request, June 9 to July 24, 2026",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Did Brennan get us the logger data on time?",
+     "state": "partial",
+     "text": "The documents indicate that Brennan did not provide the logger data on time. According to the sources, Hollis requested the Logger Data for the Shipment on July 15, 2026, and Brennan did not provide it until July 24, 2026, which was seven Business Days after the request [1][2].",
+     "secs": 14.1,
+     "cards": [],
+     "cited": [
+      "Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)",
+      "Demand letter to Brennan Freight Lines (August 18, 2026)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "two (2) business days",
+       "2 business days",
+       "two business days"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_91cca078b1c814a0340a095f9e54a745"
+  },
+  {
+   "id": "w2101-12",
+   "matter": "MAT-2101",
+   "kind": "list",
+   "source": "Scheduling Order (entered November 9, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What are all the deadlines in the scheduling order?",
+     "state": "partial",
+     "text": "The scheduling order lists the following deadlines:\n\n1. Initial disclosures must be exchanged by November 30, 2026 [7].\n\n2. The parties must meet and confer regarding a stipulated confidentiality order and a protocol for the production of electronically stored information, and submit them for the Court's approval in advance of the first document production [7].\n\n3. The pretrial conference is scheduled for January 10, 2028 at 10:00 a.m. [2].\n\n4. A bench trial is scheduled to begin on February 7, 2028 at 9:30 a.m. [2].\n\n5. Mediation must be completed by September 30, 2027 [5].\n\n6. All case-dispositive motions, and any motion to exclude expert testimony, must be filed by October 15, 2027 [5].\n\n7. Fact discovery must be completed by May 28, 2027 [8].\n\n8. Plaintiff must serve the reports of any expert witnesses by June 25, 2027 [8].\n\n9. Defendant must serve the reports of its expert witnesses, including any rebuttal reports, by July 30, 2027 [8].\n\n10. Expert discovery must be completed by September 3, 2027 [8].",
+     "secs": 40.0,
+     "cards": [],
+     "cited": [
+      "Scheduling Order (entered November 9, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_8476b0e515c4f849772c650505d4024d"
+  },
+  {
+   "id": "w2101-13",
+   "matter": "MAT-2101",
+   "kind": "role_party",
+   "source": "First Amendment to the Warehousing and Distribution Services Agreement (January 15, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who signed the First Amendment for each side, and what are their titles?",
+     "state": "unverified",
+     "text": "The First Amendment to the Warehousing and Distribution Services Agreement (January 15, 2026) was signed by the following individuals:\n\nFor HOLLIS MEDICAL SUPPLY, INC., the signatory was Marcus Bell, who signed with the title \"Vice President, Supply Chain\" [1].\n\nFor BRENNAN FREIGHT LINES, LLC, the signatory was Gregory Halvorsen, who signed with the title \"Chief Operating Officer\" [1].",
+     "secs": 9.2,
+     "cards": [],
+     "cited": [
+      "First Amendment to the Warehousing and Distribution Services Agreement (January 15, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_db4404941e9d5b5b50ec4f421d3209f9"
+  },
+  {
+   "id": "w2101-14",
+   "matter": "MAT-2101",
+   "kind": "not_stated",
+   "source": "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who is Brennan's cargo insurer, and what are the policy limits?",
+     "state": "abstained",
+     "text": "The documents do not specify who Brennan's cargo insurer is.\n\nThe policy limit for Brennan's aggregate liability, as amended, is $1,500,000 in any Contract Year [7]. This amends the original limit of $500,000 set in the original agreement [3]. The amendment was made effective January 15, 2026 [2].",
+     "secs": 14.7,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_8c5c9dbdb81cd04a55fa7f002f27f571"
+  },
+  {
+   "id": "w2101-15",
+   "matter": "MAT-2101",
+   "kind": "not_stated",
+   "source": "Scheduling Order (entered November 9, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Has Brennan filed a counterclaim?",
+     "state": "abstained",
+     "text": "The documents in this matter do not mention whether Brennan has filed a counterclaim.",
+     "secs": 4.7,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_13784b2e964253d20db2fea64d9fde17"
+  },
+  {
+   "id": "w2101-16",
+   "matter": "MAT-2101",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What's the pre-money valuation on the Northlake Analytics Series A?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 2.4,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_96c2c758112a0937ee1af32ecae45142"
+  },
+  {
+   "id": "w2102-01",
+   "matter": "MAT-2102",
+   "kind": "fact",
+   "source": "Offer letter - Maria Ortega (January 23, 2023)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What is Maria Ortega's hourly rate, and is she exempt or non-exempt?",
+     "state": "answered",
+     "text": "Maria Ortega's hourly rate is $38.00 per hour [1]. She is a non-exempt employee [1].",
+     "secs": 4.5,
+     "cards": [],
+     "cited": [
+      "Demand letter from Reyes & Gold for Maria Ortega (October 6, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_0b84db09dda7dcaee2f2c986f8936b99"
+  },
+  {
+   "id": "w2102-02",
+   "matter": "MAT-2102",
+   "kind": "fact",
+   "source": "On-Call Compensation Policy HR-214 (rev. 3, effective January 1, 2024)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What on-call stipends does Ridgeline's policy pay?",
+     "state": "partial",
+     "text": "The documents do not specify the exact on-call stipends that Ridgeline's policy pays. The Offer Letter mentions that the on-call stipends are set by Ridgeline's On-Call Compensation Policy HR-214, but it does not provide the specific amounts [1].\n\nThe Demand letter references that Maria Ortega was owed $41,200 in on-call stipends, calculated at Ridgeline's own policy rates for 214 weeknights and 31 weekend days. However, this figure appears to be an estimate based on the claimant's assertion rather than an explicit statement of the policy's stipend amounts [2].\n\nThe On-Call Compensation Policy HR-214 (rev. 3) outlines the conditions for on-call shifts and call-back pay but does not specify the exact stipend amounts for on-call shifts [3]. It also states that the stipend is paid for each scheduled on-call shift, regardless of whether the employee is called back [4].\n\nThe Payroll register extract mentions that on-call stipends and call-back pay totaled $32,710.00 in the period, but it does not provide the specific rate or amount of the on-call stipend [5].",
+     "secs": 26.6,
+     "cards": [],
+     "cited": [
+      "Demand letter from Reyes & Gold for Maria Ortega (October 6, 2026)",
+      "Offer letter - Maria Ortega (January 23, 2023)",
+      "On-Call Compensation Policy HR-214 (rev. 3, effective January 1, 2024)",
+      "Payroll register extract - Maria Ortega, on-call stipends and call-back pay"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "95.00",
+       "$95"
+      ],
+      [
+       "240.00",
+       "$240"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_ff0fbe93735139f689075bebf5801118"
+  },
+  {
+   "id": "w2102-03",
+   "matter": "MAT-2102",
+   "kind": "fact",
+   "source": "On-Call Compensation Policy HR-214 (rev. 3, effective January 1, 2024)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "While she's on call, how fast does Ortega have to answer a page and get to the hospital? Is she otherwise restricted?",
+     "state": "partial",
+     "text": "According to the documents, Ortega must answer a page within ten minutes and must be able to report to the hospital within forty-five minutes while on call [3].\n\nThe documents indicate that Ortega is otherwise free to use on-call time for her own purposes, such as sleeping at home, spending time with family, or running errands within range of the facility [3].\n\nThe documents do not mention any other restrictions on Ortega's movements or activities beyond the requirement to answer pages and be available to report to the hospital.",
+     "secs": 8.4,
+     "cards": [],
+     "cited": [
+      "On-Call Compensation Policy HR-214 (rev. 3, effective January 1, 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_1d2c247d57a2dcd1008f6f61f944257c"
+  },
+  {
+   "id": "w2102-04",
+   "matter": "MAT-2102",
+   "kind": "fact",
+   "source": "Tolling agreement - Maria Ortega and Ridgeline (signed October 28, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How long does the tolling agreement run, and can either side end it early?",
+     "state": "partial",
+     "text": "The tolling agreement runs from October 6, 2026, through January 31, 2027, inclusive [6].\n\nThe tolling agreement can be ended early by either party giving the other party fifteen (15) days’ written notice [1]. If a Party gives notice, the Tolling Period ends at 11:59 p.m. Central Time on the fifteenth (15th) day after the day on which the notice is given [1].\n\nThe agreement can also be extended by a written agreement signed by both parties [1].",
+     "secs": 16.1,
+     "cards": [],
+     "cited": [
+      "Tolling agreement - Maria Ortega and Ridgeline (signed October 28, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_8d780cb3565893ba3184ce29db7fb327"
+  },
+  {
+   "id": "w2102-05",
+   "matter": "MAT-2102",
+   "kind": "calculation",
+   "source": "Demand letter from Reyes & Gold for Maria Ortega (October 6, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "At the policy rates, what would 214 weeknights and 31 weekend days of on-call come to? Does the demand letter's stipend figure hold up?",
+     "state": "partial",
+     "text": "The demand letter from Reyes & Gold for Maria Ortega (October 6, 2026) states that Ms. Ortega is owed $41,200.00 in on-call stipends calculated at Ridgeline's policy rates for the 214 weeknights and 31 weekend days on which she was on call during the period [1].\n\nAccording to the HR investigation memo, the policy rates for on-call stipends are $95.00 per weeknight and $240.00 per weekend day [6].\n\nThe calculation for the on-call stipend based on policy rates is as follows:\n- 214 weeknights × $95.00 = $20,330.00\n- 31 weekend days × $240.00 = $7,440.00\n- Total = $20,330.00 + $7,440.00 = $27,770.00\n\nThe demand letter's stipend figure of $41,200.00 does not hold up, as the calculated amount based on the policy rates is $27,770.00, which is significantly less than $41,200.00 [1][6].",
+     "secs": 35.4,
+     "cards": [],
+     "cited": [
+      "Demand letter from Reyes & Gold for Maria Ortega (October 6, 2026)",
+      "On-Call Compensation Policy HR-214 (rev. 3, effective January 1, 2024)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_5721fa2ecac071ca96e86911ce1a489d"
+  },
+  {
+   "id": "w2102-06",
+   "matter": "MAT-2102",
+   "kind": "calculation",
+   "source": "HR investigation memo - on-call stipends (October 20, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Payroll paid 16 fewer weeknight stipends than the timesheets show. What does that shortfall come to?",
+     "state": "answered",
+     "text": "The shortfall in weeknight stipends is 16 unpaid shifts. This is stated in source [2].\n\nEach weeknight stipend is $95.00, as stated in source [3].\n\nThe total shortfall is calculated as 16 multiplied by $95.00, which equals $1,520. This is confirmed in source [3].",
+     "secs": 12.6,
+     "cards": [],
+     "cited": [
+      "HR investigation memo - on-call stipends (October 20, 2026)",
+      "Payroll register extract - Maria Ortega, on-call stipends and call-back pay"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_0a104e06c4ba9f544280292a53981dbc"
+  },
+  {
+   "id": "w2102-07",
+   "matter": "MAT-2102",
+   "kind": "conflict",
+   "source": "Timesheet summary - Maria Ortega, on-call and call-back, Q4 2023 to Q3 2026",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Do the timesheets and the payroll register agree on how many weeknight on-call shifts Ortega worked?",
+     "state": "partial",
+     "text": "The Payroll register extract states that in Q2 2025, 20 weeknight on-call shifts were recorded in Kronos, but only 4 weeknight stipends were paid [1].\n\nThe HR investigation memo also states that Ms. Ortega's records show 20 weeknight on-call shifts in the second quarter of 2025, of which four were paid [2].\n\nThe same memo also notes that 16 weeknight on-call shifts were not paid [4].\n\nThe Kronos records show 214 weeknight on-call shifts, but only 198 were paid [4].\n\nThe payroll register and the HR investigation memo both indicate that the timesheets and payroll register do not agree on the number of weeknight on-call shifts Ortega worked. The payroll register shows 20 weeknight on-call shifts recorded in Kronos, but only 4 were paid, while the HR investigation memo states that 20 weeknight on-call shifts were recorded, of which 4 were paid [1][2].",
+     "secs": 30.0,
+     "cards": [],
+     "cited": [
+      "HR investigation memo - on-call stipends (October 20, 2026)",
+      "Payroll register extract - Maria Ortega, on-call stipends and call-back pay"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_5901aded934f8be85de375f5421baac3"
+  },
+  {
+   "id": "w2102-08",
+   "matter": "MAT-2102",
+   "kind": "cross_doc",
+   "source": "Offer letter - Maria Ortega (January 23, 2023)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Is the $57.00 overtime rate in the demand letter consistent with Ortega's pay terms?",
+     "state": "answered",
+     "text": "The demand letter states that Ms. Ortega's overtime rate is $57.00 per hour [1]. It also states that her regular rate is $38.00 per hour [2]. The demand letter claims that the overtime rate of $57.00 per hour is one and one-half times her regular rate [3], which is consistent with the standard overtime rate of 1.5 times the regular rate.\n\nThe payroll register extract confirms that the overtime rate is $57.00 per hour, which is 1.5 times the regular rate of $38.00 per hour [4].\n\nTherefore, the $57.00 overtime rate in the demand letter is consistent with Ortega's pay terms.",
+     "secs": 13.4,
+     "cards": [],
+     "cited": [
+      "Demand letter from Reyes & Gold for Maria Ortega (October 6, 2026)",
+      "Payroll register extract - Maria Ortega, on-call stipends and call-back pay"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_11e45a906fff682f790506b9d6853ab4"
+  },
+  {
+   "id": "w2102-09",
+   "matter": "MAT-2102",
+   "kind": "cross_doc",
+   "source": "Payroll register extract - Maria Ortega, on-call stipends and call-back pay",
+   "ok": false,
+   "turns": [
+    {
+     "question": "The demand letter treats all 126 call-back hours as unpaid overtime worth $7,182. What does payroll show?",
+     "state": "partial",
+     "text": "The demand letter states that the 126 call-back hours are unpaid overtime worth $7,182.00, calculated at $57.00 per hour [1].\n\nAccording to the HR investigation memo, payroll shows that all 126 call-back hours were paid. Of these, 88 hours were paid at one and one-half times the regular rate of $38.00, totaling $5,016.00, and 38 hours were paid at the regular rate of $38.00, totaling $1,444.00 [6].\n\nThe total amount paid for call-back hours is therefore $5,016.00 + $1,444.00 = $6,460.00.",
+     "secs": 32.3,
+     "cards": [],
+     "cited": [
+      "Demand letter from Reyes & Gold for Maria Ortega (October 6, 2026)",
+      "HR investigation memo - on-call stipends (October 20, 2026)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "under 40",
+       "fewer than 40",
+       "less than 40",
+       "below 40",
+       "did not exceed 40",
+       "not over 40"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_39f7ee6a2acf30f335236c2529bc976c"
+  },
+  {
+   "id": "w2102-10",
+   "matter": "MAT-2102",
+   "kind": "list",
+   "source": "HR investigation memo - on-call stipends (October 20, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What does HR recommend we do about the on-call pay problem?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.7,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "1,520"
+      ],
+      [
+       "interest"
+      ],
+      [
+       "eleven",
+       "11 other"
+      ],
+      [
+       "audit"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_817d67601e776689a5ff94d205036f1c"
+  },
+  {
+   "id": "w2102-11",
+   "matter": "MAT-2102",
+   "kind": "role_party",
+   "source": "Tolling agreement - Maria Ortega and Ridgeline (signed October 28, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who signed the tolling agreement, and in what capacity?",
+     "state": "partial",
+     "text": "The documents state that Maria Ortega and Ridgeline signed the tolling agreement. The agreement was signed on October 28, 2026 [2].\n\nMaria Ortega signed the agreement in her personal capacity, as indicated by her signature [2].\n\nRidgeline signed the agreement through Andrea Lim, who is identified as Vice President & Associate General Counsel of Ridgeline Health Partners, Inc. [2].\n\nThe agreement was also signed by Daniel Gold of Reyes & Gold LLC, who is noted as counsel for Maria Ortega [2].",
+     "secs": 11.7,
+     "cards": [],
+     "cited": [
+      "Tolling agreement - Maria Ortega and Ridgeline (signed October 28, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_dfe5c045bf4b73de523139dfff4736f1"
+  },
+  {
+   "id": "w2102-12",
+   "matter": "MAT-2102",
+   "kind": "not_stated",
+   "source": "HR investigation memo - on-call stipends (October 20, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How many hours a night did Ortega actually sleep when she was on call?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 3.0,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_93771fee24333b54a8eb42887400549d"
+  },
+  {
+   "id": "w2102-13",
+   "matter": "MAT-2102",
+   "kind": "not_stated",
+   "source": "HR investigation memo - on-call stipends (October 20, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What were Ortega's annual performance ratings?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.8,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ced09bc46b51dbf127e0d0c89ee2d0a2"
+  },
+  {
+   "id": "w2102-14",
+   "matter": "MAT-2102",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What's the status of Hollis Medical Supply's lawsuit against Brennan Freight Lines?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.6,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_7e250f8c37efdfe35c231db4b47cea82"
+  },
+  {
+   "id": "w2103-01",
+   "matter": "MAT-2103",
+   "kind": "fact",
+   "source": "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What price per share are the Series A investors paying for Northlake?",
+     "state": "partial",
+     "text": "The price per share that the Series A investors are paying for Northlake is $1.20. This is stated in multiple sources, including the Series A term sheet, the Series A Preferred Stock Purchase Agreement, and the Voting Agreement. For example, the Series A term sheet states: \"Price Per Share $1.20 per share (the 'Original Issue Price')\" [4]. Additionally, the Series A Preferred Stock Purchase Agreement states: \"at a purchase price of $1.20 per share (the 'Original Issue Price')\" [5]. The Voting Agreement also references the Original Issue Price of $1.20 per share [3].",
+     "secs": 10.3,
+     "cards": [],
+     "cited": [
+      "Investors' Rights Agreement - draft (November 10, 2026)",
+      "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)",
+      "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)"
+     ],
+     "notes": [
+      "The source adds a condition to “Additionally, the Series A Preferred Stock Purchase Agreement states: \"at a purchase price of $1.20 per share (the 'Original Issue…”: “Subject to the terms and conditions of this Agreement”. Found by rule."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_36ad442e063e5bed1c0ec71befd2c416"
+  },
+  {
+   "id": "w2103-02",
+   "matter": "MAT-2103",
+   "kind": "fact",
+   "source": "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "what's the pre-money on the Northlake Series A, and on what basis is it calculated?",
+     "state": "partial",
+     "text": "The pre-money valuation of the Northlake Series A is $48,000,000. This is calculated as 40,000,000 shares at an Original Issue Price of $1.20 per share [2].\n\nThe pre-money valuation is based on a fully diluted capitalization of 40,000,000 shares, with each share valued at $1.20. This figure is explicitly stated in the documents [2].",
+     "secs": 21.3,
+     "cards": [],
+     "cited": [
+      "Capitalization table - pre- and post-money (November 9, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_35ea445cff8eacf64c42bbada3af0417"
+  },
+  {
+   "id": "w2103-03",
+   "matter": "MAT-2103",
+   "kind": "fact",
+   "source": "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What liquidation preference does the Series A get, and is it participating?",
+     "state": "answered",
+     "text": "The Series A Preferred Stock has a liquidation preference of one times (1x) the Original Issue Price plus any declared but unpaid dividends, or the amount they would receive if their shares had been converted into Common Stock, whichever is greater [1].\n\nThe Series A Preferred is non-participating, meaning that once the preference has been paid, the remaining proceeds go to the holders of Common Stock [1].",
+     "secs": 11.3,
+     "cards": [],
+     "cited": [
+      "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_dff021643b4a20a9c8ce8c78962d2906"
+  },
+  {
+   "id": "w2103-04",
+   "matter": "MAT-2103",
+   "kind": "fact",
+   "source": "Voting Agreement - draft (November 10, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Who will sit on Northlake's board after the Series A closes?",
+     "state": "answered",
+     "text": "The Northlake board after the Series A closes will consist of five directors. Two directors will be elected by the holders of Common Stock, initially Priya Raman and Owen Fitzgerald. One director will be designated by the Lead Investor, initially Rafael Mendes. One director will be designated by Halcyon Growth Fund II, L.P., initially Simone Archer. One independent director, not an employee of the Company or affiliated with any Investor, will be appointed, and this seat may remain vacant until a candidate is agreed upon [1].",
+     "secs": 13.9,
+     "cards": [],
+     "cited": [
+      "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_9a2defb99833f20cce4a6a623a201927"
+  },
+  {
+   "id": "w2103-05",
+   "matter": "MAT-2103",
+   "kind": "calculation",
+   "source": "Capitalization table - pre- and post-money (November 9, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What percentage of Northlake will Granite Peak own on a fully diluted basis after the closing?",
+     "state": "answered",
+     "text": "Granite Peak's shares at $1.20 per share, worked out from the documents' figures: USD 8,000,000 ÷ USD 1.2 = 6,666,666.67 shares [1][5].\n\nGranite Peak's percentage after closing, worked out from the documents' figures: 6,666,666.67 shares ÷ 50,000,000 shares × 100 = 13.33% [5][1][5].\n\nRounded percentage, worked out from the documents' figures: round(13.33%, 2) = 13.33% [5][1][5].",
+     "secs": 14.6,
+     "cards": [],
+     "cited": [
+      "Capitalization table - pre- and post-money (November 9, 2026)",
+      "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_1ccdde3d62f6f13ce194d41abef3b893"
+  },
+  {
+   "id": "w2103-06",
+   "matter": "MAT-2103",
+   "kind": "calculation",
+   "source": "Capitalization table - pre- and post-money (November 9, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "At the Original Issue Price, how many Series A shares does the $12 million buy, and what share of the post-money company is that?",
+     "state": "answered",
+     "text": "The documents state that at the Original Issue Price of $1.20 per share, the $12 million investment buys 10,000,000 Series A shares [1][2].\n\nThe post-money valuation is $60,000,000, corresponding to 50,000,000 shares [1]. The 10,000,000 Series A shares represent 20% of the post-money company [1][2].",
+     "secs": 24.2,
+     "cards": [],
+     "cited": [
+      "Capitalization table - pre- and post-money (November 9, 2026)",
+      "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_25c2225614d9af1b6f937adead122956"
+  },
+  {
+   "id": "w2103-07",
+   "matter": "MAT-2103",
+   "kind": "conflict",
+   "source": "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How much of Pell Strand's fees does Northlake have to pay at closing?",
+     "state": "partial",
+     "text": "The documents indicate that Northlake must pay Pell Strand's fees at closing. Specifically, the Series A Preferred Stock Purchase Agreement states that the Company shall pay, at the Initial Closing, the reasonable fees and expenses of Pell Strand LLP, counsel for the Purchasers, not to exceed $45,000 [2].\n\nAdditionally, the Series A term sheet mentions that the Company will pay at the Closing the reasonable fees and expenses of one counsel to the Investors, Pell Strand LLP, up to $50,000 [1].\n\nHowever, the more specific and detailed provision in the Series A Preferred Stock Purchase Agreement states the cap at $45,000, which appears to be the applicable figure.",
+     "secs": 13.9,
+     "cards": [],
+     "cited": [
+      "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)",
+      "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)"
+     ],
+     "notes": [
+      "The source adds a condition to “Specifically, the Series A Preferred Stock Purchase Agreement states that the Company shall pay, at the Initial Closing, the reasonable…”: “except that the Company shall pay”. Found by rule."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_e12ca682f93a37cda25f29fbadbbbe5c"
+  },
+  {
+   "id": "w2103-08",
+   "matter": "MAT-2103",
+   "kind": "conflict",
+   "source": "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Is the closing deadline in the SPA draft consistent with the term sheet?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 2.9,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "december 15",
+       "dec 15",
+       "15 december",
+       "12/15"
+      ],
+      [
+       "december 31",
+       "dec 31",
+       "31 december",
+       "12/31"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_f9a2a2daaa2f44e45bf8998aed9cf6bb"
+  },
+  {
+   "id": "w2103-09",
+   "matter": "MAT-2103",
+   "kind": "definitions",
+   "source": "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Run a definitions check on SPA Draft 3: is \"Knowledge\" defined consistently?",
+     "state": null,
+     "text": "[{\"id\": \"cmp_4097e630f2ac309e2d1f25b31bfdf5dc\", \"version\": 1, \"type\": \"notice\", \"props\": {\"tone\": \"info\", \"text\": \"Which document should be checked? Name it in the question, for example “Run a definitions check on Voting Agreement - draft (November 10, 2026)”. Documents in MAT-2103: “Voting Agreement - draft (November 10, 2026)”; “Investors' Rights Agreement - draft (November 10, 2026)”; “Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)”.\"}}]",
+     "secs": 0.1,
+     "cards": [
+      "notice"
+     ],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "laura chen",
+       "chen"
+      ],
+      [
+       "reasonable inquiry"
+      ],
+      [
+       "without inquiry"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_43d98c8b2e68e27100961840feff4606"
+  },
+  {
+   "id": "w2103-10",
+   "matter": "MAT-2103",
+   "kind": "list",
+   "source": "Closing checklist (as of November 13, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "What's still outstanding before we can close the Northlake Series A?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 2.2,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "piia",
+       "proprietary information and inventions"
+      ],
+      [
+       "stockholder consent"
+      ],
+      [
+       "wire",
+       "call-back",
+       "call back"
+      ],
+      [
+       "good standing"
+      ],
+      [
+       "restated certificate",
+       "certificate of incorporation",
+       "charter"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_87ab8b811d9c43054e87d2749013051f"
+  },
+  {
+   "id": "w2103-11",
+   "matter": "MAT-2103",
+   "kind": "role_party",
+   "source": "Investors' Rights Agreement - draft (November 10, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Is Juniper a Major Investor under the IRA? Does it get information and pro rata rights?",
+     "state": "abstained",
+     "text": "The documents do not explicitly state whether Juniper is a Major Investor under the IRA. However, they define a \"Major Investor\" as an Investor holding at least 1,000,000 shares of Series A Preferred [4].\n\nThe documents indicate that Major Investors have pro rata rights, meaning they may buy their pro rata share of any new securities the Company offers [1].\n\nAdditionally, Major Investors are entitled to receive information, including annual audited financial statements, quarterly unaudited financial statements, and an annual budget [4].",
+     "secs": 16.8,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "not a major investor",
+       "isn't a major investor",
+       "is not a major investor",
+       "does not qualify",
+       "doesn't qualify",
+       "not qualify",
+       "falls short",
+       "below the",
+       "short of",
+       "less than",
+       "fewer than",
+       "no, juniper",
+       "no. juniper"
+      ],
+      [
+       "833,333"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_8a75fbff019192c01dd42eef493144a6"
+  },
+  {
+   "id": "w2103-12",
+   "matter": "MAT-2103",
+   "kind": "cross_doc",
+   "source": "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Is the PIIA closing condition in the SPA satisfied yet?",
+     "state": "abstained",
+     "text": "The documents do not explicitly state whether the PIIA closing condition in the SPA is satisfied. However, they indicate that the condition related to PIIAs is not fully met. Specifically, the closing checklist shows that 7 out of 9 employees have signed PIIAs, with 2 new hires still outstanding, as noted in the document titled \"Closing checklist (as of November 13, 2026)\" [1].\n\nAdditionally, the SPA's clause 4.7 requires that every current employee of the Company shall have signed and delivered a PIIA [5]. Since two new hires have not yet signed, the PIIA closing condition is not yet fully satisfied.\n\nThe documents do not provide any information about the status of these two remaining employees beyond November 2, so it is unclear whether the condition will be met by the closing date.",
+     "secs": 14.4,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_6233d902cf63d8d43646a5a7b3da80fd"
+  },
+  {
+   "id": "w2103-13",
+   "matter": "MAT-2103",
+   "kind": "not_stated",
+   "source": "Voting Agreement - draft (November 10, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Who is the independent director on Northlake's post-closing board?",
+     "state": "partial",
+     "text": "The documents indicate that the independent director on Northlake's post-closing board is not yet designated. The term sheet states that the board will include \"one independent director, not an employee of the Company or affiliated with any Investor, acceptable to the other directors\" [1]. Additionally, the Voting Agreement specifies that the independent director seat will be vacant at the Initial Closing and until an independent director is designated [2].\n\nThere is no specific name provided for the independent director in the sources, and the documents do not indicate that the seat has been filled as of the closing date. [4].",
+     "secs": 9.4,
+     "cards": [],
+     "cited": [
+      "Closing checklist (as of November 13, 2026)",
+      "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)",
+      "Voting Agreement - draft (November 10, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_c0a25e1948426b8f4fce1422218b83e7"
+  },
+  {
+   "id": "w2103-14",
+   "matter": "MAT-2103",
+   "kind": "not_stated",
+   "source": "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What was Northlake's revenue for 2025?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 3.7,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_7d4b0a87b0008350b875de140e27e0f4"
+  },
+  {
+   "id": "w2103-15",
+   "matter": "MAT-2103",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How many weeknights was Maria Ortega on call, and what does Ridgeline pay per weeknight?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.2,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ce5b81973d49176f86ec1ab473c89d6a"
+  },
+  {
+   "id": "w2104-01",
+   "matter": "MAT-2104",
+   "kind": "fact",
+   "source": "Master Subscription Agreement - Brightline / Atlas",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How many named users does the Atlas MSA cover, what are the annual fees, and how long is the initial term?",
+     "state": "answered",
+     "text": "The Atlas MSA covers up to 400 named users [1]. The annual fees are $480,000 per year [1]. The initial term is three (3) years from the Effective Date [1].",
+     "secs": 5.5,
+     "cards": [],
+     "cited": [
+      "Master Subscription Agreement - Brightline / Atlas"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_54ae44bffcbdf3bda61054387f5ea0c7"
+  },
+  {
+   "id": "w2104-02",
+   "matter": "MAT-2104",
+   "kind": "fact",
+   "source": "Master Subscription Agreement - Brightline / Atlas",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Which law governs the Brightline / Atlas agreement and where would a dispute be litigated?",
+     "state": "answered",
+     "text": "The law that governs the Brightline / Atlas agreement is the laws of the State of New York, without regard to any conflict-of-laws principle that would require the application of the laws of another jurisdiction [3].\n\nA dispute would be litigated in the state and federal courts located in New York County, New York [3].",
+     "secs": 11.6,
+     "cards": [],
+     "cited": [
+      "Master Subscription Agreement - Brightline / Atlas"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_d9422cf42e6978a7f40b22fa2c56595f"
+  },
+  {
+   "id": "w2104-03",
+   "matter": "MAT-2104",
+   "kind": "fact",
+   "source": "Email from Brightline's General Counsel with negotiating instructions (November 9, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "By when does Brightline want the Atlas agreement signed, and why?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 4.1,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "december 18, 2026",
+       "december 18",
+       "dec 18",
+       "18 december",
+       "12/18/2026",
+       "dec. 18"
+      ],
+      [
+       "quarter"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_31c3424cb95430280605defbc7bfd440"
+  },
+  {
+   "id": "w2104-04",
+   "matter": "MAT-2104",
+   "kind": "version",
+   "source": "Master Subscription Agreement - Brightline / Atlas",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What did Atlas change in the data-breach super-cap between our v1 form and their markup?",
+     "state": "answered",
+     "text": "The documents indicate that Atlas changed the data-breach super-cap in their markup of Brightline's MSA form. Brightline's original form had a super-cap of 2x the annual Subscription Fees, which was $960,000, and they would not accept a super-cap above 3x, which would be $1,440,000 [1]. However, in the Atlas markup, the data-breach super-cap was set at 5x the annual Subscription Fees, which is $2,400,000 [4].\n\nThus, Atlas increased the super-cap from 2x to 5x the annual Subscription Fees.",
+     "secs": 15.7,
+     "cards": [],
+     "cited": [
+      "Email from Brightline's General Counsel with negotiating instructions (November 9, 2026)",
+      "Master Subscription Agreement - Brightline / Atlas"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_41d1fcccd917db0bee1f755734c94f8f"
+  },
+  {
+   "id": "w2104-05",
+   "matter": "MAT-2104",
+   "kind": "version",
+   "source": "Master Subscription Agreement - Brightline / Atlas",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Did Atlas change the uptime commitment in its markup of the MSA?",
+     "state": "partial",
+     "text": "The documents indicate that Atlas changed the uptime commitment in its markup of the MSA. Specifically, the documents state that Atlas \"tightened the uptime to 99.95%\" [6].\n\nAdditionally, Brightline's instructions mention that \"Brightline can accept 99.95% only if service credits are capped at 15% of the Monthly Fees in any month\" [1]. This suggests that Atlas's change to the uptime requirement was accompanied by a cap on service credits.\n\nThe documents do not provide the exact wording of the original uptime commitment or the revised version, only that Atlas tightened it to 99.95%.",
+     "secs": 10.4,
+     "cards": [],
+     "cited": [
+      "Email from Atlas (Monica Sheridan) sending the markup (November 6, 2026)",
+      "Email from Brightline's General Counsel with negotiating instructions (November 9, 2026)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "99.9%",
+       "99.9 percent",
+       "ninety-nine point nine percent",
+       "99.9 %",
+       "from 99.9"
+      ],
+      [
+       "sole and exclusive",
+       "sole remedy",
+       "exclusive remedy",
+       "without prejudice",
+       "other rights and remedies"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_7159aa392d9bb80df1410fb2c370a55a"
+  },
+  {
+   "id": "w2104-06",
+   "matter": "MAT-2104",
+   "kind": "conflict",
+   "source": "Master Subscription Agreement - Brightline / Atlas",
+   "ok": false,
+   "turns": [
+    {
+     "question": "How quickly does Brightline have to notify Atlas of a security incident? I've seen different numbers.",
+     "state": "answered",
+     "text": "The documents indicate that Brightline must notify Atlas of a security incident within twenty-four (24) hours after discovering the incident, as stated in the Master Subscription Agreement [1]. However, the Atlas Information Security Addendum states that the vendor must notify Atlas of any Security Incident within forty-eight (48) hours after discovering it [2]. These two provisions appear to provide different timeframes for notification.",
+     "secs": 7.4,
+     "cards": [],
+     "cited": [
+      "Atlas Information Security Addendum (received November 6, 2026)",
+      "Master Subscription Agreement - Brightline / Atlas"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "72 hours",
+       "seventy-two (72) hours",
+       "seventy-two hours",
+       "72-hour"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_1785c2fd292f2141c3de4cfdbe671c78"
+  },
+  {
+   "id": "w2104-07",
+   "matter": "MAT-2104",
+   "kind": "conflict",
+   "source": "Master Subscription Agreement - Brightline / Atlas",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Monica Sheridan's cover email says Atlas accepted our liability cap as drafted. Is that right?",
+     "state": "answered",
+     "text": "The documents indicate that Monica Sheridan's cover email states that Atlas accepted Brightline's liability cap as drafted. Specifically, the email says, \"The short version: we have accepted your liability cap as drafted and only tightened the uptime to 99.95%\" [2].\n\nHowever, the email also notes that the markup remains subject to Atlas's final internal review and approval, and nothing is agreed until the agreement is signed [3].\n\nTherefore, while Monica Sheridan's email claims that Atlas accepted the liability cap as drafted, the documents do not confirm that this acceptance is final or binding.",
+     "secs": 10.3,
+     "cards": [],
+     "cited": [
+      "Email from Atlas (Monica Sheridan) sending the markup (November 6, 2026)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "5x",
+       "five times",
+       "2,400,000",
+       "2.4 million",
+       "$2.4m",
+       "2.4m"
+      ],
+      [
+       "11.3",
+       "super-cap",
+       "super cap",
+       "supercap"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_2c74735fba4876f60f5a807469e5c9c8"
+  },
+  {
+   "id": "w2104-08",
+   "matter": "MAT-2104",
+   "kind": "calculation",
+   "source": "SLA Schedule (Schedule 2) - Availability and service credits",
+   "ok": true,
+   "turns": [
+    {
+     "question": "If Availability comes in at 99.3% in a month under the SLA Schedule, what service credit does Atlas get, in dollars?",
+     "state": "partial",
+     "text": "The SLA Schedule (Schedule 2) - Availability and service credits states that if the monthly Availability falls below the Availability Commitment, the Customer will be entitled to a service credit equal to the percentage of the Monthly Fees for that month as set out in the table [1].\n\nThe table specifies the following service credits based on monthly Availability:\n- ≥ 99.9%: none\n- < 99.9% but ≥ 99.5%: 5%\n- < 99.5% but ≥ 99.0%: 10%\n- < 99.0%: 25% [1].\n\nThe Monthly Fees are defined as one twelfth of the annual Subscription Fees, which is $40,000 per month based on an annual Subscription Fee of $480,000 [1].\n\nThe total service credits for any calendar month will not exceed 25% of the Monthly Fees, regardless of the number or duration of the failures in that month [1].\n\nThe Availability Commitment is 99.9% as stated in the SLA Schedule [2].\n\nIn the scenario where Availability comes in at 99.3%, which is less than 99.5% but greater than or equal to 99.0%, the service credit is 10% of the Monthly Fees. Therefore, the service credit is 10% of $40,000, which equals $4,000 [1][1].",
+     "secs": 33.7,
+     "cards": [],
+     "cited": [
+      "SLA Schedule (Schedule 2) - Availability and service credits"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_b2ec8f4fb4ba3a267322f54fe56ab84a"
+  },
+  {
+   "id": "w2104-09",
+   "matter": "MAT-2104",
+   "kind": "table",
+   "source": "SLA Schedule (Schedule 2) - Availability and service credits",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Under the SLA Schedule, what credit applies if monthly availability is below 99.9% but at least 99.5%, and what is the most Atlas can get in credits in one month?",
+     "state": "partial",
+     "text": "Under the SLA Schedule, if the monthly availability is below 99.9% but at least 99.5%, the service credit is 5% of the Monthly Fees for that month [1].\n\nThe maximum credit Atlas can get in one month is 25% of the Monthly Fees, which is capped at USD 40,000 [1].\n\nThe Monthly Fees are calculated as one twelfth of the annual Subscription Fees, which is USD 480,000 per year, resulting in USD 40,000 per month [1].\n\nThe maximum service credit for the month is 25% of USD 40,000, which equals USD 10,000 [1].",
+     "secs": 21.7,
+     "cards": [],
+     "cited": [
+      "SLA Schedule (Schedule 2) - Availability and service credits"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_85dcdc3574e2a34dfa9857aafef7968e"
+  },
+  {
+   "id": "w2104-10",
+   "matter": "MAT-2104",
+   "kind": "cross_doc",
+   "source": "Atlas Information Security Addendum (received November 6, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Nathan is prepared to give 48 hours' notice of a security incident. Is there anything in Atlas's own paper we can point to?",
+     "state": "partial",
+     "text": "Nathan is prepared to give 48 hours' notice of a security incident. The documents indicate that Brightline's General Counsel mentioned that they can live with 48 hours, which matches Atlas's own Information Security Addendum, but not 24 [1].\n\nThe Atlas Information Security Addendum specifies that the Vendor shall notify Atlas of any Security Incident within forty-eight (48) hours after Vendor discovers it [3].",
+     "secs": 8.0,
+     "cards": [],
+     "cited": [
+      "Atlas Information Security Addendum (received November 6, 2026)",
+      "Email from Brightline's General Counsel with negotiating instructions (November 9, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_c562a628bb3c208ced8da993fb3ba00f"
+  },
+  {
+   "id": "w2104-11",
+   "matter": "MAT-2104",
+   "kind": "role_party",
+   "source": "Email from Atlas (Monica Sheridan) sending the markup (November 6, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Who at Atlas prepared the markup, and who is behind the super-cap comment?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.6,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [
+      [
+       "sheridan"
+      ],
+      [
+       "ravi patel",
+       "patel",
+       "ciso",
+       "chief information security officer"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_1387d9dc64670616fed5bcdd3b582b59"
+  },
+  {
+   "id": "w2104-12",
+   "matter": "MAT-2104",
+   "kind": "not_stated",
+   "source": "Data Processing Addendum - Brightline form (October 1, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Which hosting region will Atlas's data be stored in?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.6,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_12543cb5bd72382bedafab527dd05323"
+  },
+  {
+   "id": "w2104-13",
+   "matter": "MAT-2104",
+   "kind": "not_stated",
+   "source": "Master Subscription Agreement - Brightline / Atlas",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Is there an annual price escalator on the Brightline subscription fees?",
+     "state": "partial",
+     "text": "Master Subscription Agreement - Brightline / Atlas defines \"Subscription Fees\" in clause 1.1: “means the annual fees payable by Customer for the Service under Section 3.2” [7]. It defines \"Subscription Fees\" again in clause 3.2, differently: “In consideration of the subscription in Section 3.1, Customer shall pay Brightline subscription fees of four hundred eighty thousand dollars ($480,000) per year (the” [5]. The document does not say which definition applies, so it is ambiguous on this point [7] [5].",
+     "secs": 3.9,
+     "cards": [],
+     "cited": [
+      "Master Subscription Agreement - Brightline / Atlas"
+     ],
+     "notes": [
+      "Master Subscription Agreement - Brightline / Atlas defines “Subscription Fees” more than once, with different meanings (clauses 1.1 and 3.2), so it is ambiguous on this point. Found by rule."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_1e4f246a299b082dd24bb8a5c3158d88"
+  },
+  {
+   "id": "w2104-14",
+   "matter": "MAT-2104",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What is the CMS number on the FDA warning letter Meadowgate received?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.2,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_f69dcba59c0cf64393368cb252ae13ff"
+  },
+  {
+   "id": "w2105-01",
+   "matter": "MAT-2105",
+   "kind": "fact",
+   "source": "FDA warning letter CMS # 712044 (November 6, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "How long does Meadowgate have to respond to FDA's warning letter, and from when does the time run?",
+     "state": "answered",
+     "text": "The documents state that Meadowgate has fifteen (15) working days from the receipt of the FDA warning letter to respond. The response should describe the specific steps taken to correct the violations and prevent their recurrence, including documentation of corrections [1].\n\nThe time period for responding starts on the day after the receipt of the letter. The documents indicate that Meadowgate received the letter on November 10, 2026, and the response period runs from November 11, 2026 [4].\n\nThe documents also state that the last day to respond is December 1, 2026, assuming that Veterans Day (November 11) and Thanksgiving (November 26) are treated as working days [4].",
+     "secs": 13.2,
+     "cards": [],
+     "cited": [
+      "Draft advice memo - response to the FDA warning letter (November 14, 2026)",
+      "FDA warning letter CMS # 712044 (November 6, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_7316ecbd19e1cc98e4082f2680bdd565"
+  },
+  {
+   "id": "w2105-02",
+   "matter": "MAT-2105",
+   "kind": "fact",
+   "source": "FDA warning letter CMS # 712044 (November 6, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What did FDA find in the cracker samples, and what does the warning letter charge Meadowgate with?",
+     "state": "answered",
+     "text": "The FDA found sesame in the cracker samples, specifically 14 ppm in the sample from lot HG2608B and 38 ppm in the sample from lot HG2609A [1].\n\nThe warning letter charges Meadowgate with misbranding the product under section 403(w) of the Federal Food, Drug, and Cosmetic Act because the label does not declare sesame, a major food allergen [1]. Additionally, the letter states that the plant's food allergen preventive controls did not prevent allergen cross-contact, as Line 3 is shared with a sesame product and the changeover cleaning was not verified [4].",
+     "secs": 17.3,
+     "cards": [],
+     "cited": [
+      "Draft advice memo - response to the FDA warning letter (November 14, 2026)",
+      "FDA warning letter CMS # 712044 (November 6, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_36636a1d788ffa64557e92264ada7c4d"
+  },
+  {
+   "id": "w2105-03",
+   "matter": "MAT-2105",
+   "kind": "fact",
+   "source": "Current label proof - Harvest Grain Crackers, Rosemary & Sea Salt",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What allergen statement is on the current Harvest Grain Crackers label?",
+     "state": "abstained",
+     "text": "The current Harvest Grain Crackers label states \"CONTAINS: WHEAT, SOY.\" [2] However, according to a QA memo, the label was revised to include \"Sesame\" as an allergen. [5] This revision was made after the FDA warning letter, but it is unclear if this new label is currently in use. [5].",
+     "secs": 7.7,
+     "cards": [],
+     "cited": [],
+     "notes": [
+      "The passages found are from other documents than the one asked about, so they are not given as its answer: that document does not say this."
+     ],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_e088991e99fefe89637842386aa62d05"
+  },
+  {
+   "id": "w2105-04",
+   "matter": "MAT-2105",
+   "kind": "fact",
+   "source": "QA memo - sesame cross-contact on Line 3 (November 12, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What caused the sesame cross-contact, according to the client's QA investigation?",
+     "state": "partial",
+     "text": "The documents do not explicitly state what caused the sesame cross-contact, but they indicate that the root cause was a skipped changeover clean. According to the QA memo, the validated changeover clean between Everything Seed Crisps and Harvest Grain Crackers was skipped on specific dates due to a staffing shortage [6].",
+     "secs": 12.1,
+     "cards": [],
+     "cited": [
+      "Draft advice memo - response to the FDA warning letter (November 14, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_1181b49adaf6fad97c3614769e9650ba"
+  },
+  {
+   "id": "w2105-05",
+   "matter": "MAT-2105",
+   "kind": "date",
+   "source": "QA memo - sesame cross-contact on Line 3 (November 12, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "By what date do we need to get the response to FDA out?",
+     "state": "answered",
+     "text": "The documents state that the response to the FDA must be sent by December 1, 2026. This is explicitly mentioned in the source as the date by which the response should be submitted [2]. Additionally, the source confirms that this date is the conservative reading and that Meadowgate should not rely on any later date [2].\n\nAnother source also confirms that the written response to the FDA should be sent by December 1, 2026 [4].\n\nTherefore, the date by which the response to the FDA must be submitted is December 1, 2026.",
+     "secs": 12.9,
+     "cards": [],
+     "cited": [
+      "Draft advice memo - response to the FDA warning letter (November 14, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_2e7bb743a6aa704a75e27fef4e30209d"
+  },
+  {
+   "id": "w2105-06",
+   "matter": "MAT-2105",
+   "kind": "list",
+   "source": "QA memo - sesame cross-contact on Line 3 (November 12, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Which lots are affected, and how many cases are involved?",
+     "state": "partial",
+     "text": "The affected lots are HG2607A through HG2609C [3]. These nine lots involve approximately 41,800 cases [1].\n\nThe documents do not provide a breakdown of how many cases are in each specific lot, but they do list the cases for some of the lots. For example, HG2607A has 4,520 cases, HG2607B has 4,660 cases, and HG2607C has 4,310 cases [5]. The total number of cases across all nine lots is approximately 41,800.",
+     "secs": 12.1,
+     "cards": [],
+     "cited": [
+      "QA memo - sesame cross-contact on Line 3 (November 12, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_90d9dc421e366746848d91359f9e18eb"
+  },
+  {
+   "id": "w2105-07",
+   "matter": "MAT-2105",
+   "kind": "cross_doc",
+   "source": "QA memo - sesame cross-contact on Line 3 (November 12, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What are the possible sources of the sesame?",
+     "state": "partial",
+     "text": "The possible sources of the sesame mentioned in the documents are:\n\n1. The RS-440 rosemary seasoning blend from Prairie Mills Ingredients, LLC: \"6. Second possible source: Prairie Mills RS-440\" [3].\n\n2. The validated changeover clean between Everything Seed Crisps and Harvest Grain Crackers was skipped, which could have led to cross-contact: \"Root cause. Line 3 is shared with 'Everything Seed Crisps', which contains sesame\" [5].\n\n3. The second possible source of sesame is also identified as the Prairie Mills RS-440 rosemary seasoning blend: \"It also identifies a second possible source of the sesame: the Prairie Mills RS-440 rosemary seasoning blend\" [4].",
+     "secs": 14.7,
+     "cards": [],
+     "cited": [
+      "Draft advice memo - response to the FDA warning letter (November 14, 2026)",
+      "QA memo - sesame cross-contact on Line 3 (November 12, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_a16e3e9cadcf9778d26a9f1200d8a99d"
+  },
+  {
+   "id": "w2105-08",
+   "matter": "MAT-2105",
+   "kind": "cross_doc",
+   "source": "Current label proof - Harvest Grain Crackers, Rosemary & Sea Salt",
+   "ok": true,
+   "turns": [
+    {
+     "question": "FDA says our label doesn't declare sesame. Does the label proof bear that out?",
+     "state": "answered",
+     "text": "The documents indicate that the FDA found sesame, a major food allergen, in the product samples, but the label did not declare it. The label declared \"Contains: Wheat, Soy,\" but not sesame [3]. The FDA's laboratory analysis confirmed the presence of sesame in the product, which is not declared on the label [1].\n\nThe revised label, as mentioned in the draft advice memo, now includes \"Contains: Wheat, Soy, Sesame\" [4]. However, this revision was made after the FDA's inspection and is not part of the label in question. The original label, which was the subject of the FDA's warning, did not declare sesame. Therefore, the label proof does not declare sesame, as the FDA claims [2].",
+     "secs": 12.0,
+     "cards": [],
+     "cited": [
+      "Draft advice memo - response to the FDA warning letter (November 14, 2026)",
+      "FDA warning letter CMS # 712044 (November 6, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_10b522b4b424abfc5e7b142f1a1807b4"
+  },
+  {
+   "id": "w2105-09",
+   "matter": "MAT-2105",
+   "kind": "role_party",
+   "source": "QA memo - sesame cross-contact on Line 3 (November 12, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "Who at Meadowgate prepared the root-cause memo, and who was it sent to?",
+     "state": "partial",
+     "text": "The root-cause memo was prepared by Hannah Brooks, as stated in the document: [1].\n\nThe memo was sent to the FDA, as indicated in the document: [3].",
+     "secs": 7.4,
+     "cards": [],
+     "cited": [
+      "Draft advice memo - response to the FDA warning letter (November 14, 2026)"
+     ],
+     "notes": [],
+     "missing": [
+      [
+       "celeste moreau",
+       "moreau"
+      ]
+     ],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_d9d61f47711e604cba9a4e700362b107"
+  },
+  {
+   "id": "w2105-10",
+   "matter": "MAT-2105",
+   "kind": "not_stated",
+   "source": "QA memo - sesame cross-contact on Line 3 (November 12, 2026)",
+   "ok": true,
+   "turns": [
+    {
+     "question": "Which retailers sold the affected crackers?",
+     "state": "abstained",
+     "text": "The documents do not specify which retailers sold the affected crackers. They only mention that the affected product was distributed to retailers in six states: Ohio (OH), Pennsylvania (PA), Michigan (MI), Indiana (IN), Kentucky (KY), and West Virginia (WV) [1][3].",
+     "secs": 4.8,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_ef39b98339f6df097b0b8a5b41f42349"
+  },
+  {
+   "id": "w2105-11",
+   "matter": "MAT-2105",
+   "kind": "not_stated",
+   "source": "FDA warning letter CMS # 712044 (November 6, 2026)",
+   "ok": false,
+   "turns": [
+    {
+     "question": "When did FDA last inspect the Wooster plant before this inspection, and what did it find?",
+     "state": "partial",
+     "text": "The FDA last inspected the Wooster plant on September 14–18, 2026 [1].\n\nDuring this inspection, the FDA found that the Harvest Grain Crackers - Rosemary & Sea Salt, 7 oz, were misbranded because they contained sesame, a major food allergen, which was not declared on the label [1].\n\nAdditionally, the FDA found that the plant's food allergen preventive controls did not prevent allergen cross-contact, as Line 3 was shared with a sesame product and the changeover cleaning was not verified [1].\n\nThe FDA also collected samples of the finished product during the inspection, and laboratory analysis found sesame, a major food allergen, that was not declared on the product label [2].",
+     "secs": 20.0,
+     "cards": [],
+     "cited": [
+      "Draft advice memo - response to the FDA warning letter (November 14, 2026)",
+      "FDA warning letter CMS # 712044 (November 6, 2026)"
+     ],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": false
+    }
+   ],
+   "conv": "conv_22d43e3df4562698d3d5d2aeb9373d7a"
+  },
+  {
+   "id": "w2105-12",
+   "matter": "MAT-2105",
+   "kind": "other_matter",
+   "source": "",
+   "ok": true,
+   "turns": [
+    {
+     "question": "What annual subscription fee is Brightline asking Atlas to pay for the Lending Cloud?",
+     "state": "abstained",
+     "text": "The documents in this matter do not answer that.",
+     "secs": 1.3,
+     "cards": [],
+     "cited": [],
+     "notes": [],
+     "missing": [],
+     "leaked": [],
+     "ok": true
+    }
+   ],
+   "conv": "conv_661c41eba9fc7cce0d981629c5b35318"
+  }
+ ]
+}
