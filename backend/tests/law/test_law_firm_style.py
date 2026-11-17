@@ -59,3 +59,12 @@ def test_a_demand_letter_request_picks_the_demand_letter_preset_in_either_vocabu
         assert chat_drafting._guess(options, "Draft a demand letter to Brennan Freight Lines") == "demand_letter"
     uk = [{"id": p["key"], "kind": p["kind"], "name": p["name"]} for p in presets.presets_for("uk")]
     assert chat_drafting._guess(uk, "Draft a letter before claim to Apex") == "demand_letter"
+
+
+def test_a_letter_is_dated_the_way_the_firm_writes_dates():
+    from datetime import datetime, timezone
+
+    from app.legal.drafting import engine
+    d = datetime(2026, 11, 7, tzinfo=timezone.utc)
+    assert engine.long_date(d, "uk") == "7 November 2026"
+    assert engine.long_date(d, "us") == "November 7, 2026"

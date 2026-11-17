@@ -8,7 +8,8 @@ Fictional data only. Generic: the matters, documents, updates and tasks all come
 Run after scripts/law/demo_seed.sh and scripts/law/synthetic/load.py --dataset <folder>, against a backend on that data
 folder. Everything goes through the product's API as the person who would do it (credentials from the seed; none is
 printed), so permissions, audit and quote checks apply as for a person. Steps (each reports and goes on if it fails):
-casework (stage, updates, plan), obligations, scans (conflict scans), drafts, research (a note sent for review), checks
+casework (stage, updates, plan), obligations, scans (conflict scans), drafts (then draft_fill: the author fills them
+in), research (a note sent for review), checks
 (playbook, definitions, citation checks and summaries), compare (two versions of one document), diligence, panel (Council),
 time, enquiries, chats.
 
@@ -20,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import re
 import sys
 import time
 from datetime import date, timedelta
@@ -89,7 +91,50 @@ def drafts(api: Api, spec: dict) -> str:
         r = api.call(user, "POST", f"/legal/matters/{mid}/drafts", {"template_id": tid, "title": d["title"], "documents": ids})
         # a draft waits in Drafts for a second lawyer's review (one by carol is what alice approves on stage)
         made.append(f"{number} “{d['title']}” by {user} ({r['draft']['content'].get('gaps', '?')} gaps)")
+    draft_fill(api, spec)
     return "; ".join(made)
+
+
+_UK_DATE = re.compile(r"^(\d{1,2}) ([A-Z][a-z]+) (\d{4})$")
+
+
+@step("drafts filled in by their author")
+def draft_fill(api: Api, spec: dict) -> str:
+    """The author fills in what a draft still needs ("fill" in the spec: field key -> value; "passage": the text for a written
+    passage the model left with a gap; "fill_reason") before a
+    second lawyer can approve it: a new version through the product's own edit, as a person would. A letter dated in the
+    other date style than the firm's (made before LEGAL_FIRM_STYLE dated letters) is re-dated in the same edit. Safe to run
+    again: fields already holding their value are left alone, and nothing is sent when nothing would change."""
+    out = []
+    for d in spec.get("drafts", []):
+        if not d.get("fill"):
+            continue
+        user, number = d["user"], d["matter"]
+        mid = api.matter(user, number)
+        found = next((x for x in api.call(user, "GET", f"/legal/matters/{mid}/drafts")["drafts"] if x["title"] == d["title"]), None)
+        if not found:
+            out.append(f"{number}: no draft “{d['title']}”")
+            continue
+        a = api.call(user, "GET", f"/legal/matters/{mid}/artifacts/{found['id']}")["artifact"]
+        style = (api.call(user, "GET", "/auth/me").get("features") or {}).get("firm_style", "uk")
+        fields = [{"key": f["key"], "value": d["fill"][f["key"]]} for f in a["content"]["fields"]
+                  if f["key"] in d["fill"] and f.get("value") != d["fill"][f["key"]]]
+        for f in a["content"]["fields"]:
+            m = _UK_DATE.match(str(f.get("value") or "")) if f.get("source") == "today" and style == "us" else None
+            if m:
+                fields.append({"key": f["key"], "value": f"{m.group(2)} {int(m.group(1))}, {m.group(3)}"})
+        # a written passage the model left with a gap is rewritten by the author ("passage"), and shows as edited by them
+        gapped = next((i for i, b in enumerate(a["content"]["blocks"])
+                       if b.get("origin") in ("written", "edited") and "[[NEEDS INPUT" in b["text"]), None)
+        blocks = [{"index": gapped, "text": d["passage"]}] if d.get("passage") and gapped is not None else []
+        if not fields and not blocks:
+            out.append(f"{number} “{d['title']}” already filled ({a['content']['gaps']} gaps)")
+            continue
+        r = api.call(user, "POST", f"/legal/matters/{mid}/drafts/{found['id']}/edit",
+                     {"content_sha256": a["content_sha256"], "fields": fields, "blocks": blocks, "reason": d.get("fill_reason")})
+        out.append(f"{number} “{d['title']}” version {r['draft']['version']} by {user}: {len(fields)} fields, {len(blocks)} passage, "
+                   f"{r['draft']['content']['gaps']} gaps left")
+    return "; ".join(out)
 
 
 @step("research note sent for review")
@@ -199,7 +244,7 @@ def chats(api: Api, spec: dict) -> str:
     return " ".join(out)
 
 
-STEPS = {"casework": casework, "obligations": obligations, "scans": scans, "drafts": drafts, "research": research, "checks": checks,
+STEPS = {"casework": casework, "obligations": obligations, "scans": scans, "drafts": drafts, "draft_fill": draft_fill, "research": research, "checks": checks,
          "compare": compare, "diligence": diligence, "panel": panel, "time": time_entries, "enquiries": enquiries, "chats": chats}
 
 

@@ -7,6 +7,8 @@ Usage: python3 -I scripts/law/demo_runsheet.py <base> [origin] [--steps FILE] [-
            "text_all", "text_any", "text_none", "max_secs"}]}). Without it, the webinar run-sheet is used when the instance
            has its matters, otherwise the original product-guide steps (MAT-1042, M-302).
   --repeat: ask every step N times (the webinar bar: 5 of 5), each in a new conversation.
+  --together: as the presenter asks them: the steps of one act on one matter, in order, in one conversation (a new one
+           for each repeat), so a question is asked after the ones before it.
 Part of scripts/law/release_gate.sh (2026-11-12); steps from a file since the webinar (2026-11-16)."""
 import http.cookiejar, json, os, statistics, sys, time, urllib.request
 
@@ -28,6 +30,7 @@ STEPS_FILE = opt("--steps")
 REPEAT = int(opt("--repeat", "1"))
 ONLY = {s for s in (opt("--only", "") or "").split(",") if s}
 SHOW = "--show" in args and not args.remove("--show")      # print a failed answer's text (rehearsal)
+TOGETHER = "--together" in args and not args.remove("--together")
 BASE = args[0].rstrip("/")
 ORIGIN = args[1] if len(args) > 1 else BASE
 API = BASE if BASE.endswith("/api") else BASE + "/api"
@@ -86,31 +89,57 @@ else:
 steps = [s for s in steps if not ONLY or s["id"] in ONLY]
 
 made, bad, report = [], 0, []
-for step in steps:
-    if step["matter"] not in ms:
-        print(f"FAIL  {step['id']:<14} {step['matter']} is not on this instance", flush=True)
-        bad += 1
-        continue
-    passes, secs = 0, []
+
+
+def ask_one(step, conv, secs):
+    t = time.time()
+    ev = [json.loads(x) for x in call("POST", f"/legal/counsel/conversations/{conv}/turns", {"text": step["question"]}).splitlines() if x.strip()]
+    secs.append(time.time() - t)
+    fin = next((e["data"] for e in ev if e["event"] == "ui.final"), {"components": []})
+    kinds = [c["type"] for c in fin.get("components", [])]
+    state = next((c.get("props", {}).get("state") for c in fin.get("components", []) if c["type"] == "source_answer"), None)
+    good, why = judge(step, kinds, json.dumps(fin, ensure_ascii=False))
+    slow = step.get("max_secs") and secs[-1] > step["max_secs"]
+    print(f"{'PASS' if good else 'FAIL'}  {step['id']:<14} {step['matter']:9} {secs[-1]:5.1f}s {('SLOW ' if slow else '')}"
+          f"cards={kinds} state={state} {'; '.join(why)}", flush=True)
+    if SHOW and not good:
+        ans = next((c.get("props", {}).get("answer") for c in fin.get("components", []) if c["type"] == "source_answer"), None)
+        print("      " + (ans or json.dumps(fin, ensure_ascii=False))[:700].replace("\n", " "), flush=True)
+    return good
+
+
+def new_conv(matter):
+    conv = json.loads(call("POST", "/legal/counsel/conversations", {"matter_id": ms[matter]}))["conversation"]["id"]
+    made.append(conv)
+    return conv
+
+
+missing = [s for s in steps if s["matter"] not in ms]
+for step in missing:
+    print(f"FAIL  {step['id']:<14} {step['matter']} is not on this instance", flush=True)
+bad += len(missing)
+steps = [s for s in steps if s["matter"] in ms]
+passes = {s["id"]: 0 for s in steps}
+secs = {s["id"]: [] for s in steps}
+if TOGETHER:
+    groups = []
+    for s in steps:                                  # consecutive steps of one act on one matter share a conversation
+        if groups and (groups[-1][0].get("act"), groups[-1][0]["matter"]) == (s.get("act"), s["matter"]):
+            groups[-1].append(s)
+        else:
+            groups.append([s])
     for n in range(REPEAT):
-        conv = json.loads(call("POST", "/legal/counsel/conversations", {"matter_id": ms[step["matter"]]}))["conversation"]["id"]
-        made.append(conv)
-        t = time.time()
-        ev = [json.loads(x) for x in call("POST", f"/legal/counsel/conversations/{conv}/turns", {"text": step["question"]}).splitlines() if x.strip()]
-        secs.append(time.time() - t)
-        fin = next((e["data"] for e in ev if e["event"] == "ui.final"), {"components": []})
-        kinds = [c["type"] for c in fin.get("components", [])]
-        state = next((c.get("props", {}).get("state") for c in fin.get("components", []) if c["type"] == "source_answer"), None)
-        good, why = judge(step, kinds, json.dumps(fin, ensure_ascii=False))
-        slow = step.get("max_secs") and secs[-1] > step["max_secs"]
-        passes += good
-        print(f"{'PASS' if good else 'FAIL'}  {step['id']:<14} {step['matter']:9} {secs[-1]:5.1f}s {('SLOW ' if slow else '')}"
-              f"cards={kinds} state={state} {'; '.join(why)}", flush=True)
-        if SHOW and not good:
-            ans = next((c.get("props", {}).get("answer") for c in fin.get("components", []) if c["type"] == "source_answer"), None)
-            print("      " + (ans or json.dumps(fin, ensure_ascii=False))[:700].replace("\n", " "), flush=True)
-    bad += passes < REPEAT
-    report.append((step["id"], passes, statistics.median(secs)))
+        for group in groups:
+            conv = new_conv(group[0]["matter"])
+            for step in group:
+                passes[step["id"]] += ask_one(step, conv, secs[step["id"]])
+else:
+    for step in steps:
+        for n in range(REPEAT):
+            passes[step["id"]] += ask_one(step, new_conv(step["matter"]), secs[step["id"]])
+for step in steps:
+    bad += passes[step["id"]] < REPEAT
+    report.append((step["id"], passes[step["id"]], statistics.median(secs[step["id"]])))
 for conv in made:
     try:
         call("DELETE", f"/legal/counsel/conversations/{conv}")

@@ -80,7 +80,12 @@
  "scans": ["MAT-2101", "MAT-2103", "MAT-2104"],
  "drafts": [
   {"user": "carol", "matter": "MAT-2105", "template": "Engagement letter", "title": "Engagement letter - Meadowgate Foods FDA response",
-   "documents": ["Draft advice memo - response to the FDA warning letter (November 14, 2026)"]},
+   "documents": ["Draft advice memo - response to the FDA warning letter (November 14, 2026)"],
+   "fill": {"client_address": "1450 Orchard Valley Road, Wooster, OH 44691", "client_contact": "Celeste Moreau, General Counsel",
+            "fee_arrangement": "hourly at the firm's standard rates, estimated at $65,000 for the written response to FDA",
+            "billing_frequency": "monthly", "responsible_lawyer": "Kenji Arai, supervised by Alice Moreno (Partner)"},
+   "passage": "You have asked us to advise Meadowgate Foods, Inc. on the FDA warning letter dated November 6, 2026 about the labeling of Harvest Grain Crackers and the allergen preventive controls at the Wooster plant. Our work covers: the written response to FDA, due within fifteen working days of receipt of the letter (December 1, 2026 on our conservative count); advice on a voluntary recall of the nine affected lots at the retail level, coordinated with FDA; the documentation of your corrective actions (the revised label, the changeover cleaning procedure, training records and swab results); and the testing of the RS-440 seasoning blend with an update to supplier verification.",
+   "fill_reason": "Filled from the engagement terms agreed with Celeste Moreau (she, not Hannah Brooks, instructs us); scope rewritten from Kenji's draft response memo of November 14."},
   {"user": "alice", "matter": "MAT-2103", "template": "Internal memorandum", "title": "Memo: open closing conditions and the fee-cap point",
    "documents": ["Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)", "Closing checklist (as of November 13, 2026)"]}
  ],

@@ -22,6 +22,9 @@ it). Inspection of the Wooster plant **September 14–18, 2026**.
 
 **Our firm:** Calder & Wynne LLP (Washington, DC office: 1700 K Street NW, Suite 600, Washington, DC 20006) — Kenji
 Arai (lead, Associate), Alice Moreno (Partner), Theo Lindgren (knowledge lawyer). File CW-2105.
+Engagement terms (agreed with Celeste Moreau; used for the engagement letter Carol prepares): hourly at the firm's
+standard rates, estimated at $65,000 for the written response to FDA, billed monthly; Kenji Arai responsible,
+supervised by Alice Moreno.
 
 ## 2. Facts
 

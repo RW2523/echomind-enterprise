@@ -781,16 +781,27 @@ async def work(question: str, passages: list[dict], search: Optional[Search] = N
                prefer: frozenset = frozenset()) -> tuple[Optional[Working], list[dict]]:
     """The working for `question` from `passages` (and what `search` finds for what none of them gives), or None; and the
     passages it read, `passages` first. A plan that says something is missing is never used as it stands: what it needs is
-    searched for and the plan made again, once; a plan with a problem is made again once with what was wrong. `prefer`: the
+    searched for and the plan made again, once; a plan with a problem is made again once with what was wrong; a reply that is
+    not a plan at all is asked for again once. `prefer`: the
     documents the question names, whose words state a figure first."""
     seen, read, feedback, searched, retried = {p["chunk_id"] for p in passages}, list(passages), "", False, False
-    for attempt in range(3):
+    reread = False
+    for attempt in range(4):
         try:
             raw = await llm_mod.complete(messages(question, read, feedback), temperature=0.0, max_tokens=MAX_TOKENS)
         except Exception as e:  # noqa: BLE001 — no working leaves the answer as it was
             logger.warning("Working: no plan (%s)", type(e).__name__)
             return None, read
         plan = parse(raw)
+        # A reply that is not lines (prose, a result written out) is asked for again once, with the form spelled out
+        # (webinar rehearsal 2026-11-17: 1 ask in 10 of a claimed-figure check got no plan, and the answer then repeated the
+        # other side's total). The plan made then is checked exactly like any other.
+        if plan is None and not reread:
+            reread = True
+            logger.info("Working: plan unreadable, asked again")
+            feedback = ("Your reply could not be read. Reply with CALC, CHECK and NEED lines only, each in the form given, "
+                        "or the one line NONE; no other words, and no results.")
+            continue
         if plan is None or (not plan.steps and not plan.needs):
             logger.info("Working: %s", "no plan" if plan is None else "nothing to work out")
             return None, read
@@ -811,7 +822,7 @@ async def work(question: str, passages: list[dict], search: Optional[Search] = N
             feedback = ("The sources now also include passages found for what you said was missing. Write the lines again; if "
                         "the rule or a figure is still in no source, write NEED lines only.")
             continue
-        last = retried or attempt == 2
+        last = retried or attempt == 3
         worked, problem = evaluate(plan, read, strict=not last, prefer=prefer, question=question)
         if worked is not None:
             logger.info("Working: %d steps, %d figures", len(worked.steps), len(worked.figures))

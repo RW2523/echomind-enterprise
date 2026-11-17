@@ -181,11 +181,12 @@ class Planner:
     """Writes the plan the test sets when asked for one, and answers with the sentences the test sets."""
     def __init__(self):
         self.plan, self.lines, self.calls, self.planned = PLAN, [], [], []
+        self.plans: list[str] = []                     # replies given first, one per planning call, before `plan`
 
     async def chat_raw(self, messages, temperature, max_tokens):
         if "You write the arithmetic" in messages[0]["content"]:
             self.planned.append(messages)
-            return self.plan
+            return self.plans.pop(0) if self.plans else self.plan
         return "?"
 
     async def chat_stream(self, messages, temperature, max_tokens):
@@ -310,3 +311,23 @@ def test_a_figure_the_question_gives_is_used_and_said_to_be_the_persons():
     worked, problem = working.evaluate(plan, src, question="What if delivery was 23 days late?")
     assert worked and worked.steps[0].result == "USD 142,600"
     assert any("23 is the figure your question gives" in a for a in worked.assumptions)
+
+
+def test_a_reply_that_is_not_a_plan_is_asked_for_again_once_and_the_plan_then_is_used(wk):
+    # webinar rehearsal 2026-11-17: an unreadable plan left a claimed-figure check to the answer model, which repeated the claim
+    alice = as_user(wk, "alice")
+    wk["model"].plans = ["The monthly fee is 360,000 divided by 12, so the most credit is 10% of GBP 30,000."]
+    wk["model"].lines = [("The most is GBP 3,000", "a service credit of up to 10% of the monthly subscription fee")]
+    done = ask(alice, wk["mid"], Q)[-1]
+    assert len(wk["model"].planned) == 2 and "Your reply could not be read" in wk["model"].planned[-1][-1]["content"]
+    assert done["working"] and [s["result"] for s in done["working"]["steps"]] == ["GBP 30,000", "GBP 3,000"]
+    assert "Worked out by rule" in wk["model"].calls[-1][-1]["content"]
+
+
+def test_a_reply_that_is_still_not_a_plan_leaves_the_answer_as_it_was(wk):
+    alice = as_user(wk, "alice")
+    wk["model"].plan = "Here is the working: 360000 / 12 = 30000, and 10% of that is 3000."
+    wk["model"].lines = [("A service credit is up to 10% of the monthly fee", "a service credit of up to 10% of the monthly subscription fee")]
+    done = ask(alice, wk["mid"], Q)[-1]
+    assert len(wk["model"].planned) == 2                                          # asked again once, no more
+    assert done["working"] is None and "Worked out by rule" not in wk["model"].calls[-1][-1]["content"]

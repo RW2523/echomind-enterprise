@@ -72,9 +72,15 @@ REMINDER = ('Remember: only what the sources state; cite each sentence with its 
             "[[NEEDS INPUT: ...]] for anything missing.")
 
 
-def _today() -> str:
-    d = datetime.now(timezone.utc)
+def long_date(d: datetime, style: Optional[str] = None) -> str:
+    """A letter's date as the firm writes it (LEGAL_FIRM_STYLE): "17 November 2026", or "November 17, 2026" for a US firm."""
+    if (style or settings.LEGAL_FIRM_STYLE) == "us":
+        return f"{d.strftime('%B')} {d.day}, {d.year}"
     return f"{d.day} {d.strftime('%B %Y')}"
+
+
+def _today() -> str:
+    return long_date(datetime.now(timezone.utc))
 
 
 def _matter(matter_id: str) -> dict:
