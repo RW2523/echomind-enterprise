@@ -7,7 +7,7 @@ import { draftsPath, useDocuments, useDrafts, useTemplates } from '../api/querie
 import { useMatter } from '../app/matter';
 import Toolbar from '../ui/Toolbar';
 import { Dialog, EmptyState, ErrorNote, Field, Skeleton, StatusPill } from '../ui/primitives';
-import { KIND_LABEL } from './Templates';
+import { useKindLabel } from './Templates';
 
 const day = (iso: string) => new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -54,6 +54,7 @@ export default function MatterDrafting() {
 }
 
 function NewDraft({ onClose }: { onClose: () => void }) {
+  const kindLabel = useKindLabel();
   const matter = useMatter();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -91,7 +92,7 @@ function NewDraft({ onClose }: { onClose: () => void }) {
             if (t && !title) setTitle(`${t.name} — ${matter.title}`);
           }}>
             <option value="">Choose an approved template</option>
-            {usable.map((t) => <option key={t.id} value={t.id}>{`${t.name} (${KIND_LABEL[t.kind]}, version ${t.versions.find((v) => v.status === 'approved')!.version})`}</option>)}
+            {usable.map((t) => <option key={t.id} value={t.id}>{`${t.name} (${kindLabel(t.kind)}, version ${t.versions.find((v) => v.status === 'approved')!.version})`}</option>)}
           </select>)}</Field>
         {templates.data && usable.length === 0 && <p className="lw-meta" style={{ margin: 0 }}>No template is approved yet. A managing partner approves the firm’s templates under Templates.</p>}
         <Field label="Title">{(id) => <input id={id} className="lw-input" value={title} onChange={(e) => setTitle(e.target.value)} />}</Field>

@@ -1,0 +1,82 @@
+Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)
+(file: Temperature Excursion Report - HMS-26-0588.pdf; scan; evidence, final)
+
+[stamp: RECEIVED JUN 10 2026 / HOLLIS QA]
+
+HOLLIS MEDICAL SUPPLY, INC. - QUALITY ASSURANCE
+
+TEMPERATURE EXCURSION REPORT
+
+Report no.: TER-26-014
+Report date: June 10, 2026
+Prepared by: Thomas Akers, Director of Quality Assurance
+Shipment: HMS-26-0588
+Carrier: Brennan Freight Lines, LLC
+
+1. Shipment details
+
+Origin: Brennan Freight Lines facility, 2200 Industrial Highway, Eddystone, PA 19022
+Destination: Hollis Newark DC, 300 Pencader Drive, Newark, DE 19702
+Pickup Time: June 2, 2026 at 6:00 a.m. (per Brennan advance shipping notice)
+Service level: Standard (not a Priority Shipment)
+Quantity: 22 pallets of Temperature-Controlled Goods (storage requirement 2 °C to 8 °C)
+Date and time received: June 6, 2026 at 9:40 a.m.
+Trailer at receipt: BFL-R-217 (advance shipping notice showed BFL-R-204)
+Seal at receipt: BF-118904, intact
+Temperature at receipt: 9.8 °C (handheld probe, case surface, dock 4)
+Received by: Elena Ruiz, Receiving Manager
+
+2. Product affected
+
+| Pallets | Product | Storage |
+| 14 | Insulin pens, prefilled (various) | 2 °C to 8 °C |
+| 8 | Vaccines (various) | 2 °C to 8 °C |
+| 22 | Total |  |
+
+Lot numbers and quantities by line item: see attachment A (quarantine inventory, 6 pages).
+
+3. Logger data
+
+Source: in-load continuous data logger travelling with the Shipment (placed by Brennan), downloaded at the Newark DC on June 6, 2026 and reviewed by QA on June 7, 2026.
+
+Finding: the logger record shows the Goods above 8 °C for a continuous period of 5 hours 40 minutes on June 2, 2026.
+
+Peak temperature recorded: 11.4 °C.
+
+This is an Excursion as defined in the carrier agreement (more than 30 consecutive minutes outside 2 °C to 8 °C).
+
+4. Actions taken
+
+June 6, 2026: all 22 pallets placed in quarantine (location Q-3, locked cold cage) by E. Ruiz. QA notified at 9:55 a.m.
+
+June 7, 2026: logger record reviewed by T. Akers. Excursion confirmed.
+
+June 8-9, 2026: manufacturers' stability guidance requested and reviewed for each product line. The guidance does not support release of product exposed to this Excursion for distribution to hospitals and pharmacies.
+
+June 9, 2026: Legal (P. Lowell) informed; notice of claim sent to Brennan.
+
+5. Disposition
+
+Decision: REJECT - DESTROY ALL 22 PALLETS.
+
+The product may not be released, returned to stock or sold. Destruction to be carried out through Hollis's licensed pharmaceutical waste vendor. Product to remain in quarantine at Q-3 until Legal releases it for destruction, so that the carrier may inspect it if requested.
+
+6. Root cause (carrier)
+
+To be confirmed by Brennan. Brennan's dispatch told Receiving on June 3, 2026 that the load had a "reefer problem". The Shipment arrived four days after its Pickup Time on a different trailer from the one on the advance shipping notice.
+
+7. Approval
+
+Prepared and approved by:
+
+[signature: Thomas Akers]
+
+Thomas Akers, Director of Quality Assurance - June 10, 2026
+
+Reviewed by:
+
+[signature: Marcus Bell]
+
+Marcus Bell, VP, Supply Chain - June 10, 2026
+
+[handwritten: Copy to P. Lowell (Legal) 6/10 - TA]

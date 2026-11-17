@@ -1,0 +1,80 @@
+---
+file: Disclosure Schedule - draft.docx
+title: Disclosure Schedule - draft (November 10, 2026)
+kind: other
+status: draft
+render: docx
+style: report
+font: serif
+header: C&W DRAFT 11/10/2026 - SUBJECT TO CLIENT REVIEW
+footer: CW-2103 - Northlake Series A - Disclosure Schedule
+---
+# DISCLOSURE SCHEDULE
+
+Northlake Analytics, Inc.
+
+Delivered under Section 2 of the Series A Preferred Stock Purchase Agreement (Draft 3)
+
+Draft of November 10, 2026
+
+## Preliminary statements
+
+This Disclosure Schedule is delivered by Northlake Analytics, Inc., a Delaware corporation (the "Company"), to the Purchasers under Section 2 of the Series A Preferred Stock Purchase Agreement among the Company and the Purchasers named in it (the "Agreement"). Capitalized terms used but not defined in this Disclosure Schedule have the meanings given to them in the Agreement.
+
+The section numbers below correspond to the section numbers of Section 2 of the Agreement. A disclosure in any section of this Disclosure Schedule qualifies other sections of Section 2 of the Agreement only to the extent that its relevance to those sections is readily apparent on its face.
+
+Including a matter in this Disclosure Schedule is not an admission that the matter is material, that it is outside the ordinary course of business or that it is a breach of any contract or a violation of any law, and does not set a standard of materiality. Nothing in this Disclosure Schedule is an admission of liability to any third party.
+
+Headings are for convenience only. Where a document is summarized, the summary is qualified by the full text of the document, a copy of which has been posted to the Company's online data room for the Purchasers and their counsel, Pell Strand LLP.
+
+## Section 2.3 - Capitalization
+
+2.3.1 The fully diluted capitalization of the Company immediately before and immediately after the Initial Closing is set out in Schedule B to the Agreement and in the capitalization table prepared by Laura Chen, Head of Finance, dated November 9, 2026.
+
+2.3.2 The 6,000,000 shares shown as available for future grant under the 2023 Equity Incentive Plan include an increase of 3,200,000 shares in the Plan reserve, which is to be approved by the Board and by the stockholders before the Initial Closing. After the increase, 8,400,000 shares of Common Stock will be reserved under the Plan, of which 2,400,000 shares are subject to outstanding options.
+
+2.3.3 The 5,600,000 outstanding shares of Series Seed Preferred Stock are held by Juniper Seed Partners, L.P. (4,000,000 shares) and by other seed holders (1,600,000 shares). The Series Seed investment documents give the holders of Series Seed Preferred Stock a right to take part in the Company's next equity financing. Juniper Seed Partners, L.P. is taking part in the Series A by purchasing 833,333 Shares; the other holders of Series Seed Preferred Stock will waive the right in the stockholder consent for the Series A.
+
+[C&W note: confirm that the waiver language is in the stockholder consent now circulating.]
+
+## Section 2.7 - Litigation
+
+2.7.1 DataForge LLC, a former contractor that provided data-engineering services to the Company under a statement of work, has demanded payment of $85,000 for unpaid invoices, in a demand letter addressed to the Company's Chief Executive Officer. The Company disputes the claim. The Company's position is that the deliverables under the statement of work were never completed or accepted, so that the invoices are not payable. DataForge LLC has not started any lawsuit, arbitration or other proceeding, and the Company has replied in writing rejecting the demand.
+
+2.7.2 Apart from the matter described in Section 2.7.1, there is no claim, action, suit, proceeding or investigation pending or, to the Company's knowledge, threatened against the Company.
+
+[C&W note: Laura Chen to post the statement of work, the DataForge LLC demand letter and the Company's reply to the data room.]
+
+## Section 2.9 - Material Contracts
+
+2.9.1 Master Services Agreement between the Company and Coastline Health System, as amended (the "Coastline Agreement"), under which the Company licenses its supply-chain forecasting platform to the hospitals of Coastline Health System. Revenue under the Coastline Agreement represented 34% of the Company's 2026 revenue. The Coastline Agreement requires the Company to notify Coastline Health System of a change of control of the Company, but not to obtain its consent; the Series A financing is not a change of control under the Coastline Agreement.
+
+2.9.2 Business associate agreements with each of the Company's hospital customers, including Coastline Health System, in the forms required by those customers, under which the Company handles protected health information in accordance with the Health Insurance Portability and Accountability Act of 1996.
+
+2.9.3 The Company's cloud hosting and services agreement with its cloud infrastructure provider, on that provider's standard enterprise terms.
+
+2.9.4 Lease of the Company's offices at 125 Summer Street, 9th Floor, Boston, Massachusetts.
+
+[C&W note: Company to confirm that no other customer exceeds the 10% revenue threshold in Section 2.9(a) of the Agreement.]
+
+## Section 2.10 - Intellectual Property
+
+2.10.1 Before the Company was incorporated, Owen Fitzgerald wrote source code for an early version of the Company's forecasting engine. He assigned all of his rights in that code, and in all related inventions and know-how, to the Company by an IP Assignment dated March 3, 2023 (the "IP Assignment").
+
+2.10.2 Open-source software. The Company's products include open-source components, mainly under permissive licenses such as the MIT, BSD and Apache 2.0 licenses. No copyleft-licensed code (for example, code licensed under the GNU General Public License or the GNU Affero General Public License) is incorporated into or distributed with any code that the Company distributes to customers. Copyleft-licensed tools are used only internally, for development and testing, and are not distributed.
+
+2.10.3 The Company has no issued patents.
+
+## Section 2.11 - Employee Matters
+
+2.11.1 The Company has nine (9) employees. Seven (7) of them have signed the Company's standard Proprietary Information and Inventions Agreement. The two (2) employees who joined the Company on November 2, 2026 have not yet signed it; the Company will obtain their signed agreements before the Initial Closing, as Section 4.7 of the Agreement requires.
+
+2.11.2 No Key Employee has given notice of resignation.
+
+## Section 2.12 - Compliance with Laws; Data Privacy
+
+None.
+
+## Section 2.13 - Financial Statements
+
+None.

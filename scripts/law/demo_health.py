@@ -18,8 +18,15 @@ import subprocess
 import sys
 import time
 import urllib.request
+from pathlib import Path
 
 PREFIX = "echomind-legal-demo"
+ROOT = Path(__file__).resolve().parents[2]
+# Which matter and question the chat checks use: the webinar firm's (eval/fixtures/webinar/runsheet.json "health") when
+# the demo holds it, otherwise the original demo data's.
+LEGACY = {"status_matter": "MAT-1042", "answer_question": "What is the overall cap on each party's liability?", "answer_expect": ["620,000"]}
+_RS = ROOT / "eval" / "fixtures" / "webinar" / "runsheet.json"
+WEBINAR = json.loads(_RS.read_text()).get("health", {}) if _RS.exists() else {}
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
 results: list[tuple[bool, str, str]] = []
 
@@ -94,25 +101,31 @@ def main() -> int:
 
     conv = {}
 
+    cfg = dict(LEGACY)
+
     @check("case status")
     def _():
         ms = {m["number"]: m["id"] for m in json.loads(call("GET", "/api/legal/matters")[1])["matters"]}
-        conv["id"] = json.loads(call("POST", "/api/legal/counsel/conversations", {"matter_id": ms["MAT-1042"]})[1])["conversation"]["id"]
+        if WEBINAR.get("status_matter") in ms:                            # the webinar firm's data (2026-11-16)
+            cfg.update(WEBINAR)
+        number = cfg["status_matter"]
+        conv["id"] = json.loads(call("POST", "/api/legal/counsel/conversations", {"matter_id": ms[number]})[1])["conversation"]["id"]
         ev = [json.loads(x) for x in call("POST", f"/api/legal/counsel/conversations/{conv['id']}/turns",
                                           {"text": "What's the latest on this case?"})[1].splitlines() if x.strip()]
         fin = next(e["data"] for e in ev if e["event"] == "ui.final")
         kinds = [c["type"] for c in fin["components"]]
-        return kinds == ["case_status"], f"MAT-1042 card: {kinds}"
+        return kinds == ["case_status"], f"{number} card: {kinds}"
 
     @check("chat answer")
     def _():
         t = time.time()
         ev = [json.loads(x) for x in call("POST", f"/api/legal/counsel/conversations/{conv['id']}/turns",
-                                          {"text": "What is the overall cap on each party's liability?"}, 300)[1].splitlines() if x.strip()]
+                                          {"text": cfg["answer_question"]}, 300)[1].splitlines() if x.strip()]
         fin = next(e["data"] for e in ev if e["event"] == "ui.final")
         p = (fin["components"] or [{"props": {}}])[0]["props"]
-        ok = "620,000" in (p.get("answer") or "")
-        return ok, f"{p.get('state')}, cap {'found' if ok else 'NOT found'}, {len(p.get('citations', []))} citations, {time.time() - t:.0f} s"
+        ok = all(x in (p.get("answer") or "") for x in cfg["answer_expect"])
+        return ok, (f"{p.get('state')}, {'/'.join(cfg['answer_expect'])} {'found' if ok else 'NOT found'}, "
+                    f"{len(p.get('citations', []))} citations, {time.time() - t:.0f} s")
 
     if conv.get("id"):
         try:

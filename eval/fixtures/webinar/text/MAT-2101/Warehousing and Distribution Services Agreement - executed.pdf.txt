@@ -1,0 +1,275 @@
+Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)
+(file: Warehousing and Distribution Services Agreement - executed.pdf; pdf; contract, executed)
+
+TEMPERATURE-CONTROLLED WAREHOUSING AND DISTRIBUTION SERVICES AGREEMENT
+
+This Temperature-Controlled Warehousing and Distribution Services Agreement (this "Agreement") is entered into as of March 1, 2024 (the "Effective Date") by and between:
+
+HOLLIS MEDICAL SUPPLY, INC., a Delaware corporation with its principal place of business at 4400 Concord Pike, Wilmington, Delaware 19803 ("Customer" or "Hollis"); and
+
+BRENNAN FREIGHT LINES, LLC, a Pennsylvania limited liability company with its principal place of business at 2200 Industrial Highway, Eddystone, Pennsylvania 19022 ("Brennan").
+
+Customer and Brennan are each referred to in this Agreement as a "Party" and together as the "Parties".
+
+RECITALS
+
+A. Customer distributes temperature-sensitive medical supplies, including insulin products, vaccines and biologics, to hospitals, pharmacies and other healthcare providers in the Mid-Atlantic region of the United States.
+
+B. Brennan operates a licensed refrigerated warehouse at Eddystone, Pennsylvania and a fleet of refrigerated trucks and trailers, and holds operating authority from the Federal Motor Carrier Safety Administration as a motor carrier of property.
+
+C. Customer wishes to engage Brennan to store Customer's Goods and to transport them to Customer's distribution center and to Customer's customers, and Brennan wishes to provide those services, on the terms and subject to the conditions of this Agreement.
+
+NOW, THEREFORE, in consideration of the mutual covenants set forth in this Agreement and for other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the Parties agree as follows:
+
+1. DEFINITIONS
+
+1.1 In this Agreement the following terms have the following meanings:
+
+"Business Day" means any day from Monday through Friday that is not a federal holiday in the United States.
+
+"Contract Year" means each twelve (12) month period beginning on March 1 during the Term; the first Contract Year begins on the Effective Date.
+
+"Delivery Window" means the period within which a Shipment must be delivered, as set out in Section 7.1.
+
+"Excursion" means any period of more than thirty (30) consecutive minutes during which Temperature-Controlled Goods are outside 2 °C to 8 °C.
+
+"Facility" means Brennan's refrigerated warehouse at 2200 Industrial Highway, Eddystone, Pennsylvania 19022, together with its loading docks and trailer yard.
+
+"Goods" means the products of Customer tendered to Brennan for storage or transport under this Agreement, including their packaging.
+
+"Logger Data" means all temperature data recorded for a Shipment or for Goods in storage, including the data recorded by the data loggers required by Section 6.2 and the temperature and alarm records of the refrigeration units of the trailers and storage areas used for those Goods.
+
+"Newark DC" means Customer's distribution center at 300 Pencader Drive, Newark, Delaware 19702.
+
+"Pickup Time" means the date and time, as recorded on the bill of lading, at which a Shipment is loaded and released for transport at the Facility or at any other pickup point.
+
+"Replacement Cost" means Customer's documented cost to replace Goods that cannot be used.
+
+"Services" means the storage, handling and transport services described in Section 4 and any related services provided by Brennan under this Agreement.
+
+"Shipment" means a quantity of Goods moving under a single bill of lading from a pickup point to a single delivery location.
+
+"Temperature-Controlled Goods" means Goods to be kept at 2 °C to 8 °C, as designated by Customer in its shipping order or storage instructions.
+
+"Term" has the meaning given in Section 2.
+
+"Territory" means the States of Delaware, Pennsylvania, New Jersey and Maryland.
+
+1.2 Headings are for convenience only. The words "include" and "including" are deemed to be followed by "without limitation". References to Sections and Exhibits are to the sections of and exhibits to this Agreement, and the Exhibits form part of this Agreement.
+
+2. TERM
+
+2.1 This Agreement begins on the Effective Date and continues for an initial term of three (3) years (the "Initial Term").
+
+2.2 After the Initial Term, this Agreement renews automatically for successive renewal terms of one (1) year each unless either Party gives the other written notice of non-renewal at least ninety (90) days before the end of the then-current term. The Initial Term and any renewal terms are together the "Term".
+
+3. APPOINTMENT
+
+3.1 Customer appoints Brennan as a non-exclusive provider of the Services, and Brennan accepts that appointment. Nothing in this Agreement obliges Customer to tender any minimum volume of Goods.
+
+3.2 Brennan shall perform the Services with the skill, care and diligence of a prudent operator of temperature-controlled pharmaceutical warehousing and transport, in accordance with Customer's written standard operating procedures provided to Brennan from time to time and all applicable laws.
+
+4. SERVICES
+
+4.1 Storage. Brennan shall receive, store and maintain the Goods at the Facility in dedicated refrigerated storage areas that are temperature-mapped, alarmed and monitored twenty-four (24) hours a day, seven (7) days a week.
+
+4.2 Transport. Brennan shall provide refrigerated transport of the Goods from the Facility to the Newark DC and to Customer's customers within the Territory, using trailers equipped with operational refrigeration units capable of maintaining 2 °C to 8 °C.
+
+4.3 Personnel and equipment. Brennan shall provide all personnel, tractors, trailers, refrigeration units, data loggers and other equipment required to perform the Services, and shall keep all such equipment properly maintained, calibrated and in good working order.
+
+4.4 Licenses and compliance. Brennan shall obtain and maintain all licenses, registrations and permits required to perform the Services, including its motor carrier operating authority, and shall comply with all applicable laws, including the Federal Food, Drug, and Cosmetic Act and the regulations under it, the Drug Supply Chain Security Act, and applicable state wholesale distribution and third-party logistics provider requirements.
+
+4.5 Security. Brennan shall keep the Goods secure at all times, in locked storage areas and in trailers sealed at loading with a numbered seal recorded on the bill of lading, and shall comply with Customer's written security requirements for high-value products.
+
+4.6 Recalls. If any Goods become subject to a recall, market withdrawal or regulatory hold, Brennan shall, at Customer's direction, promptly segregate, hold and ship the affected Goods and provide the records that Customer reasonably requests. Customer shall reimburse Brennan's reasonable out-of-pocket costs of those services unless the recall results from Brennan's breach of this Agreement.
+
+5. FEES
+
+5.1 Storage. Customer shall pay Brennan a storage fee of $42.00 per pallet per month.
+
+5.2 Handling. Customer shall pay Brennan a handling fee of $18.00 per pallet in and $18.00 per pallet out.
+
+5.3 Transport. Customer shall pay Brennan for transport at the rates set out in Exhibit B, including $1,150.00 for each refrigerated truckload from the Facility to the Newark DC.
+
+5.4 Invoices. Brennan shall invoice Customer monthly in arrears. Each invoice shall identify each Shipment by Customer's shipment number and shall be payable net thirty (30) days after Customer's receipt of the invoice.
+
+5.5 Disputed amounts. Customer may withhold any invoiced amount that it disputes in good faith by giving Brennan written notice of the dispute before the due date, and shall pay the undisputed balance when due. The Parties shall work in good faith to resolve any disputed amount within thirty (30) days.
+
+5.6 Taxes. The fees are exclusive of any sales, use or similar taxes, which Customer shall pay where applicable, other than taxes on Brennan's income.
+
+6. TEMPERATURE CONTROL
+
+6.1 Brennan shall keep Temperature-Controlled Goods at 2 °C to 8 °C at all times while they are in its custody.
+
+6.2 Brennan shall place at least one calibrated continuous temperature data logger with every Shipment of Temperature-Controlled Goods, recording at intervals of not more than five (5) minutes from the Pickup Time until delivery, and shall keep the refrigeration units of its trailers and storage areas recording continuously.
+
+6.3 Brennan shall provide Logger Data within two (2) Business Days after Customer's request.
+
+6.4 Brennan shall promptly notify Customer by telephone and email of any failure of refrigeration equipment, and of any Excursion, affecting Goods in its custody, and shall follow Customer's reasonable instructions for the protection of the Goods.
+
+6.5 Brennan shall retain all Logger Data for not less than three (3) years after the date of the relevant Shipment or, if a claim has been made, until the claim has been finally resolved.
+
+6.6 Brennan shall maintain a written temperature excursion response procedure, reviewed by Customer, covering alarm response, the transfer of Goods to back-up equipment, notification of Customer and documentation, and shall follow it in every case.
+
+7. DELIVERY
+
+7.1 Delivery Window: each Shipment within the Territory shall be delivered within twenty-four (24) hours after its Pickup Time.
+
+7.2 Each delivery shall be evidenced by a proof of delivery signed by Customer's receiving staff, showing the date and time of delivery, the trailer and seal numbers and the temperature of the Goods at receipt.
+
+7.3 Customer may quarantine, and may refuse, any Temperature-Controlled Goods that are delivered outside 2 °C to 8 °C or that the Logger Data shows have been subject to an Excursion. Acceptance of a Shipment, or the signing of a proof of delivery, does not waive any claim.
+
+7.4 Late Delivery Credit: for each Shipment delivered after the Delivery Window, Brennan shall credit Customer $1,250.00 for each full day (24 hours) of delay, up to a maximum of ten (10) days per Shipment.
+
+7.5 The Late Delivery Credit is not a penalty and is without prejudice to Customer's other rights and remedies under this Agreement, including under Section 10.
+
+8. CUSTODY AND TITLE
+
+8.1 Goods are in Brennan's custody from the time Brennan receives them at the Facility, or loads them at any other pickup point, until their delivery is evidenced by a proof of delivery under Section 7.2.
+
+8.2 Title to the Goods remains with Customer at all times. Brennan waives, to the fullest extent permitted by law, any warehouse lien or carrier's lien on the Goods.
+
+9. CLAIMS
+
+9.1 Customer may inspect the Goods at receipt and at any time while they are in Brennan's custody.
+
+9.2 Brennan shall cooperate with Customer in the investigation of any loss of or damage to Goods, including by providing documents, Logger Data and access to its personnel and equipment.
+
+9.3 Customer shall give Brennan written notice of any claim for loss of or damage to Goods within five (5) Business Days after Customer becomes aware of the Excursion or damage, and shall submit its full claim with supporting documents within sixty (60) days after that notice.
+
+9.4 Brennan shall acknowledge each claim in writing within five (5) Business Days after receiving it, and shall pay the amount of each claim, to the extent not disputed in good faith, within thirty (30) days after receiving Customer's full claim.
+
+10. LIABILITY FOR GOODS
+
+10.1 Brennan is liable for loss of or damage to Goods while they are in its custody, including Goods that cannot be used because of an Excursion. Brennan's liability for such loss or damage shall be measured by the Replacement Cost of the Goods, plus Customer's reasonable expedited replacement freight.
+
+10.2 Customer may dispose of Goods that cannot be used in accordance with its quality procedures and applicable law. Customer is not required to attempt to sell, return or salvage Goods that have been subject to an Excursion.
+
+10.3 Pursuant to 49 U.S.C. § 14101(b), the Parties expressly waive all rights and remedies under Part B of Subtitle IV of Title 49 of the United States Code, including 49 U.S.C. § 14706, to the extent that they differ from the terms of this Agreement, and Brennan's liability for Goods shall be governed by this Agreement. No limitation of liability in any bill of lading, tariff, rules circular or other document of Brennan applies to the Goods.
+
+11. INDEMNIFICATION
+
+11.1 Brennan shall defend, indemnify and hold harmless Customer and its officers, directors and employees from and against all third-party claims, losses, liabilities, damages, fines, costs and expenses (including reasonable attorneys' fees) arising out of (a) Brennan's breach of this Agreement, (b) the negligence or willful misconduct of Brennan or its personnel, or (c) any violation of applicable law by Brennan.
+
+11.2 Customer shall defend, indemnify and hold harmless Brennan and its officers, managers and employees from and against all third-party claims arising out of Customer's negligence or willful misconduct or Customer's violation of applicable law.
+
+11.3 The indemnified Party shall give the indemnifying Party prompt written notice of any claim, reasonable cooperation, and control of the defense, provided that no settlement imposing any obligation on the indemnified Party may be made without its consent.
+
+12. LIMITATION OF LIABILITY
+
+12.1 Except as provided in Section 12.3, neither Party shall be liable to the other for any indirect, incidental, special, consequential or punitive damages, or for lost profits, arising out of or relating to this Agreement. Replacement Cost and expedited replacement freight under Section 10 are direct damages.
+
+12.2 Brennan's aggregate liability arising out of or relating to this Agreement shall not exceed Five Hundred Thousand Dollars ($500,000) in any Contract Year.
+
+12.3 The limitations in Sections 12.1 and 12.2 shall not apply to damages arising from a Party's gross negligence or willful misconduct, or from Brennan's breach of Section 6 (Temperature Control).
+
+13. RECORDS AND AUDIT
+
+13.1 Brennan shall keep complete and accurate records of all Goods received, stored and shipped, of all Shipments (including bills of lading, proofs of delivery and Logger Data) and of all fees charged, and shall retain them for not less than three (3) years after the end of the Term.
+
+13.2 On ten (10) Business Days' notice, Customer or its auditors may inspect those records and the Facility during normal business hours, not more than twice in any Contract Year unless a claim, a regulatory inquiry or a product recall requires otherwise.
+
+13.3 Brennan shall notify Customer promptly of any regulatory inspection of the Facility that relates to the Goods, shall permit Customer to attend where lawful, and shall provide Customer with copies of any inspection observations relating to the Goods.
+
+14. CONFIDENTIALITY
+
+14.1 Each Party shall keep confidential all non-public information of the other Party disclosed in connection with this Agreement, including pricing, customer lists, product information and the terms of this Agreement, and shall use it only to perform this Agreement.
+
+14.2 Section 14.1 does not apply to information that is or becomes public through no fault of the receiving Party, that was lawfully known to it before disclosure, or that it must disclose by law or court order, provided that it gives the other Party prompt notice where lawful.
+
+15. TERM AND TERMINATION
+
+15.1 Either Party may terminate this Agreement by written notice if the other Party commits a material breach of this Agreement that is not cured within thirty (30) days after written notice describing the breach.
+
+15.2 Either Party may terminate this Agreement immediately by written notice if the other Party becomes insolvent, makes a general assignment for the benefit of creditors, or becomes the subject of any voluntary or involuntary bankruptcy proceeding that is not dismissed within sixty (60) days.
+
+15.3 On expiration or termination, Brennan shall continue to store and protect the Goods, and shall release them to Customer or its designee in accordance with Customer's instructions, against payment of undisputed fees. Sections 6.5, 9, 10, 11, 12, 13, 14, 18 and 20 survive expiration or termination.
+
+16. FORCE MAJEURE
+
+16.1 Neither Party is liable for a failure or delay in performance caused by events beyond its reasonable control, including acts of God, flood, fire, epidemic, war, terrorism, civil unrest, government order or a general failure of the electrical grid, provided that it gives prompt notice and uses diligent efforts to resume performance.
+
+16.2 The mechanical failure of any tractor, trailer, refrigeration unit or other equipment of Brennan, and any shortage of Brennan's drivers or other personnel, is not a force majeure event.
+
+17. INDEPENDENT CONTRACTOR; SUBCONTRACTING
+
+17.1 Brennan is an independent contractor. Nothing in this Agreement creates a partnership, joint venture, agency or employment relationship between the Parties.
+
+17.2 Brennan shall not subcontract or broker any of the Services without Customer's prior written consent. Brennan remains responsible for the acts and omissions of its permitted subcontractors as if they were its own.
+
+18. GOVERNING LAW; FORUM; WAIVER OF JURY TRIAL
+
+18.1 This Agreement and all claims arising out of or relating to it are governed by the laws of the State of Delaware, without regard to any conflict of laws rules that would apply the law of another jurisdiction.
+
+18.2 The exclusive forum for any action arising out of or relating to this Agreement is the Superior Court of the State of Delaware, Complex Commercial Litigation Division (CCLD). Each Party irrevocably consents to the personal jurisdiction of that court and waives any objection to venue there.
+
+18.3 EACH PARTY KNOWINGLY, VOLUNTARILY AND IRREVOCABLY WAIVES ANY RIGHT TO A TRIAL BY JURY IN ANY ACTION OR PROCEEDING ARISING OUT OF OR RELATING TO THIS AGREEMENT.
+
+19. NOTICES
+
+19.1 All notices under this Agreement shall be in writing and shall be given by email, with a confirmation copy sent by nationally recognized overnight courier, to the addresses below or to such other address as a Party designates by notice:
+
+To Customer: Hollis Medical Supply, Inc., 4400 Concord Pike, Wilmington, Delaware 19803, Attn: General Counsel; email: plowell@hollismedical.example
+
+To Brennan: Brennan Freight Lines, LLC, 2200 Industrial Highway, Eddystone, Pennsylvania 19022, Attn: Chief Operating Officer; email: ghalvorsen@brennanfreight.example
+
+19.2 A notice is effective when the email is sent, provided that the confirmation copy is dispatched by courier no later than the next Business Day.
+
+20. GENERAL
+
+20.1 Assignment. Neither Party may assign this Agreement without the prior written consent of the other Party, except to a successor to all or substantially all of its business to which this Agreement relates.
+
+20.2 Entire agreement. This Agreement, including its Exhibits, is the entire agreement of the Parties concerning its subject matter and supersedes all prior proposals, negotiations and agreements. The terms of any bill of lading, warehouse receipt, purchase order or invoice do not modify this Agreement.
+
+20.3 Amendment and waiver. This Agreement may be amended only by a written instrument signed by both Parties. No waiver is effective unless in writing, and no failure or delay in exercising any right operates as a waiver of it.
+
+20.4 Severability. If any provision of this Agreement is held invalid or unenforceable, it shall be enforced to the maximum extent permissible and the remaining provisions remain in full force and effect.
+
+20.5 Construction. This Agreement was negotiated by the Parties with the advice of counsel, and no provision shall be construed against either Party as its drafter.
+
+20.6 Counterparts. This Agreement may be executed in counterparts, each of which is an original and all of which together are one instrument. Signatures delivered by PDF or by an electronic signature service are effective as originals.
+
+20.7 No third-party beneficiaries. This Agreement is for the sole benefit of the Parties and their permitted successors and assigns, and nothing in it confers any right or remedy on any other person.
+
+20.8 Further assurances. Each Party shall execute such further documents and take such further actions as the other Party reasonably requests to give full effect to this Agreement.
+
+IN WITNESS WHEREOF, the Parties have caused this Agreement to be executed by their duly authorized representatives as of the Effective Date.
+
+--- page break ---
+
+HOLLIS MEDICAL SUPPLY, INC.
+
+[signature: Marcus Bell]
+
+By: Marcus Bell
+Title: Vice President, Supply Chain
+Date: March 1, 2024
+
+BRENNAN FREIGHT LINES, LLC
+
+[signature: Gregory Halvorsen]
+
+By: Gregory Halvorsen
+Title: Chief Operating Officer
+Date: March 1, 2024
+
+--- page break ---
+
+EXHIBIT A - SERVICE LOCATIONS
+
+| Location | Address | Function |
+| Facility | 2200 Industrial Highway, Eddystone, PA 19022 | Refrigerated storage (2 °C to 8 °C), handling, origin of all Shipments |
+| Newark DC | 300 Pencader Drive, Newark, DE 19702 | Customer distribution center; receiving Monday to Saturday |
+| Customer's customers | Hospitals, pharmacies and clinics within the Territory, as listed in Customer's shipping orders | Delivery points |
+
+EXHIBIT B - RATE SCHEDULE
+
+| Service | Unit | Rate |
+| Refrigerated truckload, Facility to Newark DC (53-ft reefer, up to 26 pallets) | per load | $1,150.00 |
+| Refrigerated delivery to customer locations in Delaware | per pallet | $68.00 |
+| Refrigerated delivery to customer locations in Pennsylvania | per pallet | $62.00 |
+| Refrigerated delivery to customer locations in New Jersey | per pallet | $74.00 |
+| Refrigerated delivery to customer locations in Maryland | per pallet | $79.00 |
+| Detention at customer locations (after 2 hours free time) | per hour | $85.00 |
+
+Rates in this Exhibit B include fuel and all accessorial charges other than detention. Storage and handling fees are set out in Sections 5.1 and 5.2.

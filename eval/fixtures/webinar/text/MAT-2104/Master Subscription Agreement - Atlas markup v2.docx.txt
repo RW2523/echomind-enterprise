@@ -1,0 +1,302 @@
+Master Subscription Agreement - Brightline / Atlas
+(file: Master Subscription Agreement - Atlas markup v2.docx; docx; contract, draft)
+
+MASTER SUBSCRIPTION AGREEMENT
+
+between
+
+BRIGHTLINE SOFTWARE, INC.
+
+and
+
+ATLAS FEDERAL CREDIT UNION
+
+for the Brightline Lending Cloud service
+
+Brightline form dated October 1, 2026 - draft for discussion - subject to contract - Atlas comments November 6, 2026
+
+--- page break ---
+
+This Master Subscription Agreement (this "Agreement") is entered into as of the date on which it has been signed by both parties (the "Effective Date") by and between Brightline Software, Inc., a Delaware corporation with its principal office at 200 Varick Street, 6th Floor, New York, NY 10014 ("Brightline" or "Provider"), and Atlas Federal Credit Union, a federally chartered credit union with its principal office at 75 State Street, Albany, NY 12207 ("Customer"). Brightline and Customer are each referred to as a "party" and together as the "parties".
+
+RECITALS
+
+A. Brightline provides Brightline Lending Cloud, a hosted loan-origination platform offered on a software-as-a-service basis to banks, credit unions and other lenders.
+
+B. Customer wishes to subscribe to Brightline Lending Cloud for use in originating and processing loans to its members, and Brightline is willing to provide it, on the terms of this Agreement.
+
+NOW, THEREFORE, in consideration of the mutual covenants set out below, and for other good and valuable consideration, the receipt and sufficiency of which are acknowledged, the parties agree as follows.
+
+1. DEFINITIONS AND INTERPRETATION
+
+1.1 Definitions. In this Agreement, the following capitalized terms have the following meanings:
+
+"Affiliate" means any entity that directly or indirectly controls, is controlled by or is under common control with a party, where "control" means ownership of more than fifty percent of the voting interests of the entity.
+
+"Applicable Law" means all federal, state and local laws, rules and regulations applicable to a party in connection with this Agreement, including, in the case of Customer, the rules and regulations of the National Credit Union Administration ("NCUA") applicable to federally insured credit unions.
+
+"Authorized User" means an individual employee or contractor of Customer whom Customer has authorized to use the Service and to whom a unique named-user login has been assigned.
+
+"Availability" means the percentage of minutes in a calendar month during which the production environment of the Service is available for access and use by Authorized Users, as measured and calculated in accordance with the SLA Schedule.
+
+"Business Day" means any day other than a Saturday, a Sunday or a day on which banks in New York, New York are authorized or required to close.
+
+"Confidential Information" has the meaning given in Section 7.1.
+
+"Customer Data" means all data, information and content submitted to, stored in or processed by the Service by or on behalf of Customer or its Authorized Users, including loan applications, member information and Personal Information, and all output of the Service derived from that data.
+
+"Documentation" means Brightline's then-current user guides, release notes and technical documentation for the Service that Brightline makes generally available to its customers.
+
+"DPA" means the Data Processing Addendum attached to this Agreement as Schedule 3.
+
+"Initial Term" has the meaning given in Section 3.4.
+
+"Intellectual Property Rights" means all patents, copyrights, trademarks, trade secrets, rights in software and databases, and all other intellectual property rights anywhere in the world, whether registered or unregistered.
+
+"Monthly Fees" means one twelfth (1/12) of the annual Subscription Fees.
+
+"Named Users" has the meaning given in Section 3.1.
+
+"Personal Information" has the meaning given in the DPA.
+
+"Security Incident" means any unauthorized access to, or acquisition, use, disclosure, alteration, loss or destruction of, Customer Data while in the possession, custody or control of Brightline or its subcontractors, and any compromise of the systems used to provide the Service that results in any such event.
+
+"Service" means the Brightline Lending Cloud loan-origination software-as-a-service offering, including the hosted software, application programming interfaces, updates and Documentation, as further described in Schedule 1.
+
+"SLA Schedule" means the service level schedule attached to this Agreement as Schedule 2.
+
+"Subscription Fees" means the annual fees payable by Customer for the Service under Section 3.2.
+
+1.2 Interpretation. In this Agreement: (a) headings are for convenience only and do not affect interpretation; (b) "including" and similar words mean "including without limitation"; (c) references to Sections and Schedules are to the sections of and schedules to this Agreement; (d) words in the singular include the plural and vice versa; and (e) "days" means calendar days unless Business Days are specified.
+
+2. PROVISION OF THE SERVICE
+
+2.1 Structure of Agreement. This Agreement consists of these terms and conditions and the following Schedules, each of which forms part of this Agreement: Schedule 1 (Subscription Details), Schedule 2 (SLA Schedule) and Schedule 3 (Data Processing Addendum). If there is a conflict between these terms and conditions and a Schedule, these terms and conditions prevail, except that the DPA prevails with respect to the processing of Personal Information.
+
+2.2 Provision of the Service. Subject to the terms of this Agreement, Brightline shall make the Service available to Customer and its Authorized Users during the Initial Term in accordance with this Agreement, the Documentation and Applicable Law.
+
+2.3 Updates. Brightline may update and enhance the Service from time to time. Brightline shall not make any update that materially reduces the core functionality of the Service or the level of security protecting Customer Data, and shall give Customer reasonable advance notice of any material change to the Service through the customer portal or by email.
+
+2.4 Subcontractors. Brightline may use subcontractors to perform its obligations under this Agreement, provided that Brightline remains responsible for the acts and omissions of its subcontractors as if they were its own. Subcontractors that process Personal Information are subject to the subprocessor terms of the DPA.
+
+2.5 Implementation Services. Any implementation, configuration, data migration or training services will be described in a statement of work signed by both parties, which will be governed by this Agreement.
+
+3. SUBSCRIPTION, FEES AND PAYMENT
+
+3.1 Subscription. Subject to Customer's payment of the Subscription Fees and compliance with this Agreement, Brightline grants Customer, during the Initial Term, a non-exclusive, non-transferable and non-sublicensable right for up to four hundred (400) named Authorized Users (the "Named Users") to access and use the Service for Customer's internal business purposes, including the origination, underwriting and processing of loans to its members. A Named User login may not be shared, but may be reassigned to a new individual who replaces a departing Authorized User.
+
+3.2 Subscription Fees. In consideration of the subscription in Section 3.1, Customer shall pay Brightline subscription fees of four hundred eighty thousand dollars ($480,000) per year (the "Subscription Fees").
+
+3.3 Invoicing and Payment. Brightline will invoice the Subscription Fees annually in advance, with the first invoice issued on the Effective Date and each subsequent invoice issued on or after each anniversary of the Effective Date. Customer shall pay each invoice within thirty (30) days after the date of the invoice (net 30). All amounts are payable in U.S. dollars by ACH or wire transfer to the account designated in the invoice.
+
+3.4 Initial Term. The subscription begins on the Effective Date and continues for an initial term of three (3) years from the Effective Date (the "Initial Term"), unless this Agreement is terminated earlier in accordance with Section 10.
+
+3.5 Disputed Amounts. If Customer disputes any invoiced amount in good faith, Customer shall notify Brightline in writing before the due date, describing the dispute in reasonable detail, and shall pay the undisputed portion when due. The parties shall work in good faith to resolve the dispute promptly.
+
+3.6 Taxes. The Subscription Fees are exclusive of all sales, use, value-added and similar taxes. Customer is responsible for any such taxes properly assessed on the Service, other than taxes based on Brightline's net income, property or employees. If Customer is exempt from any tax, it shall provide Brightline with a valid exemption certificate, and Brightline shall not invoice the exempt tax.
+
+3.7 Non-Refundable Fees. Except as expressly provided in this Agreement, Customer's payment obligations are non-cancellable and the Subscription Fees paid are non-refundable.
+
+4. CUSTOMER RESPONSIBILITIES
+
+4.1 Authorized Users. Customer is responsible for its Authorized Users' compliance with this Agreement, for maintaining the confidentiality of their login credentials, and for promptly notifying Brightline of any unauthorized use of the Service of which it becomes aware.
+
+4.2 Restrictions. Customer shall not, and shall not permit any person to:
+
+(a) sell, resell, sublicense, rent or lease the Service, or make it available to any person other than Authorized Users;
+
+(b) copy, modify, translate or create derivative works of the Service or the Documentation;
+
+(c) reverse engineer, decompile or disassemble the Service, except to the extent Applicable Law expressly permits despite this restriction;
+
+(d) use the Service to store or transmit malicious code, or interfere with or disrupt the integrity or performance of the Service; or
+
+(e) access the Service in order to build a competing product or service.
+
+4.3 Customer Responsibilities. Customer is responsible for the accuracy and legality of Customer Data, for its own network and connectivity to the Service, and for its lending, underwriting and credit decisions. The Service is a tool to assist Customer, and Customer remains solely responsible for its compliance with the lending, fair-lending and consumer-protection laws that apply to it.
+
+4.4 Suspension. Brightline may suspend access to the Service by any Authorized User, or to the extent strictly necessary by Customer, if Brightline reasonably determines that the suspension is necessary to prevent imminent harm to the Service, to other customers or to Customer Data. Brightline shall give Customer as much notice of the suspension as is practicable in the circumstances, limit the suspension to the minimum extent and duration necessary, and restore access promptly once the cause has been resolved.
+
+5. SERVICE LEVELS
+
+5.1 Availability Commitment [Word comment: Atlas's board requires 99.95% for member-facing systems.]. Brightline shall make the Service available in accordance with the SLA Schedule. Brightline's monthly Availability commitment is ninety-nine point nine five percent (99.95%) in each calendar month, measured and calculated as set out in the SLA Schedule.
+
+5.2 Service Credits. If Availability in any calendar month is less than the commitment in Section 5.1, Brightline shall provide Customer with a service credit, calculated as a percentage of the Monthly Fees for that month, in accordance with the SLA Schedule. Service credits will be applied against the next invoice for Subscription Fees.
+
+5.3 Other Remedies. The service credits under Section 5.2 are without prejudice to Customer's other rights and remedies for any failure by Brightline to meet the Availability commitment in Section 5.1.
+
+5.4 Support. Brightline shall provide technical support for the Service through its customer portal, by email and by telephone from 8:00 a.m. to 8:00 p.m. Eastern Time on Business Days, and on a twenty-four hours a day, seven days a week basis for any issue that renders the Service unavailable or unusable, in accordance with Brightline's support policy in the Documentation.
+
+5.5 Reporting. Brightline shall make a report of the Availability achieved in each calendar month available to Customer through the customer portal within ten (10) Business Days after the end of that month.
+
+6. CUSTOMER DATA
+
+6.1 Ownership. As between the parties, Customer owns all right, title and interest in and to Customer Data. Nothing in this Agreement transfers to Brightline any right in Customer Data except the limited license in Section 6.2.
+
+6.2 License to Brightline. Customer grants Brightline a non-exclusive, royalty-free license during the Initial Term to host, copy, process, transmit and display Customer Data solely to the extent necessary to provide the Service and support to Customer, to prevent or address technical or security problems, and as required by Applicable Law.
+
+6.3 Use Restrictions. Brightline shall not sell Customer Data, use Customer Data for marketing purposes, or use or disclose Customer Data for any purpose other than performing its obligations under this Agreement.
+
+6.4 Privacy. Brightline shall process Personal Information contained in Customer Data in accordance with the DPA. Brightline acknowledges that Customer Data may include nonpublic personal information of Customer's members subject to the Gramm-Leach-Bliley Act, and shall comply with the obligations that Applicable Law imposes on a service provider that receives such information.
+
+6.5 Export and Deletion. On Customer's written request made before the effective date of any termination or expiration of this Agreement, Brightline shall make Customer Data available to Customer for export in a standard, machine-readable format. Following termination or expiration, Brightline shall delete Customer Data in accordance with the DPA.
+
+7. CONFIDENTIALITY
+
+7.1 Definition. "Confidential Information" means all non-public information disclosed by or on behalf of one party (the "Discloser") to the other party (the "Recipient") in connection with this Agreement that is marked as confidential or that a reasonable person would understand to be confidential given the nature of the information and the circumstances of disclosure. Customer Data is Customer's Confidential Information. The Service, the Documentation, Brightline's security reports and the terms of this Agreement are Brightline's Confidential Information.
+
+7.2 Obligations. The Recipient shall: (a) use the Discloser's Confidential Information only to exercise its rights and perform its obligations under this Agreement; (b) protect it using at least the degree of care it uses to protect its own confidential information of a similar nature, and not less than reasonable care; and (c) disclose it only to its and its Affiliates' employees, contractors and professional advisers who need to know it for the purposes of this Agreement and who are bound by obligations of confidentiality no less protective than this Section 7.
+
+7.3 Exclusions. Confidential Information does not include information that the Recipient can show: (a) is or becomes publicly available through no fault of the Recipient; (b) was lawfully known to the Recipient before disclosure without restriction; (c) is lawfully received from a third party without restriction; or (d) is independently developed by the Recipient without use of the Discloser's Confidential Information. The exclusions in this Section 7.3 do not apply to Personal Information.
+
+7.4 Compelled Disclosure. The Recipient may disclose Confidential Information to the extent required by law, regulation or legal process, provided that, where legally permitted, it gives the Discloser prompt notice and reasonable assistance so that the Discloser may seek a protective order. Customer may disclose this Agreement and information about the Service to the NCUA and to any other regulatory authority having supervisory jurisdiction over Customer without notice to Brightline.
+
+7.5 Return or Destruction. On termination or expiration of this Agreement, or on the Discloser's written request, the Recipient shall return or destroy the Discloser's Confidential Information, except that Customer Data will be handled in accordance with Section 6.5 and the DPA.
+
+7.6 Duration. The obligations in this Section 7 continue during the Initial Term and for five (5) years after termination or expiration, except that they continue for as long as the information remains a trade secret under Applicable Law, and, for Customer Data, for as long as Brightline or its subcontractors hold it.
+
+8. SECURITY
+
+8.1 Information Security Program. Brightline shall maintain a written information security program containing administrative, technical and physical safeguards designed to protect the security, confidentiality, integrity and availability of Customer Data and to protect against anticipated threats to it, consistent with recognized industry standards for providers of hosted services to financial institutions.
+
+8.2 SOC 2 Report. Brightline shall obtain a SOC 2 Type II report on the Service annually from an independent certified public accounting firm, and shall provide Customer with a copy of its most recent SOC 2 Type II report each year and otherwise on Customer's reasonable written request. Each such report is Brightline's Confidential Information.
+
+8.3 Security Incident Notification [Word comment: Our incident response plan needs notice within 24 hours, and the clock must run from discovery, not from when Brightline has finished confirming.]. Brightline shall notify Customer of a Security Incident without undue delay and in any event within twenty-four (24) hours after Brightline discovers the Security Incident. The notice will describe, to the extent then known, the nature of the Security Incident, the categories of Customer Data affected, and the steps Brightline has taken or proposes to take in response, and Brightline shall supplement the notice as further information becomes available.
+
+8.4 Incident Response. Following any Security Incident, Brightline shall promptly investigate, contain and remediate the Security Incident, provide Customer with the information Customer reasonably requests to meet its own notification and reporting obligations to members and regulators, and, to the extent the Security Incident resulted from Brightline's breach of this Section 8, reimburse Customer's reasonable costs of legally required notifications to affected individuals, subject to Section 11.
+
+8.5 Regulatory Examination. Brightline acknowledges that Customer is a federally insured credit union subject to supervision and examination by the NCUA. Brightline shall provide reasonable cooperation with any examination of Customer, including by making information about the Service and Brightline's controls available to Customer's examiners, to the extent required by Applicable Law.
+
+8.6 Security Audit. Once in each contract year, Customer or an independent auditor appointed by Customer may, on thirty (30) days' prior written notice to Brightline, conduct an on-site audit of the security controls, policies and procedures that Brightline uses to provide the Service and to protect Customer Data. Brightline shall give Customer and its auditor reasonable access to the relevant facilities, personnel and records during normal business hours, and each party shall bear its own costs of the audit. [Word comment: Needed for our annual vendor due diligence - R. Patel to confirm the scope.]
+
+9. INTELLECTUAL PROPERTY
+
+9.1 Brightline Ownership. Brightline and its licensors own all right, title and interest, including all Intellectual Property Rights, in and to the Service, the Documentation and all improvements, enhancements and derivative works of them. Except for the rights expressly granted in this Agreement, no right or license is granted to Customer, by implication, estoppel or otherwise.
+
+9.2 Feedback. If Customer provides suggestions or feedback about the Service, Brightline may use them without restriction or obligation, provided that Brightline does not identify Customer as their source without Customer's consent.
+
+9.3 Usage Data. Brightline may collect technical and statistical data about the operation and use of the Service, and may use that data to operate, secure and improve the Service, provided that the data is aggregated and de-identified so that it does not identify Customer, any Authorized User or any of Customer's members.
+
+9.4 Publicity. Neither party may use the other party's name, logo or trademarks in any publicity, press release or customer list without the other party's prior written consent.
+
+10. TERM AND TERMINATION
+
+10.1 Term. This Agreement commences on the Effective Date and, unless terminated earlier in accordance with this Section 10, continues until the end of the Initial Term. Any renewal of the subscription requires a written agreement signed by both parties.
+
+10.2 Termination for Material Breach. Either party may terminate this Agreement by written notice to the other party if the other party materially breaches this Agreement and fails to cure the breach within thirty (30) days after receiving written notice describing the breach in reasonable detail.
+
+10.3 Termination for Insolvency. Either party may terminate this Agreement immediately by written notice if the other party becomes the subject of a petition in bankruptcy or any other proceeding relating to insolvency, receivership, conservatorship or liquidation that is not dismissed within sixty (60) days, or makes an assignment for the benefit of creditors.
+
+10.4 Termination for Convenience by Customer. At any time after the first twelve (12) months following the Effective Date, Customer may terminate this Agreement for convenience on ninety (90) days' prior written notice to Brightline. If Customer terminates this Agreement under this Section 10.4, Brightline shall refund to Customer, within thirty (30) days after the effective date of termination, the pro-rata portion of any prepaid Subscription Fees attributable to the period after the effective date of termination. [Word comment: Atlas requires an exit right for all critical vendors after the first year.]
+
+10.5 Effect of Termination. On any termination or expiration of this Agreement: (a) Customer's right to access and use the Service ends; (b) Customer shall pay any Subscription Fees accrued and unpaid as of the effective date of termination; and (c) if Customer terminates this Agreement under Section 10.2 for Brightline's uncured material breach, Brightline shall refund to Customer the pro-rata portion of any prepaid Subscription Fees attributable to the period after the effective date of termination.
+
+10.6 Survival. Sections 1, 6.5, 7, 9, 10.5, 10.6, 11, 12.4, 13, 14 and 15, and any accrued payment obligations, survive any termination or expiration of this Agreement.
+
+11. LIMITATION OF LIABILITY
+
+11.1 Exclusion of Indirect Damages. EXCEPT FOR A PARTY'S INDEMNIFICATION OBLIGATIONS UNDER SECTION 13 OR ITS GROSS NEGLIGENCE, FRAUD OR WILLFUL MISCONDUCT, IN NO EVENT WILL EITHER PARTY BE LIABLE TO THE OTHER PARTY FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, BUSINESS OR GOODWILL, ARISING OUT OF OR RELATING TO THIS AGREEMENT, HOWEVER CAUSED AND UNDER ANY THEORY OF LIABILITY, EVEN IF THE PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+11.2 General Cap. EXCEPT AS PROVIDED IN SECTIONS 11.3 AND 11.4, EACH PARTY'S TOTAL AGGREGATE LIABILITY ARISING OUT OF OR RELATING TO THIS AGREEMENT WILL NOT EXCEED THE SUBSCRIPTION FEES PAID OR PAYABLE BY CUSTOMER UNDER THIS AGREEMENT IN THE TWELVE (12) MONTHS BEFORE THE EVENT GIVING RISE TO THE CLAIM.
+
+11.3 Data Breach Super-Cap [Word comment: Required by NCUA vendor guidance per our CISO.]. NOTWITHSTANDING SECTION 11.2, BRIGHTLINE'S TOTAL AGGREGATE LIABILITY FOR ALL CLAIMS ARISING OUT OF A BREACH OF SECTION 8 (SECURITY) OR OF SECTION 7 (CONFIDENTIALITY) INVOLVING CUSTOMER DATA WILL NOT EXCEED FIVE TIMES (5X) THE ANNUAL SUBSCRIPTION FEES, THAT IS, TWO MILLION FOUR HUNDRED THOUSAND DOLLARS ($2,400,000). THIS SECTION 11.3 APPLIES TO SUCH CLAIMS IN PLACE OF SECTION 11.2.
+
+11.4 Exceptions. The limitations in Sections 11.2 and 11.3 do not apply to:
+
+(a) Customer's obligation to pay the Subscription Fees and other amounts due under this Agreement;
+
+(b) a party's obligations under Section 13 (Indemnification); or
+
+(c) a party's gross negligence, fraud or willful misconduct.
+
+11.5 Allocation of Risk. The parties acknowledge that the Subscription Fees reflect the allocation of risk set out in this Section 11, and that neither party would have entered into this Agreement without these limitations.
+
+12. WARRANTIES AND DISCLAIMERS
+
+12.1 Mutual Warranties. Each party represents and warrants that it is duly organized and in good standing, that it has full power and authority to enter into and perform this Agreement, and that its execution and performance of this Agreement do not violate any agreement by which it is bound.
+
+12.2 Service Warranties. Brightline warrants that: (a) the Service will perform materially in accordance with the Documentation; (b) Brightline will not materially decrease the overall security of the Service during the Initial Term; and (c) Brightline will use industry-standard measures designed to prevent the introduction of viruses and other malicious code into the Service.
+
+12.3 Warranty Remedy. If the Service does not conform to the warranty in Section 12.2(a), Customer shall notify Brightline in writing and Brightline shall use commercially reasonable efforts to correct the non-conformity. If Brightline does not correct it within thirty (30) days after receiving Customer's notice, Customer may terminate this Agreement under Section 10.2.
+
+12.4 Disclaimer. EXCEPT AS EXPRESSLY PROVIDED IN THIS AGREEMENT, THE SERVICE IS PROVIDED "AS IS", AND BRIGHTLINE DISCLAIMS ALL OTHER WARRANTIES, EXPRESS, IMPLIED OR STATUTORY, INCLUDING ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. BRIGHTLINE DOES NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED OR ERROR-FREE.
+
+13. INDEMNIFICATION
+
+13.1 Indemnification by Brightline. Brightline shall defend Customer and its officers, directors and employees against any claim, suit or proceeding brought by a third party alleging that the Service, as provided by Brightline and used in accordance with this Agreement, infringes or misappropriates that third party's United States patent, copyright, trademark or trade secret, and shall pay any damages, costs and attorneys' fees finally awarded against Customer, or agreed by Brightline in settlement, in respect of that claim.
+
+13.2 Exclusions. Brightline has no obligation under Section 13.1 to the extent a claim arises from: (a) any modification of the Service not made by or for Brightline; (b) the combination of the Service with any product, data or service not supplied by Brightline, where the claim would not have arisen without the combination; or (c) Customer Data or Customer's use of the Service in breach of this Agreement.
+
+13.3 Mitigation. If the Service is, or in Brightline's reasonable opinion is likely to be, the subject of an infringement claim, Brightline may at its option and expense: (a) procure for Customer the right to continue using the Service; (b) modify or replace the Service so that it is non-infringing without material loss of functionality; or (c) if neither (a) nor (b) is commercially reasonable, terminate this Agreement and refund the pro-rata portion of any prepaid Subscription Fees attributable to the period after termination.
+
+13.4 Indemnification by Customer. Customer shall defend Brightline and its officers, directors and employees against any claim, suit or proceeding brought by a third party arising from Customer Data or from Customer's use of the Service in violation of Applicable Law, and shall pay any damages, costs and attorneys' fees finally awarded against Brightline, or agreed by Customer in settlement, in respect of that claim.
+
+13.5 Procedure. The indemnified party shall: (a) give the indemnifying party prompt written notice of the claim, provided that a delay in notice relieves the indemnifying party of its obligations only to the extent it is prejudiced by the delay; (b) give the indemnifying party sole control of the defense and settlement of the claim, provided that no settlement may impose any obligation or admission on the indemnified party without its prior written consent; and (c) provide reasonable cooperation at the indemnifying party's expense.
+
+13.6 Exclusive Remedy. This Section 13 states Brightline's entire liability, and Customer's exclusive remedy, for any third-party claim that the Service infringes or misappropriates any Intellectual Property Rights.
+
+14. GOVERNING LAW AND JURISDICTION
+
+14.1 Governing Law. This Agreement, and any dispute arising out of or relating to it, is governed by and will be construed in accordance with the laws of the State of New York, without regard to any conflict-of-laws principle that would require the application of the laws of another jurisdiction.
+
+14.2 Jurisdiction. Each party irrevocably submits to the exclusive jurisdiction of the state and federal courts located in New York County, New York, for any action arising out of or relating to this Agreement, and waives any objection to venue in those courts, including any objection based on inconvenient forum.
+
+14.3 Waiver of Jury Trial. EACH PARTY KNOWINGLY AND VOLUNTARILY WAIVES ANY RIGHT IT MAY HAVE TO A TRIAL BY JURY IN ANY ACTION ARISING OUT OF OR RELATING TO THIS AGREEMENT.
+
+14.4 Equitable Relief. Nothing in this Section 14 prevents a party from seeking injunctive or other equitable relief in any court of competent jurisdiction to prevent the actual or threatened unauthorized use or disclosure of its Confidential Information or infringement of its Intellectual Property Rights.
+
+15. GENERAL
+
+15.1 Notices. Notices under this Agreement must be in writing and delivered by hand, by nationally recognized overnight courier or by email with confirmation of receipt, to the addresses set out at the beginning of this Agreement (or such other address as a party designates by notice). Notices to Brightline must be marked for the attention of the General Counsel, and notices to Customer for the attention of the Director, Vendor Management.
+
+15.2 Assignment. Neither party may assign this Agreement without the other party's prior written consent, which may not be unreasonably withheld, except that either party may assign this Agreement without consent to a successor in connection with a merger, acquisition or sale of all or substantially all of its assets or business to which this Agreement relates, on written notice to the other party.
+
+15.3 Force Majeure. Neither party is liable for any failure or delay in performing its obligations (other than payment obligations) to the extent caused by events beyond its reasonable control, including natural disasters, acts of government, war, terrorism, labor disputes not involving its own employees, and failures of public utilities or the internet, provided that the affected party uses reasonable efforts to resume performance and Brightline continues to maintain its business continuity and disaster recovery plans.
+
+15.4 Independent Contractors. The parties are independent contractors. Nothing in this Agreement creates a partnership, joint venture, agency or fiduciary relationship between them.
+
+15.5 No Third-Party Beneficiaries. This Agreement is for the sole benefit of the parties and their permitted successors and assigns, and nothing in it confers any right on any other person.
+
+15.6 Waiver and Severability. No failure or delay in exercising any right operates as a waiver of it. If any provision of this Agreement is held invalid or unenforceable, it will be enforced to the maximum extent permissible and the remaining provisions will remain in full force and effect.
+
+15.7 Entire Agreement; Amendment. This Agreement, including its Schedules, is the entire agreement between the parties regarding its subject matter and supersedes all prior proposals, negotiations and agreements, written or oral. No purchase order or other Customer form terms will apply. This Agreement may be amended only by a written instrument signed by authorized representatives of both parties.
+
+15.8 Counterparts; Electronic Signatures. This Agreement may be executed in counterparts, each of which is an original and all of which together are one instrument. Signatures delivered by electronic signature service or in PDF are binding as originals.
+
+IN WITNESS WHEREOF, the parties have caused this Agreement to be executed by their duly authorized representatives.
+
+BRIGHTLINE SOFTWARE, INC.
+
+By: ______________________________
+Name:
+Title:
+Date:
+
+ATLAS FEDERAL CREDIT UNION
+
+By: ______________________________
+Name:
+Title:
+Date:
+
+--- page break ---
+
+SCHEDULE 1 - SUBSCRIPTION DETAILS
+
+| Item | Detail |
+| Service | Brightline Lending Cloud (loan-origination software-as-a-service) |
+| Named Users | Up to 400 |
+| Subscription Fees | $480,000 per year |
+| Monthly Fees (for the SLA Schedule) | $40,000 (one twelfth of the annual Subscription Fees) |
+| Invoicing and payment | Annually in advance; payment net 30 days from the invoice date |
+| Initial Term | Three (3) years from the Effective Date |
+| Service levels | Schedule 2 (SLA Schedule) |
+| Data processing | Schedule 3 (Data Processing Addendum) |
+
+SCHEDULE 2 - SLA SCHEDULE
+
+[Attached as a separate document: SLA Schedule (Schedule 2) - Availability and service credits.]
+
+SCHEDULE 3 - DATA PROCESSING ADDENDUM
+
+[Attached as a separate document: Data Processing Addendum - Brightline form.]

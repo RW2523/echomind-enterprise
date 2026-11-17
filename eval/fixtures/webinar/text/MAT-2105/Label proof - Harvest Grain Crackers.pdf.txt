@@ -1,0 +1,44 @@
+Current label proof - Harvest Grain Crackers, Rosemary & Sea Salt
+(file: Label proof - Harvest Grain Crackers.pdf; scan; evidence, final)
+
+LABEL PROOF - SIDE PANEL
+
+| Field | Entry |
+| Product | Harvest Grain Crackers - Rosemary & Sea Salt |
+| Package | 7 oz (198 g) carton |
+| UPC | 0 41620 77310 4 |
+| Panel | Ingredient and allergen panel (side) |
+| Artwork status | CURRENT - IN USE |
+| Owner | Meadowgate Foods, Inc., Wooster, OH |
+
+Panel text as printed
+
+HARVEST GRAIN CRACKERS
+ROSEMARY & SEA SALT
+Baked whole grain crackers
+
+INGREDIENTS: Enriched wheat flour [wheat flour, niacin, reduced iron, thiamine mononitrate, riboflavin, folic acid], whole grain oats, sunflower oil, cane sugar, sea salt, rosemary seasoning [salt, rosemary, garlic powder, natural flavor], soy lecithin, baking soda.
+
+CONTAINS: WHEAT, SOY.
+
+[handwritten: add SESAME — HB 11/12]
+
+NET WT 7 OZ (198 g)
+
+Distributed by Meadowgate Foods, Inc.
+Wooster, OH 44691
+
+Questions or comments? Call (330) 555-0147
+www.meadowgatefoods.example
+
+UPC 0 41620 77310 4
+
+Proof check
+
+| Check | Entry |
+| Allergen statement on panel | CONTAINS: WHEAT, SOY. |
+| Net weight on panel | NET WT 7 OZ (198 g) |
+| Distributor line | Distributed by Meadowgate Foods, Inc., Wooster, OH 44691 |
+| Colors | 4 color process + 1 spot |
+
+This proof shows the copy and layout of the side panel only. Check all copy carefully. Colors on screen and on this print are not exact.

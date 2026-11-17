@@ -840,6 +840,9 @@ def main() -> int:
     args = ap.parse_args()
     base = Path(args.base)
     src = base / "src"
+    dataset = json.loads((base / "dataset.json").read_text()) if (base / "dataset.json").exists() else {}
+    global MARK
+    MARK = dataset.get("mark", MARK)          # the footer every page carries (the webinar set: its own wording)
     wanted = {m for m in args.only.split(",") if m}
     manifest_path = base / "manifest.json"
     old = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"cases": []}
@@ -881,8 +884,9 @@ def main() -> int:
         cases[mdir.name] = {**{k: v for k, v in info.items() if k != "paper"}, "number": mdir.name, "documents": entries}
     if args.list:
         return 0
-    manifest = {"note": "FICTIONAL synthetic legal dataset (2026-11-12): every party, person, address, figure and event is "
-                        "invented. Rendered by scripts/law/synthetic/render.py from src/; answer keys in answer_key_*.jsonl.",
+    manifest = {"note": dataset.get("note", "FICTIONAL synthetic legal dataset (2026-11-12): every party, person, address, figure "
+                        "and event is invented. Rendered by scripts/law/synthetic/render.py from src/; answer keys in answer_key_*.jsonl."),
+                **({"team": dataset["team"]} if dataset.get("team") else {}),
                 "cases": [cases[k] for k in sorted(cases)]}
     manifest_path.write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n")
     print(f"manifest: {sum(len(c['documents']) for c in manifest['cases'])} documents in {len(manifest['cases'])} matters; "

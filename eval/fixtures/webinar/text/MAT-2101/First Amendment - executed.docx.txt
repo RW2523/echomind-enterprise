@@ -1,0 +1,84 @@
+First Amendment to the Warehousing and Distribution Services Agreement (January 15, 2026)
+(file: First Amendment - executed.docx; docx; contract, executed)
+
+FIRST AMENDMENT TO TEMPERATURE-CONTROLLED WAREHOUSING AND DISTRIBUTION SERVICES AGREEMENT
+
+This First Amendment to Temperature-Controlled Warehousing and Distribution Services Agreement (this "Amendment") is entered into as of January 15, 2026 (the "Amendment Effective Date") by and between HOLLIS MEDICAL SUPPLY, INC., a Delaware corporation with its principal place of business at 4400 Concord Pike, Wilmington, Delaware 19803 ("Customer"), and BRENNAN FREIGHT LINES, LLC, a Pennsylvania limited liability company with its principal place of business at 2200 Industrial Highway, Eddystone, Pennsylvania 19022 ("Brennan"). Customer and Brennan are each a "Party" and together the "Parties".
+
+RECITALS
+
+A. Customer and Brennan are parties to that certain Temperature-Controlled Warehousing and Distribution Services Agreement dated as of March 1, 2024 (the "Agreement"), under which Brennan stores Customer's Goods at the Facility and transports them to the Newark DC and to Customer's customers within the Territory.
+
+B. Customer has increased the volume and value of the Temperature-Controlled Goods that it tenders to Brennan, and the Parties wish to increase the limit on Brennan's aggregate liability under the Agreement accordingly.
+
+C. The Parties also wish to provide for an expedited delivery service for Priority Shipments and to adjust the storage fee, in each case on the terms of this Amendment.
+
+D. Section 20.3 of the Agreement provides that the Agreement may be amended only by a written instrument signed by both Parties.
+
+NOW, THEREFORE, in consideration of the mutual covenants in this Amendment and for other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the Parties agree as follows:
+
+1. DEFINITIONS AND INTERPRETATION
+
+1.1 Capitalized terms used but not defined in this Amendment have the meanings given to them in the Agreement.
+
+1.2 Section 1.1 of the Agreement is amended by inserting the following definition in the appropriate alphabetical order: "Priority Shipment" means a Shipment that Customer designates as a "Priority Shipment" in its shipping order at least four (4) hours before the Pickup Time.
+
+2. LIMITATION OF LIABILITY
+
+2.1 Section 12.2 of the Agreement is deleted in its entirety and replaced with the following: "Brennan's aggregate liability arising out of or relating to this Agreement shall not exceed One Million Five Hundred Thousand Dollars ($1,500,000) in any Contract Year."
+
+2.2 Section 12.2 of the Agreement, as amended by Section 2.1 of this Amendment, applies to all claims arising on or after the Amendment Effective Date.
+
+2.3 For the avoidance of doubt, Sections 12.1 and 12.3 of the Agreement are not amended and continue in full force and effect, and the limitation in Section 12.2, as amended, does not apply to damages arising from a Party's gross negligence or willful misconduct or from Brennan's breach of Section 6 of the Agreement.
+
+3. DELIVERY OF PRIORITY SHIPMENTS
+
+3.1 Section 7.1 of the Agreement is amended by adding the following sentence at the end of that Section: "Priority Shipments shall be delivered within twelve (12) hours after their Pickup Time."
+
+3.2 Except as provided in Section 3.1 of this Amendment, the Delivery Window for all other Shipments within the Territory remains twenty-four (24) hours after their Pickup Time, and Section 7.4 of the Agreement applies to each Priority Shipment delivered after its Delivery Window.
+
+3.3 Brennan may decline to accept a Priority Shipment designation only if it notifies Customer within one (1) hour after receiving the shipping order that it cannot meet the twelve (12) hour Delivery Window, in which case the Shipment shall be treated as a standard Shipment unless Customer cancels it.
+
+4. STORAGE FEE
+
+4.1 Section 5.1 of the Agreement is amended by deleting "$42.00 per pallet per month" and replacing it with "$46.00 per pallet per month", with effect from February 1, 2026.
+
+4.2 Storage for any period before February 1, 2026 shall be invoiced at the rate of $42.00 per pallet per month. No other fee or rate in Section 5 of the Agreement or in Exhibit B is changed by this Amendment.
+
+5. REPRESENTATIONS
+
+5.1 Each Party represents and warrants to the other that:
+
+(a) it has full power and authority to enter into and perform this Amendment;
+
+(b) the execution and delivery of this Amendment have been duly authorized by all necessary corporate or limited liability company action; and
+
+(c) this Amendment constitutes its legal, valid and binding obligation, enforceable against it in accordance with its terms.
+
+6. MISCELLANEOUS
+
+6.1 Except as expressly amended by this Amendment, the Agreement remains unchanged and in full force and effect, and is hereby ratified and confirmed.
+
+6.2 The Agreement and this Amendment shall be read and construed together as one instrument. On and after the Amendment Effective Date, each reference in the Agreement to "this Agreement", "hereunder", "hereof" or words of like import means the Agreement as amended by this Amendment.
+
+6.3 If there is any conflict between the terms of this Amendment and the terms of the Agreement, the terms of this Amendment control.
+
+6.4 Sections 18 (Governing Law; Forum; Waiver of Jury Trial) and 19 (Notices) of the Agreement apply to this Amendment as if set out in full in it.
+
+6.5 This Amendment may be executed in counterparts, each of which is an original and all of which together are one instrument. Signatures delivered by PDF or by an electronic signature service complying with the Delaware Uniform Electronic Transactions Act are effective as originals.
+
+IN WITNESS WHEREOF, the Parties have caused this Amendment to be executed by their duly authorized representatives as of the Amendment Effective Date.
+
+HOLLIS MEDICAL SUPPLY, INC.
+
+By: [signature: Marcus Bell]
+Name: Marcus Bell
+Title: Vice President, Supply Chain
+Date: January 15, 2026
+
+BRENNAN FREIGHT LINES, LLC
+
+By: [signature: Gregory Halvorsen]
+Name: Gregory Halvorsen
+Title: Chief Operating Officer
+Date: January 15, 2026

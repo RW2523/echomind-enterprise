@@ -1,0 +1,51 @@
+---
+file: Email - Brightline instructions - 2026-11-09.pdf
+title: Email from Brightline's General Counsel with negotiating instructions (November 9, 2026)
+kind: correspondence
+status: received
+render: pdf
+style: email
+font: sans
+header: PRIVILEGED & CONFIDENTIAL - ATTORNEY-CLIENT COMMUNICATION
+---
+**Kenji Arai**
+
+From: Nathan Briggs <nbriggs@brightline.example>
+Sent: Monday, November 9, 2026 9:37 AM
+To: Alice Moreno <amoreno@calderwynne.example>; Kenji Arai <karai@calderwynne.example>
+Subject: Atlas MSA - our instructions on the Atlas markup
+Importance: High
+
+PRIVILEGED & CONFIDENTIAL - ATTORNEY-CLIENT COMMUNICATION
+
+Alice, Kenji,
+
+Thanks for picking this up. Atlas's markup of our MSA came in on Friday afternoon with a cover email from Monica Sheridan, their Director of Vendor Management, together with Atlas's own Information Security Addendum. Erin Castillo forwarded all three to you this morning.
+
+Erin read Monica's email as saying that Atlas accepted our liability cap as drafted and only moved the uptime. Before we respond, please check that against the redline itself and tell me exactly what Atlas changed.
+
+Our positions, so you have them in one place:
+
+1. Uptime. Brightline can accept 99.95% only if service credits are capped at 15% of the Monthly Fees in any month (our SLA Schedule currently caps them at 25%).
+
+2. Data-breach super-cap. Our form offers 2x the annual Subscription Fees ($960,000). We will not accept a super-cap above 3x ($1,440,000) under any circumstances. Please do not open at 3x - I want room to move.
+
+3. Termination for convenience. Acceptable only after 24 months, on 180 days' notice, and with no refund of the current year's fees.
+
+4. Security incident notice. We can live with 48 hours, which matches Atlas's own Information Security Addendum, but not 24. Our incident response team cannot commit to a 24-hour clock.
+
+5. I have no fixed view yet on Atlas deleting the sole-remedy language in Section 5 or on the new on-site audit right. Please give me your recommendation on both once you have spoken to our security team.
+
+Timing matters here. We want signature by December 18, 2026 so that the deal closes in this quarter. Please send me a draft response markup and a short issues list as soon as you can, and let me know if you need anything from us.
+
+I have not copied Erin on this email. Please keep our limits within the legal team and do not share them with Atlas or with the deal team.
+
+Thanks,
+
+Nathan
+
+Nathan Briggs
+General Counsel
+Brightline Software, Inc.
+200 Varick Street, 6th Floor, New York, NY 10014
+(212) 555-0142 | nbriggs@brightline.example

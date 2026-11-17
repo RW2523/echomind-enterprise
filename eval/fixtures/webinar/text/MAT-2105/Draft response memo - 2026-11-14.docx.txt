@@ -1,0 +1,113 @@
+Draft advice memo - response to the FDA warning letter (November 14, 2026)
+(file: Draft response memo - 2026-11-14.docx; docx; memo, draft)
+
+MEMORANDUM
+
+DRAFT — PRIVILEGED & CONFIDENTIAL — ATTORNEY-CLIENT COMMUNICATION
+
+To: Celeste Moreau, General Counsel, Meadowgate Foods, Inc.
+From: Kenji Arai, Associate, Calder & Wynne LLP
+cc: Alice Moreno, Partner; Theo Lindgren, Knowledge Lawyer
+Date: November 14, 2026
+File: CW-2105
+Re: FDA warning letter CMS # 712044 (November 6, 2026) - recommended response, recall and next steps
+
+Draft for internal review. Not yet reviewed by Alice Moreno.
+
+1. Summary
+
+1.1 FDA's warning letter of November 6, 2026, received by Meadowgate on November 10, 2026, follows the inspection of the Wooster plant on September 14–18, 2026. It makes two charges. First, Harvest Grain Crackers - Rosemary & Sea Salt, 7 oz, are misbranded under section 403(w) of the Federal Food, Drug, and Cosmetic Act, because FDA found sesame in samples from lots HG2608B (14 ppm) and HG2609A (38 ppm) and the label declares only "Contains: Wheat, Soy." Second, the plant's food allergen preventive controls did not prevent allergen cross-contact: Line 3 is shared with a sesame product and the changeover cleaning was not verified. FDA treats these as significant violations of the preventive-controls requirements.
+
+1.2 The letter asks for a written response "within fifteen (15) working days of receipt". We are working to December 1, 2026 (section 3).
+
+1.3 Hannah Brooks's QA memo of November 12, 2026 identifies the root cause: the validated changeover clean between Everything Seed Crisps and Harvest Grain Crackers (SSOP-L3-07) was skipped on July 22, August 5 and August 19, 2026, because of a staffing shortage on second shift. It scopes the affected product at 9 lots, HG2607A through HG2609C, about 41,800 cases, distributed to retailers in six states (OH, PA, MI, IN, KY and WV). It also identifies a second possible source of the sesame: the Prairie Mills RS-440 rosemary seasoning blend.
+
+2. Recommendations
+
+We recommend that Meadowgate:
+
+(a) conduct a voluntary recall of the 9 lots (HG2607A through HG2609C) at the retail level, coordinated with FDA before any public announcement;
+
+(b) send FDA a written response by December 1, 2026 setting out the root cause, the corrective actions and the supporting documentation (revised label, SSOP, training records and swab results);
+
+(c) complete the testing of the RS-440 blend and address the result in the response; and
+
+(d) update its supplier verification for Prairie Mills and for any other supplier whose allergen statement shows sesame in the facility.
+
+3. The response deadline
+
+3.1 The letter reads: "Please respond in writing within fifteen (15) working days of receipt of this letter." Meadowgate received it on November 10, 2026, and the scanned copy is stamped accordingly. Counting fifteen working days from November 11 and treating the Veterans Day (November 11) and Thanksgiving (November 26) holidays as working days, the last day is December 1, 2026. This is the date in Hannah's memo. It is the conservative reading, and we should not rely on any later date.
+
+3.2 FDA does not grant extensions of a warning-letter response as of right. If any corrective action cannot be completed by December 1, 2026, the letter itself says what to do: state the reason and the time within which it will be completed. The items likely to fall into that category are listed in part VII of the outline in section 5.
+
+3.3 The response should be signed by a senior officer of Meadowgate. Because the letter was addressed to Gary Lindqvist as Plant Manager, we suggest that he sign it together with a corporate officer [Word comment: Check with Celeste who signs for the company.], so that FDA sees commitment at both levels.
+
+4. Recommendation (a): voluntary recall
+
+4.1 The FDA samples confirm undeclared sesame in two lots, and the QA memo cannot exclude the other seven: no changeover in the period was verified, and the HG2609A result came after a clean that was signed off. Product from all nine lots may still be on shelves, as best-by dates run nine months from production. The letter itself asks Meadowgate to consider what action is needed for product already in distribution. If Meadowgate does not act, FDA can request a recall and, for food, has mandatory recall authority under section 423 of the Act. A voluntary recall now, at the retail level, gives Meadowgate control of the timing and the message.
+
+4.2 Classification. We expect FDA to classify the recall as Class II, given the low levels found (14 ppm and 38 ppm), the fact that the sesame appears to come from cross-contact rather than from an ingredient, and the absence of illness complaints. That is our expectation, not a certainty. Classification is FDA's decision after its health hazard evaluation, and FDA has classified many undeclared-allergen recalls as Class I. Meadowgate should plan its recall communications so that they work under either classification.
+
+4.3 Mechanics. We will contact the FDA division recall coordinator before retailers are notified, share the draft recall strategy, retailer notification and press release, and agree the depth (retail level) and the effectiveness checks. Notifications should go to the retail distribution centers in all six states on the same day.
+
+4.4 Reportable Food Registry. We also need to decide quickly whether a report to FDA's Reportable Food Registry under section 417 of the Act is required. The obligation applies where there is a reasonable probability that the food will cause serious adverse health consequences, and once it is triggered the time limit is short. We will give you our view separately once Hannah confirms the testing timetable.
+
+5. Recommendation (b): outline of the response to FDA
+
+I. Introduction. Acknowledge the letter (CMS # 712044), the inspection of September 14–18, 2026 and the Form FDA 483. State that senior management takes the findings seriously and has directed the corrective actions described.
+
+II. Product in distribution. The voluntary recall of the 9 lots, its status, and the coordination with FDA.
+
+III. Investigation and root cause. Line 3 shared with Everything Seed Crisps; SSOP-L3-07 skipped on July 22, August 5 and August 19, 2026 because of a second-shift staffing shortage; no verification of any changeover clean; and the HG2609A result, which leads to the RS-440 line of inquiry. The response must not present the skipped cleans as the only cause until the RS-440 results are in.
+
+IV. The misbranding charge under section 403(w). The label revision, and a new label review step for any change in ingredients, suppliers or production lines.
+
+V. The preventive-controls violations, answered one by one:
+- Violation 1 (cross-contact): Line 3 dedicated to non-sesame products from November 16, 2026; cleaning verification by ATP and allergen swab on every changeover; the revised SSOP-L3-07.
+- Violation 2 (corrective actions): the new stop-the-line rule, hold-and-test of product after any failed or missing clean, and the reanalysis of the food safety plan.
+- Violation 3 (verification): review of sanitation records by a preventive controls qualified individual, and the roster change that keeps the sanitation crew on changeovers.
+
+VI. Supplier controls. The RS-440 testing and the supplier verification update.
+
+VII. Items not complete by December 1, 2026, each with a reason and a date: likely the supplier verification update, the reanalysis of the food safety plan and the first effectiveness review of the new verification program.
+
+VIII. Exhibits: the revised label; SSOP-L3-07 (old and revised); training records; ATP and allergen swab results since September 21, 2026; the revised second-shift roster; the recall strategy and notifications; and the RS-440 results when available.
+
+6. Recommendations (c) and (d): RS-440 testing and supplier verification
+
+6.1 Prairie Mills' certificate of March 3, 2026 states: "This product does not contain sesame. This product is manufactured in a facility that also processes sesame, milk and soy." It also says that finished product is not routinely tested for allergens and that the certificate is not a certificate of analysis. It is an assurance, not a test result, and Meadowgate accepted it without further verification.
+
+6.2 Testing. Hannah has sent retained RS-440 samples to an outside accredited laboratory. We recommend that the laboratory confirm in writing that it is acting on Calder & Wynne's instructions for the purpose of our advice, that chain of custody is documented, and that the results come to us first. If sesame is found, the response must say so, the RS-440 lots used in other Meadowgate products must be checked, and the label analysis in paragraph 7.2 changes.
+
+6.3 Supplier verification update. Meadowgate's supplier approval program should require, for any ingredient made in a facility that handles sesame, the supplier's written allergen control program, periodic allergen test results or a certificate of analysis that covers sesame, and an audit or questionnaire on shared equipment. Until that is in place, each incoming RS-440 lot should be tested, or the blend sourced elsewhere.
+
+6.4 Rights against Prairie Mills. We have not seen the supply agreement with Prairie Mills; please send it to us. If the testing implicates RS-440, Meadowgate may have warranty and indemnity claims, and any notice requirements in the agreement should be met promptly.
+
+7. Risks
+
+7.1 Further enforcement. The letter warns that failure to correct may result in regulatory action without further notice, including seizure and injunction. FDA will normally reinspect, and section 743 of the Act allows it to recover reinspection costs. A response that is incomplete, or that FDA finds unconvincing, increases the risk of a second visit with a worse outcome.
+
+7.2 The revised label. Hannah's team has revised the label to "Contains: Wheat, Soy, Sesame" (print order placed November 11). A "Contains" statement should reflect the major food allergens in the product's ingredients. If RS-440 is confirmed to contain sesame, sesame must also appear in the ingredient list, within the rosemary seasoning. If it is not, declaring sesame as a contained allergen when it is not an ingredient may draw FDA comment, because FDA expects cross-contact to be prevented rather than labeled. We recommend holding the new labels on receipt until we have reviewed the artwork against the RS-440 results.
+
+7.3 An incomplete root cause. The QA memo explains the HG2608B result well but not the HG2609A result. If the response blames only the skipped cleans and RS-440 later tests positive, Meadowgate's credibility with FDA will suffer.
+
+7.4 Publicity and disclosure. FDA posts warning letters publicly, and the response may also be released. It should be drafted on that assumption, with any confidential commercial information marked for confidential treatment.
+
+7.5 Claims. No consumer illness complaints had been received as of November 12, 2026. We recommend a litigation hold on all Line 3 records, sanitation logs, test results and Prairie Mills correspondence, and notice to Meadowgate's insurers under any product recall or product liability cover.
+
+8. Open points for Meadowgate
+
+(a) Confirm the case count by lot. The QA memo gives about 41,800 cases from ERP shipment records, which Warehouse is still reconciling.
+
+(b) Confirm whether any product went to food service. The QA memo refers to retailers only; food-service customers would change the notice list and possibly the recall depth.
+
+(c) Decide on press release wording. We will send a draft once FDA has commented on the recall strategy.
+
+9. Next steps
+
+We propose a call with you, Hannah Brooks and Gary Lindqvist on Monday, November 16 to settle the recall decision. We will circulate a first draft of the response as soon as the RS-440 results are in, leaving time for review before December 1, 2026.
+
+Kenji Arai
+Associate, Calder & Wynne LLP
+1700 K Street NW, Suite 600, Washington, DC 20006
+karai@calderwynne.example

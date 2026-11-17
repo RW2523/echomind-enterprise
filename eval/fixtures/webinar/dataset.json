@@ -1,0 +1,42 @@
+{
+ "mark": "Fictional - EchoMind demonstration (Calder & Wynne LLP is not a real firm)",
+ "note": "FICTIONAL webinar dataset (2026-11-16): Calder & Wynne LLP, a fictional US law firm. Every party, person, address, figure and event is invented. Rendered by scripts/law/synthetic/render.py --base eval/fixtures/webinar; answer keys in answer_key_*.jsonl; the presenter's run-sheet in runsheet.json.",
+ "team": {
+  "harper": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "senior associate, litigation"
+  },
+  "sofia": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "associate, employment"
+  },
+  "kenji": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "associate, corporate, technology and regulatory"
+  },
+  "lena": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "first-year associate"
+  },
+  "omar": {
+   "roles": [
+    "paralegal"
+   ],
+   "about": "paralegal, litigation"
+  },
+  "theo": {
+   "roles": [
+    "reviewer"
+   ],
+   "about": "knowledge lawyer (reviews drafts)"
+  }
+ }
+}

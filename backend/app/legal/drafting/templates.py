@@ -273,9 +273,10 @@ def approved(org_id: str, template_id: str) -> Optional[tuple[dict, dict]]:
 
 
 def install_presets(org_id: str, by: str) -> int:
+    from ...core.config import settings
     from . import presets
     n = 0
-    for p in presets.PRESETS:
+    for p in presets.presets_for(settings.LEGAL_FIRM_STYLE):
         with get_conn() as conn:
             if conn.execute("SELECT 1 FROM legal_templates WHERE org_id=? AND preset_key=?", (org_id, p["key"])).fetchone():
                 continue

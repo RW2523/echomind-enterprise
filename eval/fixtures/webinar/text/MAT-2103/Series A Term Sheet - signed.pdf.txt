@@ -1,0 +1,74 @@
+Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)
+(file: Series A Term Sheet - signed.pdf; pdf; contract, executed)
+
+SUMMARY OF TERMS FOR SERIES A PREFERRED STOCK FINANCING OF NORTHLAKE ANALYTICS, INC.
+
+September 24, 2026
+
+This Summary of Terms (this "Term Sheet") sets out the principal terms of the proposed Series A Preferred Stock financing of Northlake Analytics, Inc., a Delaware corporation (the "Company"). Except for the sections headed "Expenses", "Exclusivity" and "Confidentiality", which are binding on the Company and the Lead Investor when this Term Sheet is signed, this Term Sheet is a non-binding expression of the parties' current intentions. No party is obliged to complete the financing unless and until definitive agreements satisfactory to the Company and the Investors have been negotiated, approved and signed.
+
+OFFERING TERMS
+
+| Term | Summary |
+| Issuer | Northlake Analytics, Inc., a Delaware corporation, 125 Summer Street, 9th Floor, Boston, MA 02110. |
+| Securities | Shares of the Company's Series A Preferred Stock (the "Series A Preferred"). |
+| Aggregate Proceeds | $12,000,000 in total, for 10,000,000 shares of Series A Preferred. |
+| Investors | Granite Peak Ventures III, L.P. (the "Lead Investor"): $8,000,000. Halcyon Growth Fund II, L.P.: $3,000,000. Juniper Seed Partners, L.P., an existing holder of Series Seed Preferred Stock: $1,000,000. Together, the "Investors". |
+| Price Per Share | $1.20 per share (the "Original Issue Price"), based on a pre-money valuation of $48,000,000 on a fully diluted basis (40,000,000 shares) and a post-money valuation of $60,000,000 (50,000,000 shares). The Series A Preferred will represent 20% of the post-money fully diluted capitalization. |
+| Fully Diluted Basis; Option Pool | The pre-money valuation counts all outstanding Common Stock, all outstanding Series Seed Preferred Stock on an as-converted basis, all outstanding options and an unallocated option pool equal to 12% of the post-money fully diluted capitalization. Any increase of the pool needed to reach that level will be made before the Closing and will be borne entirely by the pre-money holders. |
+| Closing | The closing of the financing (the "Closing") will take place when the definitive agreements have been signed and the conditions to Closing have been met. Closing expected on or before December 15, 2026. |
+
+TERMS OF THE SERIES A PREFERRED (RESTATED CERTIFICATE)
+
+| Term | Summary |
+| Dividends | Non-cumulative dividends at the rate of 6% of the Original Issue Price per year, payable only when, as and if declared by the Board of Directors (the "Board"), in preference to any dividend on the Common Stock. The Series A Preferred will also share, on an as-converted basis, in any dividend paid on the Common Stock. |
+| Liquidation Preference | On any liquidation, dissolution or winding up of the Company, or any Deemed Liquidation Event, the holders of Series A Preferred will first receive, on a pari passu basis with the Series Seed Preferred Stock and before any payment on the Common Stock, the greater of (i) one times (1x) the Original Issue Price plus any declared but unpaid dividends and (ii) the amount they would receive if their shares had been converted into Common Stock. The Series A Preferred is non-participating: once the preference has been paid, the remaining proceeds go to the holders of Common Stock. |
+| Deemed Liquidation Event | A merger or consolidation in which the Company's stockholders do not retain a majority of the voting power of the surviving company, a sale of voting control, or a sale, lease or exclusive license of all or substantially all of the Company's assets, unless the holders of a majority of the Series A Preferred elect otherwise. |
+| Voting Rights | The Series A Preferred votes together with the Common Stock on an as-converted basis, and not as a separate class, except as required by law, for the election of directors described below and for the Protective Provisions. |
+| Protective Provisions | So long as any shares of Series A Preferred remain outstanding, the Company will not, without the consent of the holders of a majority of the Series A Preferred: liquidate or dissolve the Company or effect a Deemed Liquidation Event; amend the Restated Certificate or Bylaws in a manner adverse to the Series A Preferred; create any security senior to or on a parity with the Series A Preferred; redeem or repurchase shares or pay dividends (other than customary repurchases from departing service providers); or change the authorized number of directors. |
+| Optional Conversion | Each share of Series A Preferred is convertible at any time, at the holder's option, into Common Stock at an initial conversion ratio of 1:1, subject to adjustment. |
+| Anti-dilution Protection | Broad-based weighted-average adjustment of the conversion price, with customary exceptions (including shares issued under the equity incentive plan, on conversion of the Preferred Stock and in strategic transactions approved by the Board). |
+| Mandatory Conversion | Automatic conversion into Common Stock on the closing of a firm-commitment underwritten initial public offering approved by the Board, or with the consent of the holders of a majority of the Series A Preferred. |
+| Redemption Rights | None. |
+
+STOCKHOLDER AGREEMENTS
+
+| Term | Summary |
+| Board of Directors | The Board will be fixed at five (5) directors: two directors elected by the holders of Common Stock (initially Priya Raman and Owen Fitzgerald); one director designated by the Lead Investor (initially Rafael Mendes); one director designated by Halcyon Growth Fund II, L.P. (initially Simone Archer); and one independent director, not an employee of the Company or affiliated with any Investor, acceptable to the other directors. The independent seat may remain vacant after the Closing until a candidate is agreed. |
+| Registration Rights | Demand registration rights for holders of a majority of the registrable shares, exercisable from the earlier of five (5) years after the Closing and 180 days after the Company's initial public offering. Customary piggyback and Form S-3 rights; registration expenses (including one counsel for the selling holders) paid by the Company; 180-day market stand-off after the initial public offering. |
+| Information Rights | A "Major Investor" is an Investor holding at least 1,000,000 shares of Series A Preferred. The Company will deliver to each Major Investor annual audited financial statements within 120 days after the end of each fiscal year, quarterly unaudited financial statements within 45 days after the end of each quarter, and an annual budget at least 30 days before the beginning of each fiscal year. |
+| Pro Rata Rights | Each Major Investor may buy its pro rata share of any new securities the Company offers, with customary exceptions. |
+| Voting Agreement | The Investors and the Founders (Priya Raman and Owen Fitzgerald) will vote their shares to elect the Board described above. Drag-along: all holders will vote for and join a sale of the Company approved by the Board, the holders of a majority of the Series A Preferred and the holders of a majority of the Common Stock held by the Founders. |
+| Right of First Refusal and Co-Sale | The Company first, and the Major Investors second, will have a right of first refusal on transfers of shares by the Founders, and the Major Investors will have a right of co-sale, in each case with customary exceptions for estate-planning transfers. |
+| Management Rights | The Company will deliver a customary management rights letter to the Lead Investor. |
+| Employee Matters | Before the Closing, each current employee of the Company will have signed the Company's standard Proprietary Information and Inventions Agreement. |
+| Conditions to Closing | Satisfactory completion of legal and financial due diligence, approval by the Lead Investor's investment committee, filing of the Restated Certificate in Delaware, signing of definitive agreements acceptable to the Investors, and the other customary conditions. |
+
+OTHER MATTERS
+
+| Term | Summary |
+| Expenses | The Company will pay at the Closing the reasonable fees and expenses of one counsel to the Investors, Pell Strand LLP, up to $50,000. If the financing does not close, each party bears its own expenses. |
+| Exclusivity | For 45 days from the date this Term Sheet is signed, the Company will not solicit, encourage, negotiate or accept any offer from any person other than the Investors for the sale of the Company's capital stock (other than equity grants to service providers) or for a sale of the Company, and will promptly tell the Lead Investor of any such approach. |
+| Confidentiality | The Company will not disclose the terms of this Term Sheet to any person other than its officers, directors, existing stockholders, key service providers and legal and financial advisers, without the Lead Investor's written consent, except as required by law. |
+| Governing Law | The laws of the State of Delaware. |
+
+--- page break ---
+
+The parties have signed this Term Sheet on the date written below.
+
+NORTHLAKE ANALYTICS, INC.
+
+[signature: Priya Raman]
+
+Name: Priya Raman
+Title: Chief Executive Officer
+Date: September 24, 2026
+
+GRANITE PEAK VENTURES III, L.P.
+By: Granite Peak Partners III, LLC, its general partner
+
+[signature: Rafael Mendes]
+
+Name: Rafael Mendes
+Title: Partner
+Date: September 24, 2026

@@ -1,0 +1,27 @@
+{
+ "title": "Hollis Medical Supply v. Brennan Freight Lines",
+ "client": {
+  "name": "Hollis Medical Supply, Inc.",
+  "code": "HMS"
+ },
+ "practice_area": "Commercial litigation",
+ "jurisdiction": "Delaware",
+ "lead": "alice",
+ "members": {
+  "harper": "attorney",
+  "bob": "attorney",
+  "carol": "paralegal",
+  "omar": "paralegal"
+ },
+ "parties": [
+  [
+   "Brennan Freight Lines, LLC",
+   "adverse"
+  ],
+  [
+   "Ostrow Kaplan LLP",
+   "related"
+  ]
+ ],
+ "paper": "letter"
+}

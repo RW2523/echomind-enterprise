@@ -1,0 +1,27 @@
+Newark DC receiving log, June 1-7, 2026
+(file: Newark DC receiving log - June 1-7 2026.pdf; pdf; evidence, final)
+
+HOLLIS MEDICAL SUPPLY, INC.
+Newark Distribution Center | 300 Pencader Drive, Newark, DE 19702 | Receiving office (302) 555-0175
+
+RECEIVING LOG - WEEK OF JUNE 1-7, 2026
+
+Receiving Manager: Elena Ruiz | Dock hours: Mon-Fri 6:00 a.m. - 6:00 p.m.; Sat 7:00 a.m. - 12:00 noon | Cold-chain acceptance range: 2.0 to 8.0 °C
+
+| Date | Time in | Carrier | Shipment / PO | Trailer | Seal | Pallets | Temp at receipt (°C) | Condition / notes | Received by |
+| 06/01/2026 (Mon) | 7:15 a.m. | Brennan Freight Lines | HMS-26-0581 | BFL-R-209 | Intact - BF-118722 | 26 | 4.6 | OK - released to cold room | E. Ruiz |
+| 06/01/2026 (Mon) | 1:30 p.m. | Delmarva Parcel & Freight | PO 4500-21877 | DPF-1142 | Intact - 0098812 | 6 | Ambient | OK - exam gloves, gauze | D. Okafor |
+| 06/02/2026 (Tue) | 9:05 a.m. | Tri-State Medical Express | PO 4500-21902 | TSM-77 | Intact - 551290 | 4 | Ambient | OK - syringes | J. Tran |
+| 06/02/2026 (Tue) | - | Brennan Freight Lines | HMS-26-0588 | BFL-R-204 (per ASN) | - | 22 (per ASN) | - | NOT RECEIVED - ASN shows Pickup Time 06/02/2026 6:00 a.m. | - |
+| 06/03/2026 (Wed) | 8:10 a.m. | Brennan Freight Lines | HMS-26-0588 | - | - | - | - | NOT RECEIVED - called Brennan dispatch: "reefer problem", load to be rescheduled, no ETA given | E. Ruiz |
+| 06/03/2026 (Wed) | 11:40 a.m. | Delmarva Parcel & Freight | PO 4500-21915 | DPF-1158 | Intact - 0098871 | 3 | Ambient | OK - IV sets | D. Okafor |
+| 06/04/2026 (Thu) | 7:20 a.m. | Brennan Freight Lines | HMS-26-0594 | BFL-R-211 | Intact - BF-118790 | 26 | 4.9 | OK - released to cold room. Driver has no information on HMS-26-0588 | E. Ruiz |
+| 06/04/2026 (Thu) | 10:25 a.m. | Brennan Freight Lines | HMS-26-0588 | - | - | - | - | NOT RECEIVED - called Brennan dispatch again, spoke to K. Delacroix: no ETA, "as soon as we have a truck" | E. Ruiz |
+| 06/05/2026 (Fri) | 2:10 p.m. | Tri-State Medical Express | PO 4500-21940 | TSM-81 | Intact - 551344 | 5 | Ambient | OK - sharps containers | J. Tran |
+| 06/06/2026 (Sat) | 9:40 a.m. | Brennan Freight Lines | HMS-26-0588 | BFL-R-217 | Intact - BF-118904 | 22 | 9.8 | OUT OF RANGE. Trailer differs from ASN (BFL-R-204). In-load logger downloaded - high readings. ALL 22 PALLETS QUARANTINED (Q-3). QA (T. Akers) notified 9:55 a.m. POD signed "received subject to inspection - temp 9.8 C - quarantined" | E. Ruiz |
+
+Summary for the week: 10 entries; 7 deliveries received; 1 cold-chain delivery out of range (HMS-26-0588, received 06/06/2026 at 9:40 a.m., temperature at receipt 9.8 °C, quarantined). Brennan deliveries received this week: HMS-26-0581 (06/01), HMS-26-0594 (06/04), HMS-26-0588 (06/06).
+
+Quarantine location Q-3 (cold room, locked cage). Release only on written QA disposition.
+
+Reviewed: Elena Ruiz, Receiving Manager - 06/08/2026

@@ -1,0 +1,29 @@
+{
+ "note": "The webinar's live chat steps (fictional firm Calder & Wynne LLP). Read by scripts/law/demo_runsheet.py (each step must pass 5 of 5 before the webinar), demo_health.py ('health') and webinar_preflight.sh. Text checks are case-insensitive substrings of the final answer and its cards.",
+ "health": {"status_matter": "MAT-2101",
+            "answer_question": "What is Brennan's liability cap under the Agreement as amended by the First Amendment?",
+            "answer_expect": ["1,500,000"]},
+ "steps": [
+  {"id": "brief", "act": "1 Morning brief", "matter": "MAT-2101", "question": "What needs my attention today?", "cards_any": ["priority_list"], "max_secs": 20},
+  {"id": "status", "act": "2 Litigation", "matter": "MAT-2101", "question": "What's the latest on this matter?", "cards_any": ["case_status"], "max_secs": 10},
+  {"id": "chronology", "act": "2 Litigation", "matter": "MAT-2101", "question": "Build a chronology of events", "cards_any": ["timeline"], "max_secs": 20},
+  {"id": "conflicts", "act": "2 Litigation", "matter": "MAT-2101", "question": "Find conflicting dates or amounts", "cards_any": ["evidence_comparison"], "text_any": ["June 3", "2026-06-03"], "max_secs": 30},
+  {"id": "cap", "act": "2 Litigation", "matter": "MAT-2101", "question": "What is Brennan's liability cap under the Agreement as amended by the First Amendment?", "text_all": ["1,500,000"], "max_secs": 20},
+  {"id": "misquote", "act": "2 Litigation", "matter": "MAT-2101", "question": "Brennan's lawyers say liability is capped at $500,000 and that our notice was late. Are they right?", "text_all": ["1,500,000"], "text_any": ["five (5) Business Days", "5 Business Days", "five Business Days"], "max_secs": 25},
+  {"id": "credit", "act": "2 Litigation", "matter": "MAT-2101", "question": "What late-delivery credit is owed on Shipment HMS-26-0588?", "text_all": ["3,750"], "max_secs": 40},
+  {"id": "discovery", "act": "2 Litigation", "matter": "MAT-2101", "question": "When does fact discovery close?", "text_all": ["May 28, 2027"], "max_secs": 20},
+  {"id": "draft", "act": "4 Drafting", "matter": "MAT-2101", "question": "Draft a demand letter to Brennan Freight Lines", "cards_any": ["guided_questions"], "max_secs": 20},
+  {"id": "policy-rates", "act": "3 Numbers", "matter": "MAT-2102", "question": "At the policy rates, what would 214 weeknights and 31 weekend days of on-call come to? Does that match the $41,200 claimed?", "text_all": ["27,770"], "max_secs": 40},
+  {"id": "unpaid", "act": "3 Numbers", "matter": "MAT-2102", "question": "What on-call pay was actually left unpaid, and why?", "text_all": ["16", "1,520"], "max_secs": 25},
+  {"id": "tolling", "act": "3 Numbers", "matter": "MAT-2102", "question": "When does the tolling agreement end?", "text_all": ["January 31, 2027"], "max_secs": 20},
+  {"id": "deal-conflicts", "act": "5 Deals", "matter": "MAT-2103", "question": "Find conflicting dates or amounts", "cards_any": ["evidence_comparison"], "text_any": ["45,000", "December 31"], "max_secs": 30},
+  {"id": "economics", "act": "5 Deals", "matter": "MAT-2103", "question": "What is the pre-money valuation, the price per share, and how much of the company will Granite Peak own after closing?", "text_all": ["48,000,000", "1.20"], "text_any": ["13.33", "6,666,667"], "max_secs": 30},
+  {"id": "conditions", "act": "5 Deals", "matter": "MAT-2103", "question": "Which conditions to the Initial Closing are still open?", "text_any": ["PIIA", "Proprietary Information"], "max_secs": 25},
+  {"id": "atlas-cap", "act": "5 Deals", "matter": "MAT-2104", "question": "What did Atlas change in the limitation of liability?", "text_all": ["2,400,000"], "max_secs": 25},
+  {"id": "notice-periods", "act": "5 Deals", "matter": "MAT-2104", "question": "What security incident notice periods do the documents give?", "text_all": ["72", "24", "48"], "max_secs": 25},
+  {"id": "sla-credit", "act": "5 Deals", "matter": "MAT-2104", "question": "If availability is 99.3% in a month, what service credit is due under the SLA Schedule?", "text_all": ["4,000"], "max_secs": 40},
+  {"id": "fda-deadline", "act": "5 Advisory", "matter": "MAT-2105", "question": "How long do we have to respond to the FDA warning letter, and by when?", "text_any": ["December 1, 2026", "December 1"], "text_all": ["15"], "max_secs": 20},
+  {"id": "fda-sources", "act": "5 Advisory", "matter": "MAT-2105", "question": "What are the possible sources of the sesame?", "text_all": ["Line 3"], "text_any": ["RS-440", "Prairie Mills", "seasoning"], "max_secs": 25},
+  {"id": "other-matter", "act": "6 Trust", "matter": "MAT-2101", "question": "What is Northlake's pre-money valuation?", "text_none": ["48,000,000", "48 million"], "max_secs": 15}
+ ]
+}

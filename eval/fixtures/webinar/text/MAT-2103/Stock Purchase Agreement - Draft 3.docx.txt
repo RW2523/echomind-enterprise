@@ -1,0 +1,283 @@
+Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)
+(file: Stock Purchase Agreement - Draft 3.docx; docx; contract, draft)
+
+SERIES A PREFERRED STOCK PURCHASE AGREEMENT
+
+NORTHLAKE ANALYTICS, INC.
+
+Dated as of [__________], 2026
+
+Calder & Wynne LLP draft of November 10, 2026 (Draft 3). Subject to client review. Not an offer capable of acceptance.
+
+EXHIBITS AND SCHEDULES
+
+Schedule A - Schedule of Purchasers
+Schedule B - Capitalization
+Exhibit A - Form of Amended and Restated Certificate of Incorporation
+Exhibit B - Disclosure Schedule
+Exhibit C - Form of Investors' Rights Agreement
+Exhibit D - Form of Voting Agreement
+Exhibit E - Form of Right of First Refusal and Co-Sale Agreement
+Exhibit F - Form of Management Rights Letter
+
+--- page break ---
+
+THIS SERIES A PREFERRED STOCK PURCHASE AGREEMENT (this "Agreement") is made as of [__________], 2026 by and among Northlake Analytics, Inc., a Delaware corporation (the "Company"), and the investors listed on Schedule A (each a "Purchaser" and together the "Purchasers").
+
+The parties agree as follows:
+
+1. PURCHASE AND SALE OF PREFERRED STOCK
+
+1.1 Sale and Issuance of Series A Preferred Stock.
+
+(a) On or before the Initial Closing, the Company shall adopt the Amended and Restated Certificate of Incorporation in the form of Exhibit A (the "Restated Certificate") and file it with the Secretary of State of the State of Delaware.
+
+(b) Subject to the terms and conditions of this Agreement, each Purchaser agrees, severally and not jointly, to purchase at the Initial Closing, and the Company agrees to sell and issue to each Purchaser at the Initial Closing, the number of shares of Series A Preferred Stock, $0.0001 par value per share, set out opposite that Purchaser's name on Schedule A, at a purchase price of $1.20 per share (the "Original Issue Price"). The Company shall sell up to 10,000,000 shares of Series A Preferred Stock in total under this Agreement, for an aggregate purchase price of up to $12,000,000. The shares of Series A Preferred Stock sold under this Agreement, at the Initial Closing or at any Additional Closing, are the "Shares".
+
+1.2 Closing; Delivery.
+
+(a) Initial Closing. The initial purchase and sale of the Shares shall take place remotely, by the electronic exchange of documents and signatures and by wire transfer of the purchase price, on the date on which the conditions in Sections 4 and 5 have been satisfied or waived (other than conditions that by their nature are satisfied at the closing itself), or at such other time and place as the Company and the Lead Investor agree in writing (that time and place being the "Initial Closing").
+
+(b) Additional Closings. Any of the 10,000,000 Shares not sold at the Initial Closing may be sold by the Company, on the terms of this Agreement, to one or more purchasers reasonably acceptable to the Lead Investor at one or more closings held within ninety (90) days after the Initial Closing (each an "Additional Closing"). Each such purchaser shall become a party to this Agreement and to the other Transaction Agreements by signing counterpart signature pages, and Schedule A shall be updated accordingly.
+
+(c) Delivery. At each closing the Company shall deliver to each Purchaser a notice of issuance in book-entry form for the Shares purchased by that Purchaser, against payment of the purchase price by wire transfer to the bank account designated by the Company. Before sending any funds, each Purchaser shall confirm the Company's wire instructions by a telephone call-back to the Company's Head of Finance at a telephone number already known to that Purchaser, and shall not act on any change to the instructions received only by email.
+
+1.3 Defined Terms Used in this Agreement. In addition to the terms defined elsewhere in this Agreement, the following terms have the meanings set out below.
+
+"Affiliate" means, with respect to any Person, any other Person who directly or indirectly controls, is controlled by or is under common control with that Person, including any general partner, managing member, officer or director of that Person and any investment fund now or later existing that is controlled by, or shares the same management company or investment adviser with, that Person.
+
+"Code" means the Internal Revenue Code of 1986, as amended.
+
+"Company Intellectual Property" means all patents, patent applications, trademarks, service marks, trade names, domain names, copyrights, software (including source code), databases, trade secrets, know-how and other proprietary rights owned by or licensed to the Company and used in, or necessary for, its business as now conducted and as presently proposed to be conducted.
+
+"DGCL" means the General Corporation Law of the State of Delaware.
+
+"Disclosure Schedule" means the disclosure schedule delivered by the Company to the Purchasers on the date of this Agreement and attached as Exhibit B.
+
+"Investors' Rights Agreement" means the Investors' Rights Agreement among the Company and the Purchasers, dated as of the date of the Initial Closing, in the form of Exhibit C.
+
+"Key Employee" means each of Priya Raman, Owen Fitzgerald and Laura Chen, and any other executive-level employee of the Company.
+
+"Knowledge," including the phrase "to the Company's knowledge," means the actual knowledge of Priya Raman, Owen Fitzgerald and Laura Chen, after reasonable inquiry.
+
+"Lead Investor" means Granite Peak Ventures III, L.P.
+
+"Management Rights Letter" means the letter agreement between the Company and the Lead Investor in the form of Exhibit F.
+
+"Material Adverse Effect" means a material adverse effect on the business, assets (including intangible assets), liabilities, financial condition, property or results of operations of the Company.
+
+"Person" means any individual, corporation, partnership, trust, limited liability company, association or other entity.
+
+"PIIA" means the Company's standard form of Proprietary Information and Inventions Agreement for employees or consultants, as applicable.
+
+"Plan" means the Company's 2023 Equity Incentive Plan, as amended.
+
+"ROFR and Co-Sale Agreement" means the Right of First Refusal and Co-Sale Agreement among the Company, the Purchasers and the founders of the Company, dated as of the date of the Initial Closing, in the form of Exhibit E.
+
+"Securities Act" means the Securities Act of 1933, as amended, and the rules and regulations under it.
+
+"Transaction Agreements" means this Agreement, the Investors' Rights Agreement, the Voting Agreement, the ROFR and Co-Sale Agreement and the Management Rights Letter.
+
+"Voting Agreement" means the Voting Agreement among the Company, the Purchasers and the founders of the Company, dated as of the date of the Initial Closing, in the form of Exhibit D.
+
+1.4 Use of Proceeds. The Company shall use the proceeds from the sale of the Shares for product development, sales and marketing, working capital and other general corporate purposes.
+
+2. REPRESENTATIONS AND WARRANTIES OF THE COMPANY
+
+The Company represents and warrants to each Purchaser that, except as set out in the Disclosure Schedule (which exceptions are part of the representations and warranties), the following statements are true and complete as of the date of the Initial Closing, except where a statement speaks as of another date. The Disclosure Schedule is arranged in sections corresponding to the sections of this Section 2, and a disclosure in any section of it qualifies other sections of this Section 2 only to the extent its relevance to them is readily apparent on its face. For purposes of this Section 2, "Knowledge" (including the phrase "to the Company's knowledge") means the actual knowledge of Priya Raman and Owen Fitzgerald, without inquiry.
+
+2.1 Organization, Good Standing, Corporate Power and Qualification. The Company is a corporation duly organized, validly existing and in good standing under the laws of the State of Delaware and has all corporate power and authority required to carry on its business as presently conducted and as presently proposed to be conducted. The Company is qualified to do business and in good standing in the Commonwealth of Massachusetts and in each other jurisdiction where the failure to qualify would have a Material Adverse Effect.
+
+2.2 Authorization. All corporate action required to be taken by the Board of Directors of the Company (the "Board") and by its stockholders to authorize the Company to enter into the Transaction Agreements, to issue the Shares and to issue the Common Stock issuable on conversion of the Shares has been taken or will be taken before the Initial Closing. Each Transaction Agreement, when signed and delivered by the Company, will be a valid and legally binding obligation of the Company, enforceable in accordance with its terms, except as limited by bankruptcy, insolvency, reorganization, moratorium and other laws of general application affecting creditors' rights, and by the rules governing equitable remedies.
+
+2.3 Capitalization.
+
+(a) Immediately before the Initial Closing, the authorized capital of the Company will consist of 60,000,000 shares of Common Stock, $0.0001 par value per share, of which 26,000,000 shares are issued and outstanding, and 15,600,000 shares of Preferred Stock, $0.0001 par value per share, of which 5,600,000 shares are designated Series Seed Preferred Stock, all of which are issued and outstanding, and 10,000,000 shares are designated Series A Preferred Stock, none of which are outstanding before the Initial Closing. All outstanding shares were duly authorized, validly issued, fully paid and nonassessable, and were issued in compliance with applicable federal and state securities laws.
+
+(b) The Company has reserved 8,400,000 shares of Common Stock for issuance under the Plan, a number that reflects an increase of 3,200,000 shares to be approved by the Board and by the stockholders of the Company before the Initial Closing. Of the reserved shares, options to purchase 2,400,000 shares have been granted and are outstanding, and 6,000,000 shares remain available for future grant.
+
+(c) The fully diluted capitalization of the Company immediately before and immediately after the Initial Closing is set out in Schedule B: 40,000,000 shares before the Initial Closing and 50,000,000 shares after it, assuming that all of the Shares are sold. Except as set out in this Section 2.3 and Schedule B, there are no outstanding options, warrants, rights (including conversion or preemptive rights, rights of first refusal or similar rights) or agreements, written or oral, for the purchase or acquisition from the Company of any shares of its capital stock or of any securities convertible into or exchangeable for its capital stock.
+
+(d) No stock purchase agreement or option document of the Company provides for acceleration of vesting, or for the lapse of a repurchase right, on the occurrence of any event, including the transactions contemplated by the Transaction Agreements.
+
+2.4 Subsidiaries. The Company does not own or control, directly or indirectly, any interest in any other corporation, partnership, limited liability company, joint venture or other business entity.
+
+2.5 Valid Issuance of Shares. The Shares, when issued, sold and delivered in accordance with this Agreement for the consideration set out in it, will be validly issued, fully paid and nonassessable and free of restrictions on transfer other than those under the Transaction Agreements and applicable securities laws. The Common Stock issuable on conversion of the Shares has been duly reserved and, when issued in accordance with the Restated Certificate, will be validly issued, fully paid and nonassessable.
+
+2.6 Governmental Consents and Filings. Assuming the accuracy of the representations of the Purchasers in Section 3, no consent, approval, order or authorization of, or registration, qualification or filing with, any federal, state or local governmental authority is required in connection with the transactions contemplated by this Agreement, except for the filing of the Restated Certificate, which will have been made by the Initial Closing, and filings under Regulation D of the Securities Act and applicable state securities laws, which will be made on time.
+
+2.7 Litigation. Except as set out in the Disclosure Schedule, there is no claim, action, suit, proceeding, arbitration, complaint, charge or investigation pending or, to the Company's knowledge, threatened against the Company or against any officer, director or Key Employee of the Company arising out of his or her relationship with the Company, or that questions the validity of the Transaction Agreements or the right of the Company to enter into them, or that would reasonably be expected to have a Material Adverse Effect. The Company is not a party to or subject to any order, writ, injunction, judgment or decree of any court or governmental agency.
+
+2.8 Compliance with Other Instruments. The Company is not in violation or default of any provision of its certificate of incorporation or bylaws, of any judgment, order, writ or decree, of any note, indenture or mortgage, or of any lease, agreement or contract to which it is a party, or of any federal or state statute, rule or regulation applicable to it, where the violation or default would have a Material Adverse Effect. The signing, delivery and performance of the Transaction Agreements will not result in any such violation or default.
+
+2.9 Material Contracts. Section 2.9 of the Disclosure Schedule lists each contract to which the Company is a party or by which it is bound that:
+
+(a) is with a customer that accounted for more than ten percent (10%) of the Company's revenue in the current fiscal year;
+
+(b) grants a license of intellectual property to or from the Company, other than licenses of generally available software on standard terms and non-exclusive licenses granted to customers in the ordinary course of business;
+
+(c) restricts the Company from competing in any line of business or geographic area, or grants exclusivity or most-favored-customer pricing to any Person; or
+
+(d) obliges the Company to indemnify any Person other than in the ordinary course of business.
+
+Each such contract is in full force and effect, and neither the Company nor, to the Company's knowledge, any other party to it is in material breach.
+
+2.10 Intellectual Property.
+
+(a) The Company owns or possesses, or believes it can acquire on commercially reasonable terms, sufficient legal rights to all Company Intellectual Property, without, to the Company's knowledge, any conflict with or infringement of the rights of others.
+
+(b) Each current and former employee, consultant and founder who has contributed to the creation or development of Company Intellectual Property has assigned to the Company all of his, her or its rights in that contribution, including, in the case of Owen Fitzgerald, under the assignment described in Section 2.10 of the Disclosure Schedule.
+
+(c) No open-source software licensed on "copyleft" terms is incorporated into, combined with or distributed with any product of the Company in a way that requires the Company to disclose or license any of its proprietary source code.
+
+2.11 Employee Matters. Each current and former employee and consultant of the Company has signed a PIIA, except as set out in Section 2.11 of the Disclosure Schedule. To the Company's knowledge, no Key Employee intends to terminate his or her employment with the Company, and the Company has no present intention of terminating the employment of any Key Employee.
+
+2.12 Compliance with Laws; Data Privacy. The Company has complied in all material respects with all laws applicable to its business, including the Health Insurance Portability and Accountability Act of 1996 and its implementing regulations to the extent that the Company acts as a business associate of its hospital customers, and all applicable laws on privacy and data security. The Company has not received any written notice of a security breach affecting personal or health information it holds, or of any claim that it has violated any such law.
+
+2.13 Financial Statements. The Company has delivered to each Purchaser its unaudited balance sheet, statement of operations and statement of cash flows as of and for the fiscal year ended December 31, 2025 and as of and for the nine months ended September 30, 2026 (the "Financial Statements"). The Financial Statements have been prepared in accordance with generally accepted accounting principles applied consistently (except that they omit footnotes and are subject to normal year-end adjustments) and fairly present in all material respects the financial condition and operating results of the Company as of their dates and for the periods they cover.
+
+3. REPRESENTATIONS AND WARRANTIES OF THE PURCHASERS
+
+Each Purchaser, severally and not jointly, represents and warrants to the Company that:
+
+3.1 Authorization. The Purchaser has full power and authority to enter into the Transaction Agreements to which it is a party, and each of them, when signed and delivered by the Purchaser, will be a valid and legally binding obligation of the Purchaser, enforceable in accordance with its terms, subject to the exceptions described in Section 2.2.
+
+3.2 Purchase for Own Account. The Purchaser is acquiring the Shares for investment for its own account, and not as a nominee or agent or with a view to the resale or distribution of any part of them, and has no present intention of selling or otherwise distributing them.
+
+3.3 Restricted Securities. The Purchaser understands that the Shares have not been registered under the Securities Act or any state securities law, in reliance on exemptions that depend on, among other things, the genuineness of the Purchaser's investment intent and the accuracy of its representations in this Section 3, and that the Shares must be held indefinitely unless they are later registered or an exemption from registration is available.
+
+3.4 Accredited Investor. The Purchaser is an accredited investor as defined in Rule 501(a) of Regulation D under the Securities Act.
+
+3.5 No General Solicitation. Neither the Purchaser nor any of its officers, directors, employees, agents or partners has engaged any broker or finder in connection with the sale of the Shares, or learned of the offering of the Shares through any form of general solicitation or general advertising.
+
+3.6 Legends. The Purchaser understands that the Shares, and any securities issued in respect of or in exchange for them, may bear or be notated with a legend referring to the Securities Act and to the Transaction Agreements.
+
+4. CONDITIONS TO THE PURCHASERS' OBLIGATIONS AT THE INITIAL CLOSING
+
+The obligation of each Purchaser to purchase Shares at the Initial Closing is subject to the fulfillment, on or before the Initial Closing, of each of the following conditions, unless waived in writing by the Lead Investor:
+
+4.1 Representations and Warranties. The representations and warranties of the Company in Section 2 shall be true and correct in all respects as of the Initial Closing, and the Company shall have performed and complied with all covenants and obligations in this Agreement that it is required to perform or comply with on or before the Initial Closing.
+
+4.2 Restated Certificate. The Company shall have filed the Restated Certificate with the Secretary of State of the State of Delaware on or before the Initial Closing, and it shall be in full force and effect as of the Initial Closing.
+
+4.3 Investors' Rights Agreement, Voting Agreement and ROFR and Co-Sale Agreement. The Company, each Purchaser (other than the Purchaser relying on this condition) and the other stockholders of the Company named as parties to them shall have signed and delivered the Investors' Rights Agreement, the Voting Agreement and the ROFR and Co-Sale Agreement.
+
+4.4 Minimum Investment. Shares with an aggregate purchase price of at least $10,000,000 shall be purchased at the Initial Closing.
+
+4.5 Board of Directors. As of the Initial Closing, the authorized size of the Board shall be five (5), and the Board shall be constituted as provided in Section 1 of the Voting Agreement.
+
+4.6 Management Rights Letter. The Company shall have signed and delivered the Management Rights Letter to the Lead Investor.
+
+4.7 Proprietary Information and Inventions Agreements. Every current employee of the Company shall have signed and delivered to the Company a PIIA.
+
+4.8 Secretary's Certificate; Good Standing. The Secretary of the Company shall have delivered to the Purchasers a certificate certifying the Restated Certificate and the bylaws of the Company as in effect at the Initial Closing, the resolutions of the Board approving the Transaction Agreements and the transactions contemplated by them, and the resolutions of the stockholders approving the Restated Certificate; and the Company shall have delivered a certificate of the Secretary of State of the State of Delaware as to the good standing of the Company, dated not more than five (5) business days before the Initial Closing.
+
+5. CONDITIONS TO THE COMPANY'S OBLIGATIONS AT THE INITIAL CLOSING
+
+The obligation of the Company to sell Shares to the Purchasers at the Initial Closing is subject to the fulfillment, on or before the Initial Closing, of each of the following conditions, unless waived by the Company:
+
+5.1 Representations and Warranties. The representations and warranties of each Purchaser in Section 3 shall be true and complete in all respects as of the Initial Closing.
+
+5.2 Payment of Purchase Price. Each Purchaser shall have paid the purchase price for its Shares by wire transfer in accordance with Section 1.2(c).
+
+5.3 Transaction Agreements. Each Purchaser shall have signed and delivered the Investors' Rights Agreement, the Voting Agreement and the ROFR and Co-Sale Agreement.
+
+5.4 Qualifications. All authorizations, approvals and permits of any governmental authority of the United States or of any state that are required by law for the lawful issuance and sale of the Shares shall have been obtained and shall be effective as of the Initial Closing.
+
+6. MISCELLANEOUS
+
+6.1 Survival of Warranties. Unless this Agreement provides otherwise, the representations and warranties of the Company and the Purchasers in this Agreement survive the signing and delivery of this Agreement and the Initial Closing and are not affected by any investigation made by or on behalf of any party.
+
+6.2 Successors and Assigns. This Agreement binds and benefits the parties and their respective successors and permitted assigns. Nothing in this Agreement, express or implied, confers any right or remedy on any Person other than the parties and their successors and permitted assigns.
+
+6.3 Governing Law. This Agreement is governed by the internal law of the State of Delaware, without regard to any conflict-of-law rule that would result in the application of the law of any other jurisdiction.
+
+6.4 Outside Date. This Agreement may be terminated by the Company or the Lead Investor if the Initial Closing has not occurred by December 31, 2026. Termination shall be by written notice to the other parties and shall not relieve any party of liability for any breach of this Agreement before termination; Sections 6.3 and 6.15 survive termination.
+
+6.5 Counterparts. This Agreement may be signed in counterparts, each of which is an original and all of which together are one instrument. Counterparts may be delivered by email in portable document format or by any electronic signature process that complies with the federal ESIGN Act of 2000, and a counterpart so delivered is effective for all purposes.
+
+6.6 Titles and Subtitles. Titles and subtitles are for convenience only and do not affect the interpretation of this Agreement.
+
+6.7 Notices. Notices under this Agreement shall be in writing and are effective on the earliest of personal delivery; sending by email during the recipient's normal business hours (or otherwise on the recipient's next business day); five (5) days after mailing by certified or registered mail, return receipt requested; or one (1) business day after deposit with a nationally recognized overnight courier. Notices shall be sent to the Company at 125 Summer Street, 9th Floor, Boston, MA 02110, Attention: Chief Executive Officer (praman@northlake.example), with a copy (which shall not constitute notice) to Calder & Wynne LLP, 100 Federal Street, 20th Floor, Boston, MA 02110, Attention: Alice Moreno (amoreno@calderwynne.example), and to each Purchaser at its address on Schedule A, with a copy (which shall not constitute notice) to Pell Strand LLP, Attention: Megan Pell (mpell@pellstrand.example).
+
+6.8 No Finder's Fees. Each party represents that it is not and will not be obligated to pay any finder's fee, brokerage fee or commission in connection with this transaction, and each party shall indemnify the others against any such fee or commission claimed through it.
+
+6.9 Expenses. Each party shall bear its own costs and expenses in connection with this Agreement and the other Transaction Agreements, except that the Company shall pay, at the Initial Closing, the reasonable fees and expenses of Pell Strand LLP, counsel for the Purchasers, not to exceed $45,000.
+
+6.10 Attorneys' Fees. If any action at law or in equity (including arbitration) is necessary to enforce or interpret any Transaction Agreement, the prevailing party is entitled to its reasonable attorneys' fees, costs and necessary disbursements, in addition to any other relief to which it is entitled.
+
+6.11 Amendments and Waivers. Any term of this Agreement may be amended, terminated or waived only with the written consent of the Company and the holders of at least a majority of the then-outstanding Shares, which majority must include the Lead Investor. An amendment or waiver made in accordance with this Section 6.11 binds each Purchaser and each transferee of the Shares.
+
+6.12 Severability. If any provision of this Agreement is held invalid, illegal or unenforceable, the balance of this Agreement remains in effect, and the provision shall be interpreted as nearly as possible to reflect the parties' original intent.
+
+6.13 Delays or Omissions. No delay or omission in exercising any right or remedy under this Agreement impairs that right or remedy or operates as a waiver of it or of any later breach.
+
+6.14 Entire Agreement. This Agreement (including its Exhibits and Schedules), the Restated Certificate and the other Transaction Agreements are the entire agreement of the parties on their subject matter, and supersede all prior agreements and understandings on that subject matter, including the Summary of Terms dated September 24, 2026.
+
+6.15 Dispute Resolution. Each party irrevocably submits to the exclusive jurisdiction of the Court of Chancery of the State of Delaware (or, if that court lacks subject-matter jurisdiction, the other state courts located in the State of Delaware or the United States District Court for the District of Delaware) for any suit, action or proceeding arising out of or based on this Agreement, and waives any objection that such a proceeding has been brought in an inconvenient forum. EACH PARTY WAIVES ITS RIGHT TO A JURY TRIAL OF ANY CLAIM OR CAUSE OF ACTION ARISING OUT OF OR BASED ON THIS AGREEMENT.
+
+[Signature pages follow]
+
+--- page break ---
+
+IN WITNESS WHEREOF, the parties have signed this Series A Preferred Stock Purchase Agreement as of the date first written above.
+
+COMPANY:
+
+NORTHLAKE ANALYTICS, INC.
+
+By: ______________________________
+Name: Priya Raman
+Title: Chief Executive Officer
+
+PURCHASERS:
+
+GRANITE PEAK VENTURES III, L.P.
+By: Granite Peak Partners III, LLC, its general partner
+
+By: ______________________________
+Name: Rafael Mendes
+Title: Partner
+
+HALCYON GROWTH FUND II, L.P.
+By: Halcyon Growth Partners II, LLC, its general partner
+
+By: ______________________________
+Name: Simone Archer
+Title: Partner
+
+JUNIPER SEED PARTNERS, L.P.
+
+By: ______________________________
+Name: Ben Okoro
+Title: Authorized Signatory
+
+--- page break ---
+
+SCHEDULE A - SCHEDULE OF PURCHASERS
+
+Initial Closing
+
+| Purchaser | Notice details | Shares of Series A Preferred Stock | Purchase Price |
+| Granite Peak Ventures III, L.P. (Lead Investor) | Attention: Rafael Mendes, rmendes@granitepeak.example | 6,666,667 | $8,000,000.40 |
+| Halcyon Growth Fund II, L.P. | Attention: Simone Archer | 2,500,000 | $3,000,000.00 |
+| Juniper Seed Partners, L.P. | Attention: Ben Okoro | 833,333 | $999,999.60 |
+| TOTAL |  | 10,000,000 | $12,000,000.00 |
+
+Purchase Price = number of Shares x the Original Issue Price of $1.20. The commitments of Granite Peak Ventures III, L.P. ($8,000,000) and Juniper Seed Partners, L.P. ($1,000,000) have been rounded to whole Shares.
+
+[C&W note: Pell Strand to confirm the Purchasers' notice addresses.]
+
+SCHEDULE B - CAPITALIZATION
+
+Fully diluted capitalization immediately before and immediately after the Initial Closing (assuming all Shares are sold).
+
+| Holder or class | Before the Initial Closing | After the Initial Closing |
+| Common Stock - Priya Raman | 15,000,000 | 15,000,000 |
+| Common Stock - Owen Fitzgerald | 11,000,000 | 11,000,000 |
+| Series Seed Preferred Stock - Juniper Seed Partners, L.P. | 4,000,000 | 4,000,000 |
+| Series Seed Preferred Stock - other seed holders | 1,600,000 | 1,600,000 |
+| Options outstanding under the Plan | 2,400,000 | 2,400,000 |
+| Available for future grant under the Plan (after the 3,200,000-share increase) | 6,000,000 | 6,000,000 |
+| Series A Preferred Stock | 0 | 10,000,000 |
+| Total, fully diluted | 40,000,000 | 50,000,000 |

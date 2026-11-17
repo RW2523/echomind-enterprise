@@ -6,8 +6,10 @@ sets a date. Firm-defined tracks are a later step.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Optional
+
+from ...core.config import settings
 
 
 @dataclass(frozen=True)
@@ -24,7 +26,7 @@ class Track:
     stages: tuple[Stage, ...]
 
 
-TRACKS: dict[str, Track] = {t.key: t for t in (
+_UK: dict[str, Track] = {t.key: t for t in (
     Track("disputes", "Disputes", (
         Stage("intake", "Intake & conflicts", ("Run the conflict check", "Send the engagement letter", "Collect the client's documents")),
         Stage("assessment", "Case assessment", ("Review the key documents", "Assess merits and risks", "Advise the client on strategy")),
@@ -50,6 +52,36 @@ TRACKS: dict[str, Track] = {t.key: t for t in (
         Stage("follow_up", "Follow-up", ("Answer the client's questions", "Close the file")),
     )),
 )}
+
+# US wording (LEGAL_FIRM_STYLE=us): the same stages under the names a US firm uses, with its usual tasks.
+_US: dict[tuple[str, str], tuple[str, tuple[str, ...]]] = {
+    ("disputes", "assessment"): ("Case assessment", ("Send a litigation hold notice", "Review the key documents", "Assess merits and risks",
+                                                    "Advise the client on strategy")),
+    ("disputes", "pleadings"): ("Pleadings", ("Draft the complaint or answer", "File and serve the complaint or answer",
+                                              "Calendar the response deadline")),
+    ("disputes", "disclosure"): ("Discovery", ("Serve initial disclosures", "Serve and answer discovery requests",
+                                               "Take and defend depositions", "Retain experts")),
+    ("disputes", "settlement"): ("Settlement & mediation", ("Prepare the settlement position", "Attend mediation", "Record the outcome")),
+    ("disputes", "hearing"): ("Trial", ("Prepare the trial binder", "File the pretrial motions and order", "Confirm the trial date with the court")),
+    ("transactions", "instruction"): ("Engagement", ("Run the conflict check", "Send the engagement letter", "Agree on the timeline")),
+    ("transactions", "diligence"): ("Due diligence", ("Open the data room review", "Send diligence requests to the other side",
+                                                      "Report the key issues")),
+    ("transactions", "negotiation"): ("Drafting & negotiation", ("Prepare the first draft", "Negotiate the open points", "Agree on the final form")),
+    ("transactions", "completion"): ("Closing", ("Satisfy the closing conditions", "Close and fund", "Make the filings")),
+    ("transactions", "post_completion"): ("Post-closing", ("Report to the client", "Close the file")),
+    ("advisory", "instruction"): ("Engagement", ("Run the conflict check", "Confirm the question and the scope")),
+}
+
+
+def tracks_for(style: str) -> dict[str, Track]:
+    """The tracks in a firm's vocabulary: "uk" as defined above, "us" with the US names and tasks (same keys, same order)."""
+    if style != "us":
+        return _UK
+    return {k: replace(t, stages=tuple(Stage(st.key, *_US[(k, st.key)]) if (k, st.key) in _US else st for st in t.stages))
+            for k, t in _UK.items()}
+
+
+TRACKS: dict[str, Track] = tracks_for(settings.LEGAL_FIRM_STYLE)
 
 _TRACK_WORDS = (
     ("disputes", ("litigat", "disput", "employment", "arbitrat", "insolvenc")),

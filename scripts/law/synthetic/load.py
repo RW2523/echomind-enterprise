@@ -66,14 +66,16 @@ def main() -> int:
     ap.add_argument("--container", required=True, help="the private copy's API container")
     ap.add_argument("--wait", type=int, default=3600, help="seconds to wait for every document to be searchable")
     ap.add_argument("--only", default="", help="comma-separated matter numbers")
+    ap.add_argument("--dataset", default=str(BASE), help="the dataset folder (default the synthetic set; e.g. eval/fixtures/webinar)")
     args = ap.parse_args()
+    base = Path(args.dataset).resolve()
     if not re.match(r"^https?://(127\.0\.0\.1|localhost):\d+/", args.base) or args.container.startswith("echomind-legal-demo"):
         print("refusing: load the synthetic set into a private copy on this machine only", file=sys.stderr)
         return 2
-    manifest = json.loads((BASE / "manifest.json").read_text())
+    manifest = json.loads((base / "manifest.json").read_text())
     cases = [c for c in manifest["cases"] if not args.only or c["number"] in args.only.split(",")]
     keep = ("number", "title", "client", "practice_area", "jurisdiction", "lead", "members", "parties", "sensitivity")
-    seed(args.container, {"team": {}, "matters": [{k: c[k] for k in keep if k in c} for c in cases]})
+    seed(args.container, {"team": manifest.get("team", {}), "matters": [{k: c[k] for k in keep if k in c} for c in cases]})
     creds = _credentials(args.container)
     sessions: dict = {}
 
@@ -95,7 +97,7 @@ def main() -> int:
         have = {d["title"]: d for d in get(user, f"/legal/matters/{urllib.parse.quote(mid)}/documents")["documents"]}
         ids = {d["file"]: have[d["title"]]["id"] for d in c["documents"] if d["title"] in have}
         for d in c["documents"]:
-            path = BASE / d["file"]
+            path = base / d["file"]
             row = {"matter": c["number"], "file": d["file"], "title": d["title"], "render": d["render"], "expected": d["import"]}
             parent = ids.get(d.get("version_of")) if d.get("version_of") else None
             if d["title"] in have and d["import"]:

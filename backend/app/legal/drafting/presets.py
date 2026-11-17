@@ -207,3 +207,43 @@ Chair: ______________________""",
         ],
     },
 ]
+
+
+# US wording (LEGAL_FIRM_STYLE=us, 2026-11-16): the same preset key, kind and fields, a US demand letter in place of the
+# English letter before claim.
+_US = {
+    "demand_letter": {"name": "Demand letter", "body": """# Demand letter
+
+{{today}}
+
+VIA EMAIL AND CERTIFIED MAIL
+
+{{recipient}}
+{{recipient_address}}
+
+Re: {{agreement}}
+
+Dear Sir or Madam:
+
+This firm represents {{client}} in connection with {{agreement}}. Please direct all further communications about this matter to the undersigned.
+
+## The facts
+[[write: Set out the relevant facts and the breach complained of, from the documents, in neutral terms.]]
+
+## Demand
+Our client demands payment of {{amount_claimed}} within {{deadline}} of the date of this letter.
+
+If payment is not received within that time, our client intends to pursue all available remedies, including filing suit, without further notice. Nothing in this letter waives any of our client's rights or remedies, all of which are expressly reserved.
+
+Very truly yours,
+
+{{responsible_lawyer}}"""},
+}
+
+
+def presets_for(style: str) -> list[dict]:
+    """The presets in a firm's vocabulary ("uk" as above, "us" with the US demand letter)."""
+    if style != "us":
+        return PRESETS
+    return [{**p, **_US[p["key"]]} if p["key"] in _US else p for p in PRESETS]
+

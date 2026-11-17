@@ -1,0 +1,82 @@
+---
+file: Capitalization table - pre and post money.pdf
+title: Capitalization table - pre- and post-money (November 9, 2026)
+kind: evidence
+status: final
+render: pdf
+style: table
+font: sans
+header: Northlake Analytics, Inc. - Confidential - for Series A counsel and investors
+footer: Prepared by L. Chen - 11/09/2026
+---
+# Northlake Analytics, Inc. - Capitalization Table
+
+Series A Preferred Stock financing - pre-money and post-money, fully diluted
+
+Prepared by Laura Chen, Head of Finance, on November 9, 2026, for Calder & Wynne LLP (Company counsel) and Pell Strand LLP (investor counsel). Assumes all 10,000,000 shares of Series A Preferred Stock are sold at the Original Issue Price of $1.20 per share.
+
+## 1. Holders - pre-money and post-money
+
+| Holder | Class | Pre-money shares | Pre-money % (fully diluted) | Series A shares purchased | Post-money shares | Post-money % (fully diluted) |
+|---|---|---|---|---|---|---|
+| Priya Raman | Common Stock | 15,000,000 | 37.50% | - | 15,000,000 | 30.00% |
+| Owen Fitzgerald | Common Stock | 11,000,000 | 27.50% | - | 11,000,000 | 22.00% |
+| Juniper Seed Partners, L.P. | Series Seed Preferred | 4,000,000 | 10.00% | - | 4,000,000 | 8.00% |
+| Other Series Seed holders | Series Seed Preferred | 1,600,000 | 4.00% | - | 1,600,000 | 3.20% |
+| Options granted (outstanding) | Common Stock options | 2,400,000 | 6.00% | - | 2,400,000 | 4.80% |
+| Unallocated option pool | Common Stock reserved | 6,000,000 | 15.00% | - | 6,000,000 | 12.00% |
+| Granite Peak Ventures III, L.P. | Series A Preferred | - | - | 6,666,667 | 6,666,667 | 13.33% |
+| Halcyon Growth Fund II, L.P. | Series A Preferred | - | - | 2,500,000 | 2,500,000 | 5.00% |
+| Juniper Seed Partners, L.P. | Series A Preferred | - | - | 833,333 | 833,333 | 1.67% |
+| TOTAL | | 40,000,000 | 100.00% | 10,000,000 | 50,000,000 | 100.00% |
+
+## 2. Summary by class
+
+| Class | Pre-money shares | Pre-money % | Post-money shares | Post-money % |
+|---|---|---|---|---|
+| Common Stock outstanding (founders) | 26,000,000 | 65.00% | 26,000,000 | 52.00% |
+| Series Seed Preferred Stock | 5,600,000 | 14.00% | 5,600,000 | 11.20% |
+| Series A Preferred Stock | 0 | 0.00% | 10,000,000 | 20.00% |
+| Options granted (outstanding) | 2,400,000 | 6.00% | 2,400,000 | 4.80% |
+| Unallocated option pool | 6,000,000 | 15.00% | 6,000,000 | 12.00% |
+| TOTAL | 40,000,000 | 100.00% | 50,000,000 | 100.00% |
+
+## 3. Valuation and round economics
+
+| Item | Figure | Basis |
+|---|---|---|
+| Series A investment | $12,000,000 | Term sheet of September 24, 2026 |
+| Original Issue Price | $1.20 per share | $48,000,000 / 40,000,000 pre-money shares |
+| Series A shares issued | 10,000,000 | $12,000,000 / $1.20 |
+| Pre-money valuation (fully diluted) | $48,000,000 | 40,000,000 shares x $1.20 |
+| Post-money valuation (fully diluted) | $60,000,000 | 50,000,000 shares x $1.20 |
+| Series A ownership post-money | 20.00% | 10,000,000 / 50,000,000 |
+| Unallocated pool post-money | 12.00% | 6,000,000 / 50,000,000 |
+
+## 4. Option pool
+
+| Item | Shares |
+|---|---|
+| Reserved under the 2023 Equity Incentive Plan before the increase | 5,200,000 |
+| Increase for the Series A (Board and stockholder approval required) | 3,200,000 |
+| Reserved under the Plan after the increase | 8,400,000 |
+| of which: options granted (outstanding) | 2,400,000 |
+| of which: unallocated, available for future grant | 6,000,000 |
+
+## 5. Juniper Seed Partners, L.P. - combined holding after the Series A
+
+| Series | Shares | Post-money % |
+|---|---|---|
+| Series Seed Preferred Stock | 4,000,000 | 8.00% |
+| Series A Preferred Stock | 833,333 | 1.67% |
+| Total | 4,833,333 | 9.67% |
+
+Notes
+
+1. Fully diluted means all outstanding Common Stock, all Preferred Stock on an as-converted basis (each share of Series Seed Preferred and Series A Preferred converts into one share of Common Stock), all outstanding options and the unallocated pool.
+
+2. The unallocated pool of 6,000,000 shares includes the 3,200,000-share increase to be approved by the Board and the stockholders for this financing. It is sized at 12% of the post-money fully diluted capitalization and is included in the pre-money share count, as the term sheet requires.
+
+3. Series A shares are whole shares: Granite Peak's 6,666,667 shares and Juniper's 833,333 shares are rounded from their $8,000,000 and $1,000,000 commitments. Percentages are rounded to two decimal places; the unrounded Series A percentages are 13.333334% (Granite Peak), 5.000000% (Halcyon) and 1.666666% (Juniper).
+
+4. Source: the Company's stock ledger and option ledger as of November 9, 2026. No warrants, convertible notes or other rights to acquire shares are outstanding.

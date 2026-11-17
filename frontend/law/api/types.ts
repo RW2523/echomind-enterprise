@@ -9,7 +9,7 @@ export interface Me {
   /** The firm-wide actions the person may take (2026-11-12): what the rail, menus and home page offer. */
   can?: string[];
   session: { auth: string; mfa_enrolled: boolean; must_change_password: boolean; idle_expires_at: number; abs_expires_at: number };
-  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean; conversation?: boolean; regulatory?: boolean; translation?: boolean; demo_signin?: boolean;
+  features?: { intake: boolean; intake_links: boolean; summaries?: boolean; time_entries?: boolean; panel?: boolean; conversation?: boolean; regulatory?: boolean; translation?: boolean; demo_signin?: boolean; firm_style?: 'uk' | 'us';
     /** Where the answer model runs, from its configured address (review P1): the interface claims no more than this. */
     model_location?: 'this_server' | 'firm_network' | 'external'; network_mode?: 'disconnected' | 'restricted' };
 }

@@ -1,0 +1,25 @@
+{
+ "title": "Ortega v. Ridgeline Health Partners - on-call pay claim",
+ "client": {
+  "name": "Ridgeline Health Partners, Inc.",
+  "code": "RHP"
+ },
+ "practice_area": "Employment",
+ "jurisdiction": "Illinois",
+ "lead": "sofia",
+ "members": {
+  "alice": "attorney",
+  "omar": "paralegal"
+ },
+ "parties": [
+  [
+   "Maria Ortega",
+   "adverse"
+  ],
+  [
+   "Reyes & Gold LLC",
+   "related"
+  ]
+ ],
+ "paper": "letter"
+}

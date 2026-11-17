@@ -1,0 +1,132 @@
+Data Processing Addendum - Brightline form (October 1, 2026)
+(file: Data Processing Addendum - Brightline form.docx; docx; contract, draft)
+
+DATA PROCESSING ADDENDUM
+
+Schedule 3 to the Master Subscription Agreement
+
+Brightline form dated October 1, 2026 - draft for discussion
+
+This Data Processing Addendum (this "DPA") is entered into between Brightline Software, Inc., a Delaware corporation ("Brightline"), and Atlas Federal Credit Union, a federally chartered credit union ("Customer"), and forms part of the Master Subscription Agreement between them for the Brightline Lending Cloud service (the "Agreement"). This DPA sets out the terms on which Brightline processes Personal Information on behalf of Customer in providing the Service.
+
+1. DEFINITIONS
+
+1.1 Definitions. Capitalized terms used but not defined in this DPA have the meanings given in the Agreement. In this DPA:
+
+"Applicable Privacy Law" means all federal and state laws and regulations relating to the privacy, security, confidentiality or breach notification of Personal Information that apply to the processing of Personal Information under the Agreement, including Title V of the Gramm-Leach-Bliley Act and its implementing regulations and state data security and breach notification laws, including those of the State of New York.
+
+"Individual" means an identified or identifiable natural person to whom Personal Information relates, including Customer's members, loan applicants, co-applicants and guarantors, and Customer's personnel.
+
+"Personal Information" means any information contained in Customer Data that identifies, relates to, describes or is reasonably capable of being associated with an Individual, including "nonpublic personal information" as defined under the Gramm-Leach-Bliley Act.
+
+"Personal Information Breach" means any breach of security leading to the accidental or unlawful destruction, loss, alteration, or unauthorized acquisition, disclosure of or access to, Personal Information processed by Brightline or its Subprocessors.
+
+"Process" or "processing" means any operation performed on Personal Information, including collection, recording, storage, retrieval, use, disclosure, transmission, alteration and deletion.
+
+"Subprocessor" means any third party engaged by Brightline that processes Personal Information on behalf of Customer in connection with the Service.
+
+1.2 Relationship with the Agreement. A Personal Information Breach that is also a Security Incident is subject to both this DPA and Section 8 of the Agreement.
+
+2. SCOPE AND ROLES
+
+2.1 Roles of the Parties. Customer determines the purposes and means of the processing of Personal Information. Brightline processes Personal Information solely as Customer's service provider, on Customer's behalf and for the purpose of providing the Service.
+
+2.2 Customer Instructions. Brightline shall process Personal Information only in accordance with Customer's documented instructions. The Agreement, this DPA, the Documentation and Customer's configuration and use of the Service are Customer's complete instructions at the date of this DPA. Brightline shall promptly inform Customer if, in its opinion, an instruction would violate Applicable Privacy Law.
+
+2.3 Details of Processing. The subject matter, nature, purpose and duration of the processing, and the categories of Personal Information and Individuals, are described in Annex A.
+
+2.4 Restrictions. Brightline shall not: (a) sell Personal Information or disclose it to any third party for monetary or other valuable consideration; (b) retain, use or disclose Personal Information for any purpose other than providing the Service, or outside the direct business relationship between Brightline and Customer; or (c) combine Personal Information with personal information that Brightline receives from any other person, except as necessary to provide the Service.
+
+2.5 Customer Obligations. Customer is responsible for providing any notices to, and obtaining any consents from, Individuals that Applicable Privacy Law requires for the processing of Personal Information under the Agreement.
+
+3. BRIGHTLINE'S OBLIGATIONS
+
+3.1 Personnel. Brightline shall ensure that each of its personnel authorized to process Personal Information is subject to a written obligation of confidentiality, has received appropriate training in data protection and security, and has access only to the Personal Information necessary for that person's role.
+
+3.2 Security Safeguards. Brightline shall implement and maintain the administrative, technical and physical safeguards described in Section 8 of the Agreement, which are designed to ensure the security and confidentiality of Personal Information, to protect against anticipated threats or hazards to its security or integrity, and to protect against unauthorized access to or use of Personal Information that could result in substantial harm or inconvenience to any Individual.
+
+3.3 Requests from Individuals. Brightline shall promptly forward to Customer any request it receives from an Individual relating to that Individual's Personal Information, and shall not respond to the request except to direct the Individual to Customer, unless Customer instructs otherwise. Brightline shall provide reasonable assistance to enable Customer to respond to any such request.
+
+3.4 Government Requests. If Brightline receives a subpoena, court order or other request from a government authority for Personal Information, Brightline shall, to the extent legally permitted, promptly notify Customer and give Customer a reasonable opportunity to seek a protective order before disclosing the Personal Information.
+
+3.5 Records. Brightline shall maintain records of its processing of Personal Information sufficient to demonstrate its compliance with this DPA and shall make them available to Customer on reasonable request.
+
+4. SUBPROCESSORS
+
+4.1 Authorization. Customer generally authorizes Brightline to engage Subprocessors to process Personal Information. The Subprocessors engaged by Brightline as of the date of this DPA are listed in Annex B, and Customer approves them.
+
+4.2 Subprocessor Obligations. Brightline shall engage each Subprocessor under a written agreement that imposes data protection and security obligations no less protective of Personal Information than those in this DPA, and shall remain responsible to Customer for the performance of each Subprocessor's obligations.
+
+4.3 Changes to Subprocessors. Brightline shall give Customer at least thirty (30) days' prior written notice before engaging any new Subprocessor, identifying the Subprocessor and the services it will perform. Customer may object to a new Subprocessor on reasonable grounds relating to the protection of Personal Information by written notice within that period. If Customer objects, the parties shall discuss Customer's concerns in good faith with a view to agreeing a commercially reasonable resolution.
+
+5. PERSONAL INFORMATION BREACH
+
+5.1 Notification. Brightline shall notify Customer of a Personal Information Breach without undue delay and in any event within seventy-two (72) hours after Brightline confirms the Personal Information Breach. Brightline shall send the notice to Customer's designated security contact by email and by telephone.
+
+5.2 Content of Notice. The notice shall include, to the extent then known: (a) a description of the nature of the Personal Information Breach, including the categories and approximate number of Individuals and records concerned; (b) the likely consequences of the Personal Information Breach; (c) the measures Brightline has taken or proposes to take to address it and to mitigate its possible adverse effects; and (d) the name and contact details of a Brightline contact from whom more information may be obtained. Where it is not possible to provide all of this information at the same time, Brightline may provide it in phases without undue further delay.
+
+5.3 Cooperation. Brightline shall take reasonable steps to contain, investigate and remediate any Personal Information Breach and shall provide the cooperation Customer reasonably requests to enable Customer to meet its obligations under Applicable Privacy Law, including any obligation to notify Individuals or regulators.
+
+5.4 Notifications to Third Parties. Customer controls all notifications of a Personal Information Breach to Individuals, regulators and the media. Brightline shall not notify any Individual or regulator of a Personal Information Breach affecting Customer's Personal Information without Customer's prior written approval, unless the notification is required by law.
+
+5.5 No Admission. Brightline's notification of or response to a Personal Information Breach is not an acknowledgment by Brightline of any fault or liability.
+
+6. AUDITS AND ASSESSMENTS
+
+6.1 SOC 2 Report. Brightline shall provide Customer with a copy of its most recent SOC 2 Type II report each year, as provided in Section 8.2 of the Agreement.
+
+6.2 Security Questionnaire. Not more than once in any twelve-month period, Brightline shall complete a written information security questionnaire reasonably requested by Customer as part of Customer's vendor management program, provided that Brightline may answer by referring to its SOC 2 Type II report where the report addresses the question.
+
+6.3 Regulatory Examination. Brightline shall cooperate with any examination of Customer by the NCUA or another regulator having supervisory jurisdiction over Customer, as provided in Section 8.5 of the Agreement.
+
+7. RETURN AND DELETION
+
+7.1 Deletion. Brightline shall delete all Personal Information, and all other Customer Data, from the Service within thirty (30) days after the termination or expiration of the Agreement, after first making it available for export in accordance with Section 6.5 of the Agreement.
+
+7.2 Exceptions. Brightline may retain Personal Information to the extent required by law, and copies held in Brightline's backup systems may be retained until they are overwritten in the ordinary course of Brightline's backup rotation. Any Personal Information so retained remains subject to this DPA for as long as Brightline holds it.
+
+7.3 Certification. On Customer's written request, Brightline shall certify in writing that it has deleted Personal Information in accordance with this Section 7.
+
+8. GENERAL
+
+8.1 Order of Precedence. If there is a conflict between this DPA and the Agreement with respect to the processing of Personal Information, this DPA prevails.
+
+8.2 Liability. Each party's liability arising out of or relating to this DPA is subject to the exclusions and limitations of liability in Section 11 of the Agreement.
+
+8.3 Term. This DPA remains in effect for as long as Brightline processes Personal Information on behalf of Customer, and terminates automatically when Brightline has deleted all Personal Information in accordance with Section 7.
+
+8.4 Governing Law. This DPA is governed by the governing law and jurisdiction provisions in Section 14 of the Agreement.
+
+IN WITNESS WHEREOF, the parties have executed this DPA by their duly authorized representatives.
+
+BRIGHTLINE SOFTWARE, INC.
+
+By: ______________________________
+Name:
+Title:
+Date:
+
+ATLAS FEDERAL CREDIT UNION
+
+By: ______________________________
+Name:
+Title:
+Date:
+
+--- page break ---
+
+ANNEX A - DETAILS OF PROCESSING
+
+| Item | Description |
+| Subject matter | Provision of the Brightline Lending Cloud service to Customer under the Agreement |
+| Nature and purpose | Hosting, storage, retrieval, analysis and transmission of Personal Information to enable Customer to originate, underwrite and process loans; technical support; security monitoring |
+| Duration | The term of the Agreement and the period until deletion under Section 7 of this DPA |
+| Categories of Individuals | Customer's members, loan applicants, co-applicants and guarantors; Customer's Authorized Users |
+| Categories of Personal Information | Names and contact details; dates of birth; Social Security numbers and other government identifiers; employment and income information; account and loan information; credit reports and credit scores obtained by Customer; Authorized User names and login credentials |
+
+ANNEX B - SUBPROCESSORS
+
+| Subprocessor | Service performed | Personal Information processed |
+| Northbeam Cloud, Inc. | Cloud hosting: infrastructure, storage and backups for the Service | All Personal Information in Customer Data (encrypted) |
+| Quillfeather Support, Inc. | Customer support ticketing platform | Authorized User names and business contact details; any Personal Information that Customer includes in a support ticket |
+| Tallowmere Messaging, LLC | Transactional email delivery (system notifications) | Authorized User names and email addresses |

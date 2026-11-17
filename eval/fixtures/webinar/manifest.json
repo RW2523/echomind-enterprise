@@ -1,0 +1,794 @@
+{
+ "note": "FICTIONAL webinar dataset (2026-11-16): Calder & Wynne LLP, a fictional US law firm. Every party, person, address, figure and event is invented. Rendered by scripts/law/synthetic/render.py --base eval/fixtures/webinar; answer keys in answer_key_*.jsonl; the presenter's run-sheet in runsheet.json.",
+ "team": {
+  "harper": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "senior associate, litigation"
+  },
+  "sofia": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "associate, employment"
+  },
+  "kenji": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "associate, corporate, technology and regulatory"
+  },
+  "lena": {
+   "roles": [
+    "attorney"
+   ],
+   "about": "first-year associate"
+  },
+  "omar": {
+   "roles": [
+    "paralegal"
+   ],
+   "about": "paralegal, litigation"
+  },
+  "theo": {
+   "roles": [
+    "reviewer"
+   ],
+   "about": "knowledge lawyer (reviews drafts)"
+  }
+ },
+ "cases": [
+  {
+   "title": "Hollis Medical Supply v. Brennan Freight Lines",
+   "client": {
+    "name": "Hollis Medical Supply, Inc.",
+    "code": "HMS"
+   },
+   "practice_area": "Commercial litigation",
+   "jurisdiction": "Delaware",
+   "lead": "alice",
+   "members": {
+    "harper": "attorney",
+    "bob": "attorney",
+    "carol": "paralegal",
+    "omar": "paralegal"
+   },
+   "parties": [
+    [
+     "Brennan Freight Lines, LLC",
+     "adverse"
+    ],
+    [
+     "Ostrow Kaplan LLP",
+     "related"
+    ]
+   ],
+   "number": "MAT-2101",
+   "documents": [
+    {
+     "file": "MAT-2101/Warehousing and Distribution Services Agreement - executed.pdf",
+     "title": "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)",
+     "kind": "contract",
+     "status": "executed",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2101/01-services-agreement-executed.src.md",
+     "bytes": 88182,
+     "sha256": "cab43904de8228987fc66591bafca26e6cab6873d604b81d42327395351a1157",
+     "features": {
+      "tables": 2,
+      "pages": 9
+     }
+    },
+    {
+     "file": "MAT-2101/First Amendment - executed.docx",
+     "title": "First Amendment to the Warehousing and Distribution Services Agreement (January 15, 2026)",
+     "kind": "contract",
+     "status": "executed",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2101/02-first-amendment-executed.src.md",
+     "bytes": 40794,
+     "sha256": "090bc35cd3f9c3e44d93aba2cc9aa9b8b9b766758f995a3082c853a0b72f5f15",
+     "features": {
+      "auto_numbered": 25
+     }
+    },
+    {
+     "file": "MAT-2101/Newark DC receiving log - June 1-7 2026.pdf",
+     "title": "Newark DC receiving log, June 1-7, 2026",
+     "kind": "evidence",
+     "status": "final",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2101/03-receiving-log-june-1-7.src.md",
+     "bytes": 45095,
+     "sha256": "5e78d306f4870e99ef41c30826a19c85a7279e050aada6e9de9227a12db30ed8",
+     "features": {
+      "tables": 1,
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2101/Temperature Excursion Report - HMS-26-0588.pdf",
+     "title": "Temperature Excursion Report - Shipment HMS-26-0588 (June 10, 2026)",
+     "kind": "evidence",
+     "status": "final",
+     "render": "scan",
+     "import": true,
+     "source": "src/MAT-2101/04-temperature-excursion-report.src.md",
+     "bytes": 513405,
+     "sha256": "378d2a8b77ab7a7c3df1df400ae5847caeb68f21e38d0950a4eb07cd6738cce6",
+     "features": {
+      "tables": 1,
+      "pages": 2,
+      "scanned": true,
+      "scan": "gray 250 dpi, skew up to 0.4 degrees",
+      "handwriting": 1,
+      "stamps": 1,
+      "signatures": 2
+     }
+    },
+    {
+     "file": "MAT-2101/Brennan Incident Report - HMS-26-0588.pdf",
+     "title": "Brennan Freight Lines incident report - Shipment HMS-26-0588 (June 4, 2026)",
+     "kind": "evidence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2101/05-brennan-incident-report.src.md",
+     "bytes": 44409,
+     "sha256": "b32c7e9656fca10eb30a39849c8846145378a6303e6591d5a677b8c42c076c8f",
+     "features": {
+      "tables": 2,
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2101/Notice of claim and logger data emails.pdf",
+     "title": "Emails - notice of claim and Logger Data request, June 9 to July 24, 2026",
+     "kind": "correspondence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2101/06-notice-and-logger-emails.src.md",
+     "bytes": 44545,
+     "sha256": "9a44768211f29de4b5b358140ac6ec91836e4d79b26ab65c0fdae37061e36134",
+     "features": {
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2101/Interview memo - Elena Ruiz.docx",
+     "title": "Privileged interview memo - Elena Ruiz, Receiving Manager (October 5, 2026)",
+     "kind": "memo",
+     "status": "final",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2101/07-interview-memo-elena-ruiz.src.md",
+     "bytes": 40958,
+     "sha256": "4cfd124bf26ffe4ce42af32f1c85cc95d9bdf9d88ee39ac25a289ad11da5f14c",
+     "features": {}
+    },
+    {
+     "file": "MAT-2101/Brennan invoice BFL-26-06-114.pdf",
+     "title": "Brennan invoice BFL-26-06-114 (June 30, 2026)",
+     "kind": "evidence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2101/08-brennan-invoice-bfl-26-06-114.src.md",
+     "bytes": 43947,
+     "sha256": "2ea1efc1a899520eb4ca324c42e47ec50745cb0ac8f99b35a8a029a3998a3aa4",
+     "features": {
+      "tables": 3,
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2101/Brennan credit memo BFL-CM-26-019.pdf",
+     "title": "Brennan credit memo BFL-CM-26-019 (July 20, 2026)",
+     "kind": "evidence",
+     "status": "received",
+     "render": "scan",
+     "import": true,
+     "source": "src/MAT-2101/09-brennan-credit-memo-bfl-cm-26-019.src.md",
+     "bytes": 227495,
+     "sha256": "99d7a2282531a9d7544d7926e89a10723d4661dd5ed2a1e5f42505a65b58a929",
+     "features": {
+      "tables": 1,
+      "pages": 1,
+      "scanned": true,
+      "scan": "gray 250 dpi, skew up to 0.4 degrees",
+      "handwriting": 1,
+      "stamps": 1,
+      "signatures": 1
+     }
+    },
+    {
+     "file": "MAT-2101/Demand letter to Brennan - 2026-08-18.docx",
+     "title": "Demand letter to Brennan Freight Lines (August 18, 2026)",
+     "kind": "correspondence",
+     "status": "final",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2101/10-demand-letter-2026-08-18.src.md",
+     "bytes": 40437,
+     "sha256": "fcb2dc512639dbf710a86823498e63aeab25649a76c6a5841543793ef49e0aa8",
+     "features": {
+      "tables": 1
+     }
+    },
+    {
+     "file": "MAT-2101/Ostrow Kaplan response - 2026-09-02.pdf",
+     "title": "Ostrow Kaplan letter for Brennan responding to the demand (September 2, 2026)",
+     "kind": "correspondence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2101/11-ostrow-kaplan-response-2026-09-02.src.md",
+     "bytes": 68193,
+     "sha256": "611dcd9542d6cfb981c5193e611f42bb626823a5fadda6f1103813579b0d1e11",
+     "features": {
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2101/Complaint - N26C-09-117 CCLD.pdf",
+     "title": "Complaint - Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC (filed September 21, 2026)",
+     "kind": "pleading",
+     "status": "final",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2101/12-complaint-n26c-09-117.src.md",
+     "bytes": 97149,
+     "sha256": "de3aeeb52934bb798617d749b0e90cfca01eb9401961080000ab310f20a3bb2b",
+     "features": {
+      "pages": 5
+     }
+    },
+    {
+     "file": "MAT-2101/Scheduling Order - 2026-11-09.pdf",
+     "title": "Scheduling Order (entered November 9, 2026)",
+     "kind": "pleading",
+     "status": "final",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2101/13-scheduling-order-2026-11-09.src.md",
+     "bytes": 67473,
+     "sha256": "f608c3d689ae128405df1b25ebdd782cfc2c3399a850a7e47ac9492c30d57b12",
+     "features": {
+      "pages": 2
+     }
+    }
+   ]
+  },
+  {
+   "title": "Ortega v. Ridgeline Health Partners - on-call pay claim",
+   "client": {
+    "name": "Ridgeline Health Partners, Inc.",
+    "code": "RHP"
+   },
+   "practice_area": "Employment",
+   "jurisdiction": "Illinois",
+   "lead": "sofia",
+   "members": {
+    "alice": "attorney",
+    "omar": "paralegal"
+   },
+   "parties": [
+    [
+     "Maria Ortega",
+     "adverse"
+    ],
+    [
+     "Reyes & Gold LLC",
+     "related"
+    ]
+   ],
+   "number": "MAT-2102",
+   "documents": [
+    {
+     "file": "MAT-2102/Offer letter - Maria Ortega.docx",
+     "title": "Offer letter - Maria Ortega (January 23, 2023)",
+     "kind": "correspondence",
+     "status": "executed",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2102/01-offer-letter.src.md",
+     "bytes": 39473,
+     "sha256": "fd828b5cdf31ce6c8d2781760f3159aa1b1d54ccb0474d5c9a6a7a3ea90cbee3",
+     "features": {}
+    },
+    {
+     "file": "MAT-2102/On-Call Compensation Policy HR-214.pdf",
+     "title": "On-Call Compensation Policy HR-214 (rev. 3, effective January 1, 2024)",
+     "kind": "other",
+     "status": "final",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2102/02-on-call-policy-hr-214.src.md",
+     "bytes": 68811,
+     "sha256": "76313e6757b92f29130ce4521aff73434b59048ddc580a79dd7e2d6353b571cb",
+     "features": {
+      "tables": 2,
+      "pages": 4
+     }
+    },
+    {
+     "file": "MAT-2102/Timesheet summary - Ortega - Q4 2023 to Q3 2026.pdf",
+     "title": "Timesheet summary - Maria Ortega, on-call and call-back, Q4 2023 to Q3 2026",
+     "kind": "evidence",
+     "status": "final",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2102/03-timesheet-summary.src.md",
+     "bytes": 43641,
+     "sha256": "cc2bd52514591d88b70935808b989028ffa9c6679622a945cfac155a2f279426",
+     "features": {
+      "tables": 1,
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2102/Payroll register extract - Ortega.pdf",
+     "title": "Payroll register extract - Maria Ortega, on-call stipends and call-back pay",
+     "kind": "evidence",
+     "status": "final",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2102/04-payroll-register-extract.src.md",
+     "bytes": 45251,
+     "sha256": "26ad4f28b8a491cae83b62caaf84b5b515fc9ba7f6d404b4b9b0abfc1902d1de",
+     "features": {
+      "tables": 2,
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2102/Reyes and Gold demand letter - 2026-10-06.pdf",
+     "title": "Demand letter from Reyes & Gold for Maria Ortega (October 6, 2026)",
+     "kind": "correspondence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2102/05-demand-letter-reyes-gold.src.md",
+     "bytes": 70807,
+     "sha256": "907777f2edd1eaec875e983324de5ce176d973839768ffc31f57f8c6f3535b1e",
+     "features": {
+      "tables": 1,
+      "pages": 3
+     }
+    },
+    {
+     "file": "MAT-2102/HR investigation memo - on-call pay.docx",
+     "title": "HR investigation memo - on-call stipends (October 20, 2026)",
+     "kind": "memo",
+     "status": "final",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2102/06-hr-investigation-memo.src.md",
+     "bytes": 41226,
+     "sha256": "d6c7e4aff8a4d38db2209d45ec5bda1b57116af330855f8e24f1dc84b7de07d1",
+     "features": {
+      "auto_numbered": 37
+     }
+    },
+    {
+     "file": "MAT-2102/Tolling agreement - Ortega - signed.pdf",
+     "title": "Tolling agreement - Maria Ortega and Ridgeline (signed October 28, 2026)",
+     "kind": "contract",
+     "status": "executed",
+     "render": "scan",
+     "import": true,
+     "source": "src/MAT-2102/07-tolling-agreement-signed-scan.src.md",
+     "bytes": 719481,
+     "sha256": "212e031e95e6cf2f9388ea694e9e6beb7fcd30409aaf7c4b3e3a80a57cd4f056",
+     "features": {
+      "pages": 4,
+      "scanned": true,
+      "scan": "gray 200 dpi, skew up to 0.4 degrees",
+      "handwriting": 2,
+      "signatures": 3
+     }
+    }
+   ]
+  },
+  {
+   "title": "Northlake Analytics - Series A financing",
+   "client": {
+    "name": "Northlake Analytics, Inc.",
+    "code": "NLA"
+   },
+   "practice_area": "Corporate / venture",
+   "jurisdiction": "Delaware",
+   "lead": "alice",
+   "members": {
+    "kenji": "attorney",
+    "lena": "attorney",
+    "carol": "paralegal"
+   },
+   "parties": [
+    [
+     "Granite Peak Ventures III, L.P.",
+     "adverse"
+    ],
+    [
+     "Halcyon Growth Fund II, L.P.",
+     "adverse"
+    ],
+    [
+     "Juniper Seed Partners, L.P.",
+     "adverse"
+    ]
+   ],
+   "number": "MAT-2103",
+   "documents": [
+    {
+     "file": "MAT-2103/Series A Term Sheet - signed.pdf",
+     "title": "Series A term sheet - Northlake Analytics / Granite Peak (signed September 24, 2026)",
+     "kind": "contract",
+     "status": "executed",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2103/01-term-sheet-signed.src.md",
+     "bytes": 73577,
+     "sha256": "fedf45b67dc02462cfb587ce464543cf01819dfa3a81819d8f2be6f82811b904",
+     "features": {
+      "tables": 4,
+      "pages": 4
+     }
+    },
+    {
+     "file": "MAT-2103/Stock Purchase Agreement - Draft 3.docx",
+     "title": "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)",
+     "kind": "contract",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2103/02-spa-draft-3.src.md",
+     "bytes": 48223,
+     "sha256": "2f425a6a4edd970d5e3c414201fde699382bfdf142e2b999029a5435ffb879b6",
+     "features": {
+      "auto_numbered": 72,
+      "tables": 2
+     }
+    },
+    {
+     "file": "MAT-2103/Investors Rights Agreement - draft.docx",
+     "title": "Investors' Rights Agreement - draft (November 10, 2026)",
+     "kind": "contract",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2103/03-ira-draft.src.md",
+     "bytes": 44601,
+     "sha256": "d2fd5292de77ef14cc8a091e56bfc1aab6c25c6febad3a5d352397fbfd12973f",
+     "features": {
+      "auto_numbered": 58,
+      "tables": 1
+     }
+    },
+    {
+     "file": "MAT-2103/Voting Agreement - draft.docx",
+     "title": "Voting Agreement - draft (November 10, 2026)",
+     "kind": "contract",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2103/04-voting-agreement-draft.src.md",
+     "bytes": 42872,
+     "sha256": "9ecbf538dfa3199f7e46daa41e61e718d98e9e9b822a7bf6feb2b9c64c73f0bf",
+     "features": {
+      "auto_numbered": 36,
+      "tables": 2
+     }
+    },
+    {
+     "file": "MAT-2103/Capitalization table - pre and post money.pdf",
+     "title": "Capitalization table - pre- and post-money (November 9, 2026)",
+     "kind": "evidence",
+     "status": "final",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2103/05-cap-table.src.md",
+     "bytes": 45489,
+     "sha256": "102f4f6c05c257d115889f713194531b46b35dce0ea8f04fcb41240cd291f6bb",
+     "features": {
+      "tables": 5,
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2103/Board consent - Series A - signed.pdf",
+     "title": "Board consent approving the Series A financing (signed November 12, 2026)",
+     "kind": "other",
+     "status": "executed",
+     "render": "scan",
+     "import": true,
+     "source": "src/MAT-2103/06-board-consent-signed.src.md",
+     "bytes": 430682,
+     "sha256": "a1eeaa61a5fcaf83d54f8f1230e7d2a89dde9b1ccce4c4909a9c00599f53e84c",
+     "features": {
+      "pages": 2,
+      "scanned": true,
+      "scan": "gray 200 dpi, skew up to 0.4 degrees",
+      "handwriting": 1,
+      "signatures": 2
+     }
+    },
+    {
+     "file": "MAT-2103/Disclosure Schedule - draft.docx",
+     "title": "Disclosure Schedule - draft (November 10, 2026)",
+     "kind": "other",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2103/07-disclosure-schedule-draft.src.md",
+     "bytes": 40644,
+     "sha256": "8a953615790afc76af0079619ba938674a48d68e32ebd6bc986b4bc5aaba594a",
+     "features": {}
+    },
+    {
+     "file": "MAT-2103/Closing checklist - 2026-11-13.docx",
+     "title": "Closing checklist (as of November 13, 2026)",
+     "kind": "note",
+     "status": "final",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2103/08-closing-checklist.src.md",
+     "bytes": 40139,
+     "sha256": "eb36bbe4ca432570d93f3c06b197ff43ebd221c50a4c0194fba1cc65ab19a630",
+     "features": {
+      "tables": 4
+     }
+    },
+    {
+     "file": "MAT-2103/Email - Granite Peak - 2026-11-13.pdf",
+     "title": "Email from Granite Peak (Rafael Mendes) about the closing (November 13, 2026)",
+     "kind": "correspondence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2103/09-email-granite-peak.src.md",
+     "bytes": 42300,
+     "sha256": "33461b1be343061382b319fb828ed98df5491c8f640010fdbc793ad789244a30",
+     "features": {
+      "pages": 1
+     }
+    }
+   ]
+  },
+  {
+   "title": "Brightline Software - SaaS agreement with Atlas Federal Credit Union",
+   "client": {
+    "name": "Brightline Software, Inc.",
+    "code": "BLS"
+   },
+   "practice_area": "Technology & commercial contracts",
+   "jurisdiction": "New York",
+   "lead": "kenji",
+   "members": {
+    "alice": "attorney",
+    "theo": "reviewer"
+   },
+   "parties": [
+    [
+     "Atlas Federal Credit Union",
+     "adverse"
+    ]
+   ],
+   "number": "MAT-2104",
+   "documents": [
+    {
+     "file": "MAT-2104/Master Subscription Agreement - Brightline form v1.docx",
+     "title": "Master Subscription Agreement - Brightline / Atlas",
+     "kind": "contract",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2104/01-msa-brightline-form-v1.src.md",
+     "bytes": 49780,
+     "sha256": "0da97dc79da3115c4f49144f62cfdc5aa57e70abbc89d17d78b3c02245d9dd0c",
+     "features": {
+      "auto_numbered": 99,
+      "tables": 1
+     }
+    },
+    {
+     "file": "MAT-2104/Master Subscription Agreement - Atlas markup v2.docx",
+     "title": "Master Subscription Agreement - Brightline / Atlas",
+     "kind": "contract",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2104/02-msa-atlas-markup-v2.src.md",
+     "bytes": 51191,
+     "sha256": "5c601d9d3c88fea5f632aa9ba2c52e857fbe2a8d519d361f2dc82b450f73d4f0",
+     "features": {
+      "tracked_insertions": 10,
+      "tracked_deletions": 8,
+      "comments": 5,
+      "auto_numbered": 100,
+      "tables": 1
+     },
+     "version_of": "MAT-2104/Master Subscription Agreement - Brightline form v1.docx"
+    },
+    {
+     "file": "MAT-2104/SLA Schedule - Schedule 2.docx",
+     "title": "SLA Schedule (Schedule 2) - Availability and service credits",
+     "kind": "contract",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2104/03-sla-schedule-2.src.md",
+     "bytes": 40259,
+     "sha256": "b3538d351912a6f45b543965c9c1381d3be981877f18c1bb893e19081248079d",
+     "features": {
+      "tables": 1
+     }
+    },
+    {
+     "file": "MAT-2104/Data Processing Addendum - Brightline form.docx",
+     "title": "Data Processing Addendum - Brightline form (October 1, 2026)",
+     "kind": "contract",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2104/04-dpa-brightline-form.src.md",
+     "bytes": 42862,
+     "sha256": "986c69a3656f6f6415c044116d76a86c9eaaa44ee89a36089648f2f1f270c5ee",
+     "features": {
+      "auto_numbered": 38,
+      "tables": 2
+     }
+    },
+    {
+     "file": "MAT-2104/Atlas Information Security Addendum.pdf",
+     "title": "Atlas Information Security Addendum (received November 6, 2026)",
+     "kind": "contract",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2104/05-atlas-security-addendum.src.md",
+     "bytes": 72604,
+     "sha256": "7a3f1aee93c490fc64c209440b68cc412c1ac2ded7d256b05ea6fee7fa592f31",
+     "features": {
+      "pages": 4
+     }
+    },
+    {
+     "file": "MAT-2104/Email - Atlas markup cover - 2026-11-06.pdf",
+     "title": "Email from Atlas (Monica Sheridan) sending the markup (November 6, 2026)",
+     "kind": "correspondence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2104/06-email-atlas-markup-cover.src.md",
+     "bytes": 42272,
+     "sha256": "77eb81e40862513909410a67dabfa8bceba4f87e0921539b1db38a8a001e8819",
+     "features": {
+      "pages": 1
+     }
+    },
+    {
+     "file": "MAT-2104/Email - Brightline instructions - 2026-11-09.pdf",
+     "title": "Email from Brightline's General Counsel with negotiating instructions (November 9, 2026)",
+     "kind": "correspondence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2104/07-email-brightline-instructions.src.md",
+     "bytes": 42549,
+     "sha256": "99f06fde87ccf69e71d0be3439ccba0e219ecab3d6e3fc49b874e6dc5995e954",
+     "features": {
+      "pages": 1
+     }
+    }
+   ]
+  },
+  {
+   "title": "Meadowgate Foods - FDA allergen labeling",
+   "client": {
+    "name": "Meadowgate Foods, Inc.",
+    "code": "MGF"
+   },
+   "practice_area": "Regulatory",
+   "jurisdiction": "Federal (FDA)",
+   "lead": "kenji",
+   "members": {
+    "alice": "attorney",
+    "theo": "reviewer"
+   },
+   "parties": [
+    [
+     "Prairie Mills Ingredients, LLC",
+     "related"
+    ]
+   ],
+   "number": "MAT-2105",
+   "documents": [
+    {
+     "file": "MAT-2105/FDA warning letter - CMS 712044.pdf",
+     "title": "FDA warning letter CMS # 712044 (November 6, 2026)",
+     "kind": "correspondence",
+     "status": "received",
+     "render": "scan",
+     "import": true,
+     "source": "src/MAT-2105/01-fda-warning-letter.src.md",
+     "bytes": 643812,
+     "sha256": "f747b1cb5b8344c446f2ee57d48b4db24a1a2cf6fc4e9aa37f5bd3b7979583ef",
+     "features": {
+      "pages": 3,
+      "scanned": true,
+      "scan": "gray 200 dpi, skew up to 0.4 degrees",
+      "stamps": 1,
+      "signatures": 1
+     }
+    },
+    {
+     "file": "MAT-2105/QA memo - sesame cross-contact.docx",
+     "title": "QA memo - sesame cross-contact on Line 3 (November 12, 2026)",
+     "kind": "memo",
+     "status": "final",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2105/02-qa-memo-sesame-cross-contact.src.md",
+     "bytes": 41896,
+     "sha256": "2a56929cab965eeac3dc0af917216b99387ff4d3e2eb246fc71d8f8afbe65970",
+     "features": {
+      "tables": 1
+     }
+    },
+    {
+     "file": "MAT-2105/Label proof - Harvest Grain Crackers.pdf",
+     "title": "Current label proof - Harvest Grain Crackers, Rosemary & Sea Salt",
+     "kind": "evidence",
+     "status": "final",
+     "render": "scan",
+     "import": true,
+     "source": "src/MAT-2105/03-label-proof-harvest-grain.src.md",
+     "bytes": 153896,
+     "sha256": "80ae40b5b44bed369efdbf0340f710359281c33fbe5ee4e00126a1b4ac3f1fcc",
+     "features": {
+      "tables": 2,
+      "pages": 1,
+      "scanned": true,
+      "scan": "gray 200 dpi, skew up to 0.3 degrees",
+      "handwriting": 1
+     }
+    },
+    {
+     "file": "MAT-2105/Supplier allergen certificate - Prairie Mills RS-440.pdf",
+     "title": "Supplier allergen certificate - Prairie Mills RS-440 seasoning (March 3, 2026)",
+     "kind": "evidence",
+     "status": "received",
+     "render": "pdf",
+     "import": true,
+     "source": "src/MAT-2105/04-supplier-allergen-certificate-rs440.src.md",
+     "bytes": 64611,
+     "sha256": "8147ed8b83f53e77e382fd24c1c87c5dfc397657d1a376b1af3c3a5635233ece",
+     "features": {
+      "tables": 2,
+      "pages": 2
+     }
+    },
+    {
+     "file": "MAT-2105/Draft response memo - 2026-11-14.docx",
+     "title": "Draft advice memo - response to the FDA warning letter (November 14, 2026)",
+     "kind": "memo",
+     "status": "draft",
+     "render": "docx",
+     "import": true,
+     "source": "src/MAT-2105/05-draft-advice-memo-response.src.md",
+     "bytes": 43524,
+     "sha256": "ccd3f06f2924a18d86fa0126697eee8e6cb3eb83a9e3cad7887fee4fd2b3efa8",
+     "features": {
+      "comments": 1
+     }
+    }
+   ]
+  }
+ ]
+}

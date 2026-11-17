@@ -1,0 +1,116 @@
+{
+ "note": "The work Calder & Wynne LLP (fictional) has already done on the webinar matters; read by scripts/law/webinar_enrich.py. ISO dates are used as written (they match the documents); numbers are days from the day it runs.",
+ "casework": [
+  {"matter": "MAT-2101", "lead": "alice", "track": "disputes", "updates": [
+    ["2026-07-30", "instruction", "Hollis (Patricia Lowell) instructs us to recover its losses from Brennan Freight Lines for Shipment HMS-26-0588: all 22 pallets destroyed after the June 2 temperature excursion."],
+    ["2026-08-03", "stage:assessment", "Assessment started on the Agreement, the First Amendment, the Newark DC receiving log and the excursion report."],
+    ["2026-08-18", "filing", "Demand letter sent to Brennan for $1,228,900.00, with 30 days to pay."],
+    ["2026-09-02", "note", "Ostrow Kaplan rejected the demand for Brennan and offered $150,000. Their letter relies on a $500,000 cap and a 48-hour notice period; both need checking against the Agreement as amended."],
+    ["2026-09-21", "stage:pleadings", "Complaint filed in the Superior Court (CCLD), C.A. No. N26C-09-117 CCLD."],
+    ["2026-10-05", "meeting", "Interviewed Elena Ruiz (Receiving Manager, Newark DC); memo on file."],
+    ["2026-11-09", "stage:disclosure", "Scheduling Order entered; discovery is open."],
+    ["2026-11-12", "call", "Call with Patricia Lowell: Hollis wants to press for early mediation once Brennan produces its logger data, dispatch records and reefer maintenance logs."]
+   ], "tasks": [
+    ["Serve initial disclosures", "filing", "2026-11-30", "alice", false],
+    ["Serve first requests for production (dispatch records, reefer maintenance logs)", "task", 4, "harper", false],
+    ["Notice the deposition of Kim Delacroix (Brennan dispatch)", "task", 12, "harper", false],
+    ["Collect the Newark DC CCTV for June 6 from the client", "task", -1, "carol", false],
+    ["Fact discovery closes", "key_date", "2027-05-28", null, false],
+    ["Mediation to be completed", "key_date", "2027-09-30", null, false],
+    ["Bench trial (4 days)", "hearing", "2028-02-07", "alice", false],
+    ["File the complaint", "filing", "2026-09-21", "alice", true]
+   ]},
+  {"matter": "MAT-2102", "lead": "sofia", "track": "disputes", "updates": [
+    ["2026-10-08", "instruction", "Ridgeline (Andrea Lim) instructs us on Maria Ortega's on-call pay demand of $96,764.00 from Reyes & Gold."],
+    ["2026-10-09", "stage:assessment", "Assessment started on policy HR-214, the timesheet summary and the payroll register."],
+    ["2026-10-20", "note", "HR investigation: 16 weeknight on-call shifts in April to June 2025 were not paid because of a timekeeping code error ($1,520.00)."],
+    ["2026-10-28", "filing", "Tolling agreement signed; it tolls the claims through January 31, 2027."],
+    ["2026-11-10", "meeting", "Strategy meeting: answer Reyes & Gold with the policy-rate calculation and offer the unpaid stipends with interest."]
+   ], "tasks": [
+    ["Send the response letter to Reyes & Gold", "task", 3, "sofia", false],
+    ["Client approval of settlement authority", "key_date", 8, null, false],
+    ["Tolling agreement ends", "key_date", "2027-01-31", "sofia", false],
+    ["Client to audit all on-call schedule templates", "task", 20, null, false]
+   ]},
+  {"matter": "MAT-2103", "lead": "alice", "track": "transactions", "updates": [
+    ["2026-09-18", "instruction", "Northlake Analytics instructs us on its $12,000,000 Series A led by Granite Peak Ventures."],
+    ["2026-09-24", "note", "Term sheet signed: $48,000,000 pre-money, $1.20 per share, 45-day exclusivity."],
+    ["2026-10-05", "stage:negotiation", "First drafts of the Stock Purchase Agreement, Investors' Rights Agreement and Voting Agreement sent to Pell Strand."],
+    ["2026-11-10", "note", "Draft 3 of the Stock Purchase Agreement sent to Pell Strand with the disclosure schedule."],
+    ["2026-11-12", "stage:signing", "Board consent signed; working through the closing checklist."]
+   ], "tasks": [
+    ["Collect the two outstanding PIIAs", "task", 2, "carol", false],
+    ["Settle the investor counsel fee cap with Pell Strand", "task", 1, "alice", false],
+    ["Circulate the stockholder consent for signature", "task", 4, "kenji", false],
+    ["Target closing (term sheet)", "key_date", "2026-12-15", null, false],
+    ["Outside Date under the Stock Purchase Agreement", "key_date", "2026-12-31", null, false]
+   ]},
+  {"matter": "MAT-2104", "lead": "kenji", "track": "transactions", "updates": [
+    ["2026-09-28", "instruction", "Brightline Software asks us to negotiate its Lending Cloud subscription agreement with Atlas Federal Credit Union."],
+    ["2026-10-01", "note", "Brightline's form agreement (version 1) sent to Atlas with the SLA schedule and the DPA."],
+    ["2026-11-06", "stage:negotiation", "Atlas's markup (version 2) received with its Information Security Addendum."],
+    ["2026-11-09", "instruction", "Nathan Briggs's limits: 99.95% only with credits capped at 15%; no super-cap above 3x; termination for convenience only after 24 months on 180 days' notice."]
+   ], "tasks": [
+    ["Issues list on the Atlas markup", "task", 1, "kenji", false],
+    ["Call with Atlas vendor management", "key_date", 5, "kenji", false],
+    ["Target signature (Brightline quarter end)", "key_date", "2026-12-18", null, false]
+   ]},
+  {"matter": "MAT-2105", "lead": "kenji", "track": "advisory", "updates": [
+    ["2026-11-10", "instruction", "Meadowgate (Celeste Moreau) asks for advice on FDA warning letter CMS # 712044, received November 10."],
+    ["2026-11-11", "stage:research", "Collecting the QA records, the label proof and the supplier certificate."],
+    ["2026-11-12", "note", "QA memo received: 9 lots, about 41,800 cases, shipped to six states; root cause shared Line 3."],
+    ["2026-11-14", "note", "Draft advice memo sent to Celeste Moreau for comments."]
+   ], "tasks": [
+    ["Client decision on a voluntary recall", "key_date", 1, null, false],
+    ["Collect cleaning validation and training records", "task", 3, "kenji", false],
+    ["Results of the RS-440 seasoning blend test", "task", 6, null, false],
+    ["Written response to FDA due", "filing", "2026-12-01", "kenji", false]
+   ]}
+ ],
+ "obligations": {
+  "read": [
+   ["alice", "MAT-2101", "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)"],
+   ["alice", "MAT-2101", "First Amendment to the Warehousing and Distribution Services Agreement (January 15, 2026)"],
+   ["alice", "MAT-2101", "Scheduling Order (entered November 9, 2026)"],
+   ["alice", "MAT-2103", "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)"],
+   ["alice", "MAT-2104", "Master Subscription Agreement - Brightline / Atlas"]
+  ],
+  "confirm": {"MAT-2101": 2}
+ },
+ "scans": ["MAT-2101", "MAT-2103", "MAT-2104"],
+ "drafts": [
+  {"user": "carol", "matter": "MAT-2105", "template": "Engagement letter", "title": "Engagement letter - Meadowgate Foods FDA response",
+   "documents": ["Draft advice memo - response to the FDA warning letter (November 14, 2026)"]},
+  {"user": "alice", "matter": "MAT-2103", "template": "Internal memorandum", "title": "Memo: open closing conditions and the fee-cap point",
+   "documents": ["Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)", "Closing checklist (as of November 13, 2026)"]}
+ ],
+ "research": [
+  {"matter": "MAT-2101", "question": "What is Brennan's liability cap under the Agreement as amended by the First Amendment, and when does the cap not apply?"}
+ ],
+ "checks": [
+  ["playbook", "MAT-2104", "Master Subscription Agreement - Brightline / Atlas"],
+  ["definitions", "MAT-2103", "Series A Preferred Stock Purchase Agreement - Draft 3 (November 10, 2026)"],
+  ["summary", "MAT-2101", "Warehousing and Distribution Services Agreement - Hollis / Brennan (executed, March 1, 2024)"],
+  ["summary", "MAT-2105", "FDA warning letter CMS # 712044 (November 6, 2026)"]
+ ],
+ "compare": [["MAT-2104", "Master Subscription Agreement - Brightline / Atlas"]],
+ "diligence": [["MAT-2103", "Corporate governance review"]],
+ "panel": [
+  {"matter": "MAT-2101", "specialist": "commercial", "question": "Should Hollis accept Brennan's offer of $150,000 to settle, given what the Agreement as amended, the receiving log and Brennan's own incident report say about the delivery date, the notice and the liability cap?"}
+ ],
+ "enquiries": [
+  {"channel": "phone", "answers": {"your_name": "Rachel Dunmore", "organisation": "Dunmore Orthopedic Group (fictional)", "email": "rdunmore@example.invalid",
+    "matter_type": "commercial", "other_parties": ["Keystone Imaging Partners (fictional)"],
+    "summary": "We want our equipment lease with an imaging provider reviewed before it renews in January; the renewal raises the monthly rent by 18%.",
+    "heard_from": "referral"}},
+  {"channel": "in_person", "answers": {"your_name": "Victor Hale", "organisation": "Tri-State Cold Chain LLC (fictional)", "phone": "+1 302 555 0177",
+    "matter_type": "dispute", "other_parties": ["Brennan Freight Lines, LLC"],
+    "summary": "A refrigerated carrier lost two of our loads this summer; we want to claim against them.",
+    "heard_from": "website"}}
+ ],
+ "chats": [
+  ["MAT-2101", ["What needs my attention today?", "When does fact discovery close?"]],
+  ["MAT-2103", ["What is the pre-money valuation and the price per share?"]],
+  ["MAT-2105", ["What did FDA find during the inspection?"]]
+ ]
+}

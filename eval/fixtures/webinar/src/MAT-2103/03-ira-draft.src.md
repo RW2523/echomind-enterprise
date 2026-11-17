@@ -1,0 +1,192 @@
+---
+file: Investors Rights Agreement - draft.docx
+title: Investors' Rights Agreement - draft (November 10, 2026)
+kind: contract
+status: draft
+render: docx
+style: contract
+font: serif
+numbering: auto
+header: C&W DRAFT 11/10/2026 - SUBJECT TO CLIENT REVIEW
+footer: CW-2103 - Northlake Series A - Investors' Rights Agreement
+---
+# INVESTORS' RIGHTS AGREEMENT
+
+NORTHLAKE ANALYTICS, INC.
+
+Dated as of [__________], 2026
+
+<<<PAGE>>>
+
+THIS INVESTORS' RIGHTS AGREEMENT (this "Agreement") is made as of [__________], 2026 by and among Northlake Analytics, Inc., a Delaware corporation (the "Company"), and the investors listed on Schedule A (each an "Investor" and together the "Investors").
+
+## RECITALS
+
+The Company and the Investors are parties to the Series A Preferred Stock Purchase Agreement of even date with this Agreement (the "Purchase Agreement"). To induce the Investors to invest in the Company under the Purchase Agreement, the Company and the Investors agree that this Agreement governs the rights of the Investors to have the Company register shares of Common Stock issuable to them, to receive information from the Company and to take part in future equity offerings of the Company, and certain other matters.
+
+The parties therefore agree as follows:
+
+1. DEFINITIONS
+
+1.1 "Affiliate" means, with respect to any Person, any other Person who directly or indirectly controls, is controlled by or is under common control with that Person, including any general partner, managing member, officer or director of that Person and any investment fund controlled by, or sharing a management company or investment adviser with, that Person.
+
+1.2 "Board of Directors" means the board of directors of the Company.
+
+1.3 "Common Stock" means the common stock of the Company, $0.0001 par value per share.
+
+1.4 "Deemed Liquidation Event" has the meaning given in the Restated Certificate.
+
+1.5 "Exchange Act" means the Securities Exchange Act of 1934, as amended, and the rules and regulations under it.
+
+1.6 "Holder" means any holder of Registrable Securities who is a party to this Agreement.
+
+1.7 "IPO" means the Company's first underwritten public offering of its Common Stock under the Securities Act.
+
+1.8 "Major Investor" means any Investor that, individually or together with its Affiliates, holds at least 1,000,000 shares of Series A Preferred Stock (as adjusted for any stock split, stock dividend, combination or recapitalization after the date of this Agreement). Shares of Series Seed Preferred Stock and Common Stock are not counted toward this threshold.
+
+1.9 "New Securities" means equity securities of the Company, whether or not currently authorized, and rights, options or warrants to purchase them, and securities of any type that are or may become convertible into or exchangeable or exercisable for them.
+
+1.10 "Person" means any individual, corporation, partnership, trust, limited liability company, association or other entity.
+
+1.11 "Preferred Stock" means the Series Seed Preferred Stock and the Series A Preferred Stock of the Company.
+
+1.12 "Registrable Securities" means the Common Stock issued or issuable on conversion of the Preferred Stock held by the Investors, and any Common Stock issued as a dividend or other distribution on, or in exchange for or replacement of, those shares; excluding any securities sold by a Person in a transaction in which the rights under this Agreement are not assigned.
+
+1.13 "Restated Certificate" means the Company's Amended and Restated Certificate of Incorporation, as amended from time to time.
+
+1.14 "SEC" means the Securities and Exchange Commission.
+
+1.15 "Securities Act" means the Securities Act of 1933, as amended, and the rules and regulations under it.
+
+1.16 "Series A Preferred Stock" means the Series A Preferred Stock of the Company, $0.0001 par value per share, issued under the Purchase Agreement at an Original Issue Price of $1.20 per share.
+
+2. REGISTRATION RIGHTS
+
+2.1 Demand Registration. If at any time after the earlier of five (5) years after the date of the Initial Closing under the Purchase Agreement and one hundred eighty (180) days after the effective date of the registration statement for the IPO, the Company receives a request from Holders of a majority of the Registrable Securities then outstanding (the "Initiating Holders") that the Company file a registration statement covering Registrable Securities, the Company shall, within ten (10) days after receiving the request, notify all other Holders, and shall, as soon as practicable and in any event within sixty (60) days after receiving the request, file a registration statement covering all Registrable Securities that the Initiating Holders and any other Holders request to be included. The Company is not obliged to effect more than two (2) registrations under this Section 2.1.
+
+2.2 Company Registration. If the Company proposes to register any of its securities under the Securities Act (other than a registration relating solely to employee benefit plans or to a business combination), it shall promptly notify each Holder and, subject to Section 2.3, include in the registration all Registrable Securities that a Holder asks, within twenty (20) days after the notice is given, to have included.
+
+2.3 Underwriting Requirements. In any underwritten offering, if the managing underwriter advises that marketing factors require a limit on the number of securities to be underwritten, the Registrable Securities to be included shall be allocated among the selling Holders pro rata to the Registrable Securities each of them requested to include; however, except in the IPO, the Registrable Securities included shall not be reduced below twenty-five percent (25%) of the total securities included in the offering.
+
+2.4 Expenses of Registration. All expenses (other than underwriting discounts and selling commissions) of registrations under this Section 2, including registration, filing and qualification fees, printing and accounting fees, the fees of counsel for the Company and the reasonable fees of one counsel for the selling Holders, shall be paid by the Company.
+
+2.5 Obligations of the Company. Whenever Registrable Securities are to be registered under this Agreement, the Company shall use its reasonable best efforts to have the registration statement declared effective and kept effective for the period reasonably needed for the distribution, to prepare and file any amendments and supplements needed, to furnish the selling Holders with copies of the prospectus, and to list the Registrable Securities on each exchange on which similar securities of the Company are listed.
+
+2.6 Indemnification. To the extent permitted by law, the Company shall indemnify each selling Holder, its partners, members, officers and directors, any underwriter and each Person who controls any of them against all losses, claims, damages and liabilities arising out of any untrue statement or omission of a material fact in a registration statement, except to the extent caused by information furnished in writing by that Holder for use in it. Each selling Holder shall indemnify the Company on the same terms for information it furnished in writing, but a Holder's liability is limited to the net proceeds it received in the offering.
+
+2.7 Market Stand-off Agreement. Each Holder agrees that it will not, during the period beginning on the date of the final prospectus for the IPO and ending one hundred eighty (180) days after that date, sell, pledge or otherwise transfer any shares of Common Stock or other securities of the Company held immediately before the IPO, provided that all officers and directors of the Company are bound by restrictions at least as restrictive.
+
+2.8 Termination of Registration Rights. The right of any Holder to request registration or inclusion of Registrable Securities in any registration ends on the earliest of the closing of a Deemed Liquidation Event, the time after the IPO when Rule 144 under the Securities Act permits that Holder to sell all of its shares within a three-month period without registration, and the fifth anniversary of the IPO.
+
+3. INFORMATION RIGHTS
+
+3.1 Delivery of Financial Statements. The Company shall deliver to each Major Investor, unless the Board of Directors has reasonably determined that the Major Investor is a competitor of the Company:
+
+(a) as soon as practicable, and in any event within one hundred twenty (120) days after the end of each fiscal year of the Company, a balance sheet as of the end of that year, statements of income and cash flows for that year and a statement of stockholders' equity as of the end of that year, all audited and certified by independent public accountants of regionally or nationally recognized standing selected by the Company;
+
+(b) as soon as practicable, and in any event within forty-five (45) days after the end of each of the first three quarters of each fiscal year, unaudited statements of income and cash flows for that quarter and an unaudited balance sheet as of the end of that quarter, prepared in accordance with generally accepted accounting principles (except that they may omit footnotes and are subject to normal year-end audit adjustments);
+
+(c) as soon as practicable, and in any event at least thirty (30) days before the beginning of each fiscal year, a budget and business plan for that fiscal year, prepared on a monthly basis and approved by the Board of Directors; and
+
+(d) together with the quarterly statements under Section 3.1(b), a statement of the number of shares of each class and series of capital stock, and of securities convertible into or exercisable for capital stock, outstanding at the end of the quarter.
+
+3.2 Inspection. The Company shall permit each Major Investor, at its own expense, to visit and inspect the Company's properties, examine its books of account and records and discuss its affairs, finances and accounts with its officers, at reasonable times during normal business hours. The Company is not obliged to give access to information that it reasonably and in good faith considers to be a trade secret or similar confidential information, or the disclosure of which would adversely affect the attorney-client privilege between the Company and its counsel.
+
+3.3 Termination of Information Rights. The covenants in Sections 3.1 and 3.2 end on the earliest of immediately before the IPO, the date the Company first becomes subject to the periodic reporting requirements of Section 12(g) or 15(d) of the Exchange Act, and the closing of a Deemed Liquidation Event.
+
+3.4 Confidentiality. Each Investor shall keep confidential, and shall not use for any purpose other than monitoring its investment in the Company, any confidential information it obtains from the Company under this Agreement, except information that is or becomes public through no fault of that Investor, information it already knew or receives from a third party without a duty of confidentiality, and disclosures to its attorneys, accountants, consultants, partners and prospective purchasers of its shares who are bound by a duty of confidentiality, or as required by law.
+
+4. RIGHTS TO FUTURE STOCK ISSUANCES
+
+4.1 Right of First Offer. Subject to applicable securities laws, if the Company proposes to offer or sell any New Securities, it shall first offer them to each Major Investor, which may apportion its right among itself and its Affiliates as it chooses.
+
+(a) The Company shall give each Major Investor a notice (the "Offer Notice") of its good-faith intention to offer New Securities, stating the number of New Securities to be offered and the price and terms of the offer.
+
+(b) Within twenty (20) days after the Offer Notice is given, each Major Investor may elect, by notice to the Company, to purchase at the price and on the terms in the Offer Notice up to its pro rata share of the New Securities, being the proportion that the Common Stock then held by that Major Investor (including all Common Stock issuable on conversion of its Preferred Stock) bears to all Common Stock then outstanding, assuming the conversion and exercise of all outstanding convertible and exercisable securities.
+
+(c) Any New Securities not elected to be purchased may be sold by the Company within ninety (90) days after the election period ends to any Person, at a price not less than, and on terms no more favorable to the purchaser than, those in the Offer Notice. New Securities not sold within that period shall be offered again under this Section 4.1 before they are sold.
+
+(d) This Section 4.1 does not apply to Exempted Securities (as defined in the Restated Certificate), including shares and options issued under the Company's equity incentive plan and Common Stock issued on conversion of the Preferred Stock.
+
+4.2 Termination. The covenants in Section 4.1 end on the earlier of immediately before the IPO and the closing of a Deemed Liquidation Event.
+
+5. ADDITIONAL COVENANTS
+
+5.1 Insurance. The Company shall use commercially reasonable efforts to obtain, within ninety (90) days after the date of this Agreement, directors' and officers' liability insurance from financially sound and reputable insurers, in an amount and on terms satisfactory to the Board of Directors, and shall maintain it until the Board of Directors decides it should be discontinued.
+
+5.2 Employee Agreements. The Company shall require each Person it employs or engages as a consultant who has access to confidential information or trade secrets to sign a Proprietary Information and Inventions Agreement in the Company's standard form, and shall not amend or waive any such agreement without the approval of the Board of Directors.
+
+5.3 Board Matters. Unless a majority of the directors then in office decides otherwise, the Board of Directors shall meet at least quarterly on an agreed schedule. The Company shall reimburse each non-employee director for reasonable out-of-pocket travel expenses incurred in attending meetings of the Board of Directors and its committees.
+
+5.4 Successor Indemnification. If the Company merges or consolidates with any other Person and is not the surviving entity, provision shall be made so that the successor assumes the Company's obligations to indemnify its directors under the Restated Certificate, its bylaws and any indemnification agreements.
+
+5.5 Termination of Covenants. The covenants in this Section 5, other than Section 5.4, end on the earlier of immediately before the IPO and the closing of a Deemed Liquidation Event.
+
+6. MISCELLANEOUS
+
+6.1 Successors and Assigns. The rights under this Agreement may be assigned, together with the related obligations, by a Holder to a transferee of Registrable Securities that is an Affiliate of that Holder or that acquires the Registrable Securities with the prior written consent of the Company, if the transferee agrees in writing to be bound by this Agreement.
+
+6.2 Governing Law. This Agreement is governed by the internal law of the State of Delaware, without regard to any conflict-of-law rule that would result in the application of the law of any other jurisdiction.
+
+6.3 Counterparts. This Agreement may be signed in counterparts, including by electronic signature, each of which is an original and all of which together are one instrument.
+
+6.4 Notices. Notices under this Agreement shall be given in the manner set out in Section 6.7 of the Purchase Agreement, to the addresses on Schedule A or to such other address as a party designates by notice.
+
+6.5 Amendments and Waivers. Any term of this Agreement may be amended, modified or terminated, and its observance waived, only with the written consent of the Company and the holders of a majority of the Registrable Securities then outstanding; however, Sections 3 and 4 may be amended, modified, terminated or waived with the written consent of the Company and the holders of a majority of the Registrable Securities then held by the Major Investors. An amendment or waiver that treats one Investor differently from the others in an adverse way also requires that Investor's written consent.
+
+6.6 Severability. If any provision of this Agreement is held invalid, illegal or unenforceable, the balance of this Agreement remains in effect.
+
+6.7 Aggregation of Stock. All Registrable Securities held by Affiliated Persons are aggregated in determining the availability of any right under this Agreement, and the Affiliated Persons may apportion those rights among themselves as they choose.
+
+6.8 Entire Agreement. This Agreement (including its Schedule) is the entire agreement of the parties on its subject matter and supersedes all prior agreements and understandings on that subject matter.
+
+6.9 Dispute Resolution. Each party irrevocably submits to the exclusive jurisdiction of the Court of Chancery of the State of Delaware for any suit, action or proceeding arising out of or based on this Agreement. EACH PARTY WAIVES ITS RIGHT TO A JURY TRIAL OF ANY CLAIM ARISING OUT OF THIS AGREEMENT.
+
+[Signature pages follow]
+
+<<<PAGE>>>
+
+IN WITNESS WHEREOF, the parties have signed this Investors' Rights Agreement as of the date first written above.
+
+COMPANY:
+
+NORTHLAKE ANALYTICS, INC.
+
+By: ______________________________
+Name: Priya Raman
+Title: Chief Executive Officer
+
+INVESTORS:
+
+GRANITE PEAK VENTURES III, L.P.
+By: Granite Peak Partners III, LLC, its general partner
+
+By: ______________________________
+Name: Rafael Mendes
+Title: Partner
+
+HALCYON GROWTH FUND II, L.P.
+By: Halcyon Growth Partners II, LLC, its general partner
+
+By: ______________________________
+Name: Simone Archer
+Title: Partner
+
+JUNIPER SEED PARTNERS, L.P.
+
+By: ______________________________
+Name: Ben Okoro
+Title: Authorized Signatory
+
+<<<PAGE>>>
+
+<<<NUMBERING OFF>>>
+
+## SCHEDULE A - INVESTORS
+
+| Investor | Notice details | Series A Preferred Stock | Series Seed Preferred Stock |
+|---|---|---|---|
+| Granite Peak Ventures III, L.P. | Attention: Rafael Mendes, rmendes@granitepeak.example | 6,666,667 | 0 |
+| Halcyon Growth Fund II, L.P. | Attention: Simone Archer | 2,500,000 | 0 |
+| Juniper Seed Partners, L.P. | Attention: Ben Okoro | 833,333 | 4,000,000 |
+| Total | | 10,000,000 | 4,000,000 |

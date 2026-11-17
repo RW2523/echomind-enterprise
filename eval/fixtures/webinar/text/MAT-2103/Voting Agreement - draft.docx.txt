@@ -1,0 +1,154 @@
+Voting Agreement - draft (November 10, 2026)
+(file: Voting Agreement - draft.docx; docx; contract, draft)
+
+VOTING AGREEMENT
+
+NORTHLAKE ANALYTICS, INC.
+
+Dated as of [__________], 2026
+
+--- page break ---
+
+THIS VOTING AGREEMENT (this "Agreement") is made as of [__________], 2026 by and among Northlake Analytics, Inc., a Delaware corporation (the "Company"), the holders of Series A Preferred Stock listed on Schedule A (each an "Investor" and together the "Investors"), and Priya Raman and Owen Fitzgerald, the holders of Common Stock listed on Schedule B (each a "Founder" and together the "Founders"). The Investors and the Founders are together the "Stockholders".
+
+RECITALS
+
+A. Concurrently with the signing of this Agreement, the Company and the Investors are entering into a Series A Preferred Stock Purchase Agreement (the "Purchase Agreement") for the sale of shares of the Company's Series A Preferred Stock at an Original Issue Price of $1.20 per share.
+
+B. The Amended and Restated Certificate of Incorporation of the Company (the "Restated Certificate") provides that the holders of the Series A Preferred Stock, voting exclusively and as a separate class, may elect two (2) directors of the Company; that the holders of the Common Stock, voting exclusively and as a separate class, may elect two (2) directors; and that the holders of the Common Stock and the Preferred Stock, voting together as a single class on an as-converted basis, may elect the remaining director.
+
+C. As a condition to the Investors' obligations under the Purchase Agreement, the parties wish to agree how the members of the Board of Directors of the Company (the "Board") will be designated and elected, and certain other matters, as set out in this Agreement.
+
+The parties therefore agree as follows:
+
+1. VOTING PROVISIONS REGARDING THE BOARD
+
+1.1 Size of the Board. Each Stockholder shall vote, or cause to be voted, all shares of capital stock of the Company that it owns or over which it has voting control (its "Shares"), at all times and in whatever manner is necessary, to ensure that the size of the Board is set and remains at five (5) directors.
+
+1.2 Board Composition. Each Stockholder shall vote, or cause to be voted, all of its Shares, at each annual or special meeting of stockholders at which directors are elected and in any written consent of stockholders, in whatever manner is necessary to ensure that the following persons are elected to the Board:
+
+(a) one person designated by Granite Peak Ventures III, L.P. ("Granite Peak"), for so long as Granite Peak and its Affiliates hold at least a majority of the shares of Series A Preferred Stock purchased by Granite Peak under the Purchase Agreement, who shall initially be Rafael Mendes;
+
+(b) one person designated by Halcyon Growth Fund II, L.P. ("Halcyon"), for so long as Halcyon and its Affiliates hold at least a majority of the shares of Series A Preferred Stock purchased by Halcyon under the Purchase Agreement, who shall initially be Simone Archer;
+
+(c) two persons elected by the holders of a majority of the Common Stock, who shall initially be Priya Raman and Owen Fitzgerald (the "Common Directors"); and
+
+(d) one individual who is not an employee of the Company and is not an Affiliate of the Company or of any Investor, and who is acceptable to the other members of the Board (the "Independent Director"). The seat of the Independent Director shall be vacant at the Initial Closing and until an Independent Director is designated under this Section 1.2(d).
+
+1.3 Failure to Designate. If a Person or group entitled to designate a director under Section 1.2 makes no designation, the director previously designated by that Person or group and then serving shall be re-elected if still eligible and willing to serve, and otherwise the seat shall remain vacant until filled under Section 1.2.
+
+1.4 Removal and Vacancies. Each Stockholder shall vote, or cause to be voted, all of its Shares in whatever manner is necessary to ensure that:
+
+(a) no director elected under Section 1.2 is removed from office other than for cause unless the removal is directed or approved by the Person or group entitled to designate that director;
+
+(b) any vacancy created by the resignation, removal or death of a director elected under Section 1.2 is filled in accordance with Section 1.2; and
+
+(c) on the request of Granite Peak or Halcyon, the director designated by it under Section 1.2(a) or 1.2(b), as the case may be, is removed.
+
+1.5 No Liability for Election of Recommended Directors. No Stockholder, and no Affiliate of any Stockholder, is liable, by reason of designating or voting for a person as a director in accordance with this Agreement, for any act or omission of that person in his or her capacity as a director of the Company.
+
+1.6 No "Bad Actor" Designees. Each Person entitled to designate a director under this Agreement represents that, to its knowledge, none of the disqualifying events described in Rule 506(d)(1) under the Securities Act of 1933 applies to its initial designee, and agrees to notify the Company promptly if it learns that such an event applies to its designee.
+
+2. VOTE TO INCREASE AUTHORIZED COMMON STOCK
+
+Each Stockholder shall vote, or cause to be voted, all of its Shares in whatever manner is necessary to increase the number of authorized shares of Common Stock from time to time so that enough shares of Common Stock are available for the conversion of all outstanding shares of Preferred Stock.
+
+3. DRAG-ALONG RIGHT
+
+3.1 Definitions. A "Sale of the Company" means either (a) a transaction or series of related transactions in which a Person, or a group of related Persons, acquires from stockholders of the Company shares representing more than fifty percent (50%) of the outstanding voting power of the Company (a "Stock Sale"), or (b) a transaction that is a Deemed Liquidation Event as defined in the Restated Certificate.
+
+3.2 Actions to be Taken. If a Sale of the Company is approved in writing, with a statement that this Section 3 applies, by the Board, by the holders of a majority of the then-outstanding shares of Series A Preferred Stock (the "Selling Investors") and by the holders of a majority of the then-outstanding shares of Common Stock held by the Founders, then each Stockholder and the Company shall:
+
+(a) if the transaction requires stockholder approval, vote all of its Shares (in person, by proxy or by written consent) in favor of the Sale of the Company and against any proposal that could reasonably be expected to delay or impair it;
+
+(b) if the transaction is a Stock Sale, sell the same proportion of its Shares as the Selling Investors are selling, to the same purchaser and on the same terms and conditions;
+
+(c) sign and deliver all related documents and take such other action in support of the Sale of the Company as the Company or the Selling Investors reasonably request;
+
+(d) not deposit any of its Shares in a voting trust or subject them to any voting arrangement, unless the acquirer asks for this in connection with the Sale of the Company; and
+
+(e) not exercise any dissenters' or appraisal rights under applicable law with respect to the Sale of the Company.
+
+3.3 Conditions. A Stockholder is not required to comply with Section 3.2 unless: any representations and warranties it must give are limited to its own title to its Shares, its authority and similar matters; its liability for indemnification is several and not joint, pro rata to its share of the consideration, and never more than the consideration paid to it; the consideration is allocated as the Restated Certificate provides on a Deemed Liquidation Event; and it is not required to agree to any non-competition or non-solicitation covenant.
+
+4. REMEDIES
+
+4.1 Covenants of the Company. The Company shall use its best efforts, within the requirements of applicable law, to ensure that the rights granted under this Agreement are effective and that the parties enjoy their benefits, including by nominating and recommending the persons designated under Section 1.2 for election.
+
+4.2 Irrevocable Proxy and Power of Attorney. Each Stockholder appoints the Chief Executive Officer of the Company and a designee of the Selling Investors, and each of them acting alone, as its proxy and attorney-in-fact, with full power of substitution, to vote its Shares in accordance with Sections 1, 2 and 3 if that Stockholder fails to do so. This proxy is coupled with an interest, is irrevocable until this Agreement ends, and may be exercised only if the Stockholder fails to comply with this Agreement.
+
+4.3 Specific Enforcement. Each party acknowledges that the parties would be irreparably damaged if this Agreement were not specifically enforced, and that each party is entitled to an injunction or specific performance, without posting a bond, in addition to any other remedy.
+
+5. TERM
+
+This Agreement takes effect on the date written above and ends on the earliest of the closing of the Company's first underwritten public offering of its Common Stock (other than a registration relating solely to employee benefit plans), the closing of a Sale of the Company and the distribution of its proceeds in accordance with the Restated Certificate, and termination of this Agreement under Section 6.5.
+
+6. MISCELLANEOUS
+
+6.1 Additional Parties. Any Person who acquires shares of capital stock of the Company and who is required by the Purchase Agreement or by the Company to become a party to this Agreement shall do so by signing a joinder, and shall then be an Investor or a Founder, as applicable.
+
+6.2 Transfers. Each transferee of Shares that are subject to this Agreement holds them subject to this Agreement, and no transfer is effective until the transferee has signed a joinder. Each book-entry notation or certificate for Shares shall refer to this Agreement.
+
+6.3 Governing Law; Jurisdiction. This Agreement is governed by the internal law of the State of Delaware. Each party irrevocably submits to the exclusive jurisdiction of the Court of Chancery of the State of Delaware for any proceeding arising out of this Agreement. EACH PARTY WAIVES ITS RIGHT TO A JURY TRIAL OF ANY CLAIM ARISING OUT OF THIS AGREEMENT.
+
+6.4 Notices. Notices under this Agreement shall be given in the manner set out in Section 6.7 of the Purchase Agreement, to the addresses on Schedule A or Schedule B or to such other address as a party designates by notice.
+
+6.5 Amendments and Waivers. This Agreement may be amended, modified or terminated (other than under Section 5), and its observance waived, only by a written instrument signed by the Company, the holders of a majority of the Shares then held by the Founders and the holders of a majority of the Shares then held by the Investors. Section 1.2(a) may not be amended or waived without the written consent of Granite Peak, and Section 1.2(b) may not be amended or waived without the written consent of Halcyon.
+
+6.6 Entire Agreement; Counterparts. This Agreement (including its Schedules) is the entire agreement of the parties on its subject matter. It may be signed in counterparts, including by electronic signature, each of which is an original and all of which together are one instrument.
+
+[Signature pages follow]
+
+--- page break ---
+
+IN WITNESS WHEREOF, the parties have signed this Voting Agreement as of the date first written above.
+
+COMPANY:
+
+NORTHLAKE ANALYTICS, INC.
+
+By: ______________________________
+Name: Priya Raman
+Title: Chief Executive Officer
+
+FOUNDERS:
+
+______________________________
+Priya Raman
+
+______________________________
+Owen Fitzgerald
+
+INVESTORS:
+
+GRANITE PEAK VENTURES III, L.P.
+By: Granite Peak Partners III, LLC, its general partner
+By: ______________________________
+Name: Rafael Mendes
+Title: Partner
+
+HALCYON GROWTH FUND II, L.P.
+By: Halcyon Growth Partners II, LLC, its general partner
+By: ______________________________
+Name: Simone Archer
+Title: Partner
+
+JUNIPER SEED PARTNERS, L.P.
+By: ______________________________
+Name: Ben Okoro
+Title: Authorized Signatory
+
+--- page break ---
+
+SCHEDULE A - INVESTORS
+
+| Investor | Shares of Series A Preferred Stock | Board designation right |
+| Granite Peak Ventures III, L.P. | 6,666,667 | One director - Section 1.2(a) (initially Rafael Mendes) |
+| Halcyon Growth Fund II, L.P. | 2,500,000 | One director - Section 1.2(b) (initially Simone Archer) |
+| Juniper Seed Partners, L.P. | 833,333 | None |
+
+SCHEDULE B - FOUNDERS
+
+| Founder | Shares of Common Stock |
+| Priya Raman | 15,000,000 |
+| Owen Fitzgerald | 11,000,000 |

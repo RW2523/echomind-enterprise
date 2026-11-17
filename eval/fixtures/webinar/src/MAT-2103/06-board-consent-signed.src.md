@@ -1,0 +1,76 @@
+---
+file: Board consent - Series A - signed.pdf
+title: Board consent approving the Series A financing (signed November 12, 2026)
+kind: other
+status: executed
+render: scan
+style: minutes
+font: serif
+scan: skew=0.4 noise=0.2 dpi=200 mode=gray
+---
+NORTHLAKE ANALYTICS, INC.
+(a Delaware corporation)
+
+# ACTION BY UNANIMOUS WRITTEN CONSENT OF THE BOARD OF DIRECTORS
+
+November 12, 2026
+
+The undersigned, being all of the members of the Board of Directors (the "Board") of Northlake Analytics, Inc., a Delaware corporation (the "Company"), acting under Section 141(f) of the Delaware General Corporation Law (the "DGCL") and the Bylaws of the Company, waive all notice and adopt the following resolutions by unanimous written consent, effective as of November 12, 2026.
+
+## 1. Amended and Restated Certificate of Incorporation
+
+WHEREAS, the Board has reviewed the proposed Amended and Restated Certificate of Incorporation of the Company in the form presented to the Board (the "Restated Certificate"), which, among other things, authorizes 10,000,000 shares of Series A Preferred Stock with an Original Issue Price of $1.20 per share;
+
+RESOLVED, that the Restated Certificate is approved and declared advisable, and the Board recommends that the stockholders of the Company adopt it in accordance with Sections 228, 242 and 245 of the DGCL; and
+
+RESOLVED FURTHER, that, once the stockholders have adopted it, the officers of the Company are authorized to file the Restated Certificate with the Secretary of State of the State of Delaware.
+
+## 2. Sale of Series A Preferred Stock
+
+WHEREAS, the Board has reviewed the Series A Preferred Stock Purchase Agreement (the "Purchase Agreement") among the Company, Granite Peak Ventures III, L.P., Halcyon Growth Fund II, L.P. and Juniper Seed Partners, L.P. (the "Purchasers"), in the form of Draft 3 dated November 10, 2026 presented to the Board;
+
+RESOLVED, that the Board approves the sale and issuance of up to 10,000,000 shares of Series A Preferred Stock at a purchase price of $1.20 per share, for an aggregate purchase price of up to $12,000,000, to the Purchasers at one or more closings on the terms of the Purchase Agreement (the "Financing");
+
+RESOLVED FURTHER, that the shares of Series A Preferred Stock, when issued and paid for in accordance with the Purchase Agreement, shall be validly issued, fully paid and nonassessable; and
+
+RESOLVED FURTHER, that 10,000,000 shares of Common Stock are reserved for issuance on conversion of the Series A Preferred Stock.
+
+## 3. Transaction Documents
+
+RESOLVED, that the forms of the Purchase Agreement, the Investors' Rights Agreement, the Voting Agreement, the Right of First Refusal and Co-Sale Agreement and the Management Rights Letter to Granite Peak Ventures III, L.P. (together, the "Transaction Documents") presented to the Board are approved, with such changes as the officer signing them approves, that approval to be conclusively shown by the officer's signature.
+
+## 4. Increase of the Option Pool
+
+WHEREAS, 5,200,000 shares of Common Stock are reserved for issuance under the Company's 2023 Equity Incentive Plan (the "Plan"), of which 2,400,000 shares are subject to outstanding options, and the Purchasers require that unallocated shares equal to 12% of the post-money fully diluted capitalization be available under the Plan after the Financing;
+
+RESOLVED, that, subject to the approval of the stockholders, the number of shares of Common Stock reserved for issuance under the Plan is increased by 3,200,000 shares, from 5,200,000 shares to 8,400,000 shares, being 2,400,000 shares subject to outstanding options and 6,000,000 shares available for future grant.
+
+## 5. Stockholder Approval
+
+RESOLVED, that the officers of the Company are authorized to seek the written consent of the stockholders of the Company under Section 228 of the DGCL to adopt the Restated Certificate and approve the increase of the Plan reserve.
+
+## 6. Securities Filings
+
+RESOLVED, that the officers of the Company are authorized to file a notice on Form D with the Securities and Exchange Commission and any notices required under state securities laws in connection with the Financing.
+
+## 7. General Authority
+
+RESOLVED, that the officers of the Company are each authorized to sign and deliver the Transaction Documents and all other agreements, certificates and instruments, to pay all fees and expenses, and to take all other actions that they consider necessary or advisable to carry out these resolutions; and that all actions already taken by any officer or director in connection with these matters are ratified, confirmed and approved.
+
+This consent may be signed in counterparts and by electronic signature, and shall be filed with the minutes of the proceedings of the Board.
+
+DIRECTORS:
+
+[[sign: Priya Raman]]
+
+Priya Raman, Director
+Date: November 12, 2026
+
+[[sign: Owen Fitzgerald]]
+
+Owen Fitzgerald, Director
+Date: November 12, 2026
+
+Being all of the directors of the Company.
+
+[[hand: Original to minute book - KA]]

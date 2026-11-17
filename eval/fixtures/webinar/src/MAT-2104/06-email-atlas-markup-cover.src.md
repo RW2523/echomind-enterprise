@@ -1,0 +1,46 @@
+---
+file: Email - Atlas markup cover - 2026-11-06.pdf
+title: Email from Atlas (Monica Sheridan) sending the markup (November 6, 2026)
+kind: correspondence
+status: received
+render: pdf
+style: email
+font: sans
+header: Brightline Software, Inc. - Mail - Erin Castillo - printed 11/09/2026 8:12 AM
+---
+**Erin Castillo**
+
+From: Monica Sheridan <msheridan@atlasfcu.example>
+Sent: Friday, November 6, 2026 4:52 PM
+To: Erin Castillo <ecastillo@brightline.example>
+Cc: Nathan Briggs <nbriggs@brightline.example>
+Subject: Brightline MSA - Atlas markup
+Attachments: Master Subscription Agreement - Atlas markup v2.docx; Atlas Information Security Addendum.pdf
+
+Hi Erin,
+
+Thank you for your patience while our team worked through the paperwork. Attached are Atlas's markup of Brightline's Master Subscription Agreement (your form of October 1) and our standard Information Security Addendum, which every vendor that handles member data is required to sign.
+
+The short version: we have accepted your liability cap as drafted and only tightened the uptime to 99.95%, which our board requires for member-facing systems. The rest of the markup is housekeeping and a few items from our vendor due diligence checklist, so I am hopeful we can wrap this up quickly.
+
+A couple of next steps on our side:
+
+- Ravi Patel, our CISO, would like a short call with your security team to walk through the Security Addendum and your most recent SOC 2 Type II report. Could you send me two or three times that work for your team next Tuesday through Thursday?
+
+- Our credit committee is keen to have the new loan-origination platform under contract before year end so that implementation can start in January. If Brightline can come back to us with any comments before Thanksgiving, I think we can keep to that timetable.
+
+The markup remains subject to Atlas's final internal review and approval, and nothing is agreed until the agreement is signed by both sides.
+
+Have a good weekend, and thanks again to you and the team for the demo last month - our lending staff are excited about this one.
+
+Best regards,
+
+Monica
+
+Monica Sheridan
+Director, Vendor Management
+Atlas Federal Credit Union
+75 State Street, Albany, NY 12207
+msheridan@atlasfcu.example
+
+CONFIDENTIALITY NOTICE: This email and any attachments are intended only for the addressee and may contain confidential information of Atlas Federal Credit Union. If you have received this email in error, please notify the sender and delete it.

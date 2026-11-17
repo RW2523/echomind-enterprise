@@ -1,0 +1,30 @@
+{
+ "title": "Northlake Analytics - Series A financing",
+ "client": {
+  "name": "Northlake Analytics, Inc.",
+  "code": "NLA"
+ },
+ "practice_area": "Corporate / venture",
+ "jurisdiction": "Delaware",
+ "lead": "alice",
+ "members": {
+  "kenji": "attorney",
+  "lena": "attorney",
+  "carol": "paralegal"
+ },
+ "parties": [
+  [
+   "Granite Peak Ventures III, L.P.",
+   "adverse"
+  ],
+  [
+   "Halcyon Growth Fund II, L.P.",
+   "adverse"
+  ],
+  [
+   "Juniper Seed Partners, L.P.",
+   "adverse"
+  ]
+ ],
+ "paper": "letter"
+}

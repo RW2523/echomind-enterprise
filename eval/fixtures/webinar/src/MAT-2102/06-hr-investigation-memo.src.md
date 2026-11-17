@@ -1,0 +1,106 @@
+---
+file: HR investigation memo - on-call pay.docx
+title: HR investigation memo - on-call stipends (October 20, 2026)
+kind: memo
+status: final
+render: docx
+style: report
+font: sans
+numbering: auto
+author: Janet Kowalski
+header: PRIVILEGED & CONFIDENTIAL - PREPARED AT THE REQUEST OF COUNSEL
+footer: Ridgeline Health Partners, Inc. - Human Resources - HR-INV-2026-044
+---
+**PRIVILEGED & CONFIDENTIAL - ATTORNEY-CLIENT COMMUNICATION - PREPARED AT THE REQUEST OF COUNSEL**
+
+# Memorandum
+
+To: Andrea Lim, Vice President & Associate General Counsel
+From: Janet Kowalski, HR Business Partner
+Date: October 20, 2026
+Re: Maria Ortega (Respiratory Therapist II, Lakeshore Medical Center) - on-call stipends and call-back pay - investigation findings
+HR case no.: HR-INV-2026-044
+Distribution: addressee only
+
+1. PURPOSE AND REQUEST
+
+1.1 After Ridgeline received the demand letter from Reyes & Gold LLC dated October 6, 2026, you asked me to investigate how Ms. Ortega's on-call shifts and call-back time were recorded and paid between October 1, 2023 and September 30, 2026, and to report the facts to you so that you and outside counsel can advise Ridgeline. This memorandum is prepared at your request for that purpose.
+
+1.2 This memorandum reports facts only. I express no view on the legal questions raised by the demand letter or on its calculations.
+
+2. SOURCES REVIEWED
+
+2.1 I reviewed the following:
+
+(a) Ms. Ortega's offer letter dated January 23, 2023 and the HR system record of her job, FLSA classification (non-exempt) and regular rate ($38.00 per hour, unchanged throughout the period);
+
+(b) On-Call Compensation Policy HR-214, revision 3, effective January 1, 2024, and revision 2;
+
+(c) the Kronos timesheet summary of Ms. Ortega's on-call shifts and call-back hours by quarter, prepared by Payroll on October 15, 2026;
+
+(d) the payroll register extract of her on-call stipends and call-back pay for the same period;
+
+(e) the Lakeshore respiratory-care schedule templates in Kronos and the Information Services change record for the Kronos upgrade of April 3, 2025;
+
+(f) the paging system log for the respiratory care on-call pager; and
+
+(g) my interviews with Victor Esposito, Director, Respiratory Care, and Paul Werner, Payroll Manager.
+
+2.2 On your instruction I did not interview Ms. Ortega, because she is represented by counsel in this matter.
+
+3. SUMMARY OF FINDINGS
+
+3.1 Kronos records 214 weeknight on-call shifts, 31 weekend on-call days and 126 call-back hours for Ms. Ortega in the period. The demand letter uses the same counts.
+
+3.2 Ridgeline paid weeknight stipends for 198 of the 214 weeknight shifts, weekend stipends for all 31 weekend days, and call-back pay for all 126 call-back hours.
+
+3.3 Sixteen (16) weeknight on-call shifts between April 6 and June 28, 2025 were not paid. The cause was a scheduling system error, described in section 4. The unpaid stipends total 16 x $95.00 = $1,520.00.
+
+3.4 Eleven other employees were affected by the same error. Their unpaid amounts are not part of Ms. Ortega's claim.
+
+3.5 Of the 126 call-back hours, 88 were paid at one and one-half times the regular rate and 38, which fell in weeks under 40 hours, at the regular rate.
+
+4. THE UNPAID WEEKNIGHT STIPENDS
+
+4.1 Under section 5.1 of HR-214, on-call shifts are recorded in Kronos with code ONC-WN (weeknight) or ONC-WE (weekend or holiday). The code is attached to each on-call shift by the department's schedule template, and the stipend is generated for payroll from that code.
+
+4.2 Information Services upgraded Kronos on April 3, 2025, and the schedule templates were migrated to the new version. After the upgrade the ONC-WN code was missing from the Lakeshore respiratory-care schedule template. The ONC-WE code migrated correctly, so weekend stipends were not affected. From the first schedule period built on the new template, which began on April 6, 2025, weeknight on-call shifts appeared on the schedule, and were counted in Kronos reports of scheduled on-call shifts, but carried no pay code, so no stipend was generated.
+
+4.3 Information Services found the missing code during a post-upgrade review and restored it to the template on July 1, 2025. The ticket was closed as a template fix. Payroll was not told, and the shifts already worked were never reprocessed. The post-upgrade test with Payroll that section 6.5 of HR-214 requires was not carried out.
+
+4.4 Ms. Ortega's records show 20 weeknight on-call shifts in the second quarter of 2025, of which four were paid: April 1 and April 2, 2025, which fell in the last schedule period built on the old template, and May 14 and June 11, 2025, which she picked up on the critical care float schedule, a different template that kept the code. The other 16, between April 6 and June 28, 2025, were not paid.
+
+4.5 Ms. Ortega's unpaid stipends are therefore 16 x $95.00 = $1,520.00. Her weekend stipends and her call-back pay for the same quarter were paid correctly.
+
+4.6 Eleven other employees on the Lakeshore respiratory-care schedule had weeknight on-call shifts in the same period that were not paid for the same reason. Payroll is calculating each employee's unpaid amount, and I will send you the schedule separately. Those amounts are not part of Ms. Ortega's claim.
+
+5. CALL-BACK PAY
+
+5.1 All 126 call-back hours were paid in the pay periods in which they were worked: 88 hours at $57.00 (one and one-half times $38.00), or $5,016.00, for hours over 40 in the workweek, and 38 hours at the regular rate of $38.00, or $1,444.00. Payroll confirmed that the 38 hours paid at the regular rate fell in weeks under 40 hours, counting the call-back time.
+
+5.2 I found no call-back that was paid for less than the two-hour minimum in section 4.1 of HR-214.
+
+6. ON-CALL CONDITIONS
+
+6.1 According to the paging system log, Ms. Ortega averaged 0.6 call-backs per on-call night over the period. The log counts every page she answered, whether it was resolved by telephone or required her to return to the hospital. Mr. Esposito told me that most pages are resolved by telephone within a few minutes.
+
+6.2 Mr. Esposito confirmed that therapists on call are free to stay at home, to sleep and to handle personal and family matters, subject only to the response standards in section 3.3 of HR-214. The department does not require them to remain on the premises, to stay in any particular place or to keep a log of their activities, and therapists regularly trade on-call shifts with colleagues under section 3.4.
+
+6.3 Neither Mr. Esposito, Payroll nor HR has any record of a complaint or question from Ms. Ortega about her on-call pay, the response standards or call-back pay before the demand letter.
+
+7. RECOMMENDATIONS
+
+7.1 Pay Ms. Ortega the unpaid stipends of $1,520.00 plus interest. Because she is represented, I suggest that the payment be made in coordination with outside counsel.
+
+7.2 Pay the eleven other affected employees their unpaid amounts, plus interest, once Payroll's schedule is final.
+
+7.3 Audit all schedule templates in Kronos, at every Ridgeline facility, against the pay codes in section 5.1 of HR-214, and confirm with Information Services that the testing required by section 6.5 is carried out after every future upgrade.
+
+Please let me know if you need anything further.
+
+[[sign: Janet Kowalski]]
+Janet Kowalski
+HR Business Partner
+jkowalski@ridgelinehealth.example | (312) 555-0147
+
+Attachments: A - Timesheet summary (Payroll, October 15, 2026); B - Payroll register extract

@@ -12,6 +12,11 @@ export const KIND_LABEL: Record<TemplateKind, string> = {
   engagement_letter: 'Engagement letter', nda: 'Non-disclosure agreement', demand_letter: 'Letter before claim', memo: 'Memorandum',
   contract_review: 'Contract review report', board_minutes: 'Board minutes', custom: 'Other',
 };
+/** The kind's name in the firm's vocabulary: a US firm (features.firm_style "us") calls the demand letter a demand letter. */
+export function useKindLabel(): (k: TemplateKind) => string {
+  const me = useSession();
+  return (k) => (k === 'demand_letter' && me.features?.firm_style === 'us' ? 'Demand letter' : KIND_LABEL[k]);
+}
 const SOURCE_LABEL: Record<string, string> = { documents: 'From the documents', matter: 'From the matter record', person: 'Entered by a lawyer', today: "Today's date" };
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString([], { dateStyle: 'medium' }) : '');
 
@@ -53,13 +58,14 @@ export default function Templates() {
 function TemplateCard({ t, canManage, canApprove, onChange, onNewVersion }: {
   t: FirmTemplate; canManage: boolean; canApprove: boolean; onChange: () => void; onNewVersion: () => void;
 }) {
+  const kindLabel = useKindLabel();
   const current = t.versions.find((v) => v.status === 'approved');
   return (
     <section className="lw-paper lw-sheet" aria-label={t.name}>
       <div className="lw-minutes-h">
         <div>
           <h2 className="lw-h2" style={{ margin: 0 }}>{t.name}</h2>
-          <p className="lw-meta" style={{ margin: '2px 0 0' }}>{KIND_LABEL[t.kind]}{t.preset ? ' · standard preset' : ''}</p>
+          <p className="lw-meta" style={{ margin: '2px 0 0' }}>{kindLabel(t.kind)}{t.preset ? ' · standard preset' : ''}</p>
         </div>
         {current ? <StatusPill tone="verified">{`In use: version ${current.version}`}</StatusPill> : <StatusPill tone="attention">No approved version</StatusPill>}
       </div>
@@ -139,6 +145,7 @@ const FIELD_KINDS = ['text', 'party', 'date', 'money', 'period', 'percent', 'add
 const blankField = (key = ''): TemplateField => ({ key, label: '', kind: 'text', source: 'documents', question: '' });
 
 function TemplateEditor({ template, onClose, onSaved }: { template?: FirmTemplate; onClose: () => void; onSaved: () => void }) {
+  const kindLabel = useKindLabel();
   const latest = template?.versions[0];
   const [name, setName] = useState(template?.name ?? '');
   const [kind, setKind] = useState<TemplateKind>(template?.kind ?? 'custom');
@@ -170,7 +177,7 @@ function TemplateEditor({ template, onClose, onSaved }: { template?: FirmTemplat
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
             <Field label="Name">{(id) => <input id={id} className="lw-input" value={name} onChange={(e) => setName(e.target.value)} />}</Field>
             <Field label="Kind">{(id) => <select id={id} className="lw-input" value={kind} onChange={(e) => setKind(e.target.value as TemplateKind)}>
-              {KINDS.map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}</select>}</Field>
+              {KINDS.map((k) => <option key={k} value={k}>{kindLabel(k)}</option>)}</select>}</Field>
           </div>
         )}
         <Field label="Wording" hint="# Heading · {{field}} · [[write: an instruction]] for a passage written from the documents, citing them">

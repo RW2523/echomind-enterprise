@@ -1,0 +1,69 @@
+---
+file: Payroll register extract - Ortega.pdf
+title: Payroll register extract - Maria Ortega, on-call stipends and call-back pay
+kind: evidence
+status: final
+render: pdf
+style: table
+font: sans
+header: Ridgeline Health Partners, Inc. - Payroll Register - Employee Earnings Extract by Quarter - CONFIDENTIAL
+footer: Report PR-EARN-QTR - run 10/15/2026 15:05 by pwerner (Payroll)
+---
+# Payroll Register Extract - On-Call Stipends and Call-Back Pay
+
+Employee: ORTEGA, MARIA
+Employee ID: 204117
+Job: Respiratory Therapist II - Respiratory Care, Lakeshore Medical Center (cost center 3140)
+FLSA status: Non-exempt
+Pay frequency: Biweekly (workweek begins 12:00 a.m. Sunday)
+Regular rate: $38.00 per hour (no change in period); overtime rate $57.00 per hour (1.5x)
+Period: work performed October 1, 2023 through September 30, 2026, grouped by the quarter in which the work was performed. Amounts in USD, gross.
+Earnings codes: STIP-WN = weeknight on-call stipend ($95.00 per night); STIP-WE = weekend or holiday on-call stipend ($240.00 per day); CB-OT = call-back hours paid at 1.5x ($57.00 per hour), hours over 40 in the workweek; CB-REG = call-back hours paid at the regular rate ($38.00 per hour), workweeks under 40 hours
+
+## Table A - On-call stipends paid
+
+| Quarter | STIP-WN nights paid | STIP-WN amount ($) | STIP-WE days paid | STIP-WE amount ($) | Total stipends paid ($) |
+|---|---|---|---|---|---|
+| Q4 2023 | 18 | 1,710.00 | 3 | 720.00 | 2,430.00 |
+| Q1 2024 | 17 | 1,615.00 | 2 | 480.00 | 2,095.00 |
+| Q2 2024 | 19 | 1,805.00 | 3 | 720.00 | 2,525.00 |
+| Q3 2024 | 17 | 1,615.00 | 2 | 480.00 | 2,095.00 |
+| Q4 2024 | 18 | 1,710.00 | 3 | 720.00 | 2,430.00 |
+| Q1 2025 | 17 | 1,615.00 | 2 | 480.00 | 2,095.00 |
+| Q2 2025 | 4 | 380.00 | 3 | 720.00 | 1,100.00 |
+| Q3 2025 | 18 | 1,710.00 | 2 | 480.00 | 2,190.00 |
+| Q4 2025 | 17 | 1,615.00 | 3 | 720.00 | 2,335.00 |
+| Q1 2026 | 18 | 1,710.00 | 3 | 720.00 | 2,430.00 |
+| Q2 2026 | 18 | 1,710.00 | 2 | 480.00 | 2,190.00 |
+| Q3 2026 | 17 | 1,615.00 | 3 | 720.00 | 2,335.00 |
+| Total | 198 | 18,810.00 | 31 | 7,440.00 | 26,250.00 |
+
+## Table B - Call-back pay
+
+| Quarter | CB-OT hours (1.5x) | CB-OT amount ($) | CB-REG hours (regular rate) | CB-REG amount ($) | Call-back hours paid | Call-back pay ($) |
+|---|---|---|---|---|---|---|
+| Q4 2023 | 8.00 | 456.00 | 4.00 | 152.00 | 12.00 | 608.00 |
+| Q1 2024 | 7.00 | 399.00 | 3.00 | 114.00 | 10.00 | 513.00 |
+| Q2 2024 | 8.00 | 456.00 | 3.00 | 114.00 | 11.00 | 570.00 |
+| Q3 2024 | 6.00 | 342.00 | 3.00 | 114.00 | 9.00 | 456.00 |
+| Q4 2024 | 9.00 | 513.00 | 3.00 | 114.00 | 12.00 | 627.00 |
+| Q1 2025 | 7.00 | 399.00 | 3.00 | 114.00 | 10.00 | 513.00 |
+| Q2 2025 | 9.00 | 513.00 | 4.00 | 152.00 | 13.00 | 665.00 |
+| Q3 2025 | 6.00 | 342.00 | 3.00 | 114.00 | 9.00 | 456.00 |
+| Q4 2025 | 8.00 | 456.00 | 3.00 | 114.00 | 11.00 | 570.00 |
+| Q1 2026 | 7.00 | 399.00 | 3.00 | 114.00 | 10.00 | 513.00 |
+| Q2 2026 | 6.00 | 342.00 | 3.00 | 114.00 | 9.00 | 456.00 |
+| Q3 2026 | 7.00 | 399.00 | 3.00 | 114.00 | 10.00 | 513.00 |
+| Total | 88.00 | 5,016.00 | 38.00 | 1,444.00 | 126.00 | 6,460.00 |
+
+Notes:
+
+1. Each amount is the number of nights, days or hours multiplied by the rate for its earnings code.
+
+2. Q2 2025: 4 weeknight stipends (STIP-WN) were paid against 20 weeknight on-call shifts recorded in Kronos for the quarter (report TK-ONC-QTR), a difference of 16 nights. Referred to HR (J. Kowalski) on 10/15/2026 for review. No adjustment has been processed.
+
+3. The 38.00 CB-REG hours were worked in workweeks in which Ms. Ortega's total hours worked, including the call-back time, were under 40, and were therefore paid at the regular rate under Policy HR-214, section 4.1. The 88.00 CB-OT hours were hours over 40 in the workweek.
+
+4. Total on-call stipends and call-back pay in the period: $32,710.00.
+
+Prepared by: Paul Werner, Payroll Manager - 10/15/2026

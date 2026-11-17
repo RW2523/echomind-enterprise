@@ -414,6 +414,9 @@ class Settings(BaseSettings):
     LEGAL_TIME_ENTRIES: bool = os.getenv("LEGAL_TIME_ENTRIES", "0").lower() in ("1", "true", "yes")
     # S4.5 review panel (OPT-05, D-057): off unless the firm turns it on.
     LEGAL_PANEL: bool = os.getenv("LEGAL_PANEL", "0").lower() in ("1", "true", "yes")
+    # The firm's legal vocabulary (2026-11-16, the US webinar): "uk" (default: disclosure, completion, letter before claim)
+    # or "us" (discovery, closing, demand letter). Labels and preset wording only; stage keys and data are the same.
+    LEGAL_FIRM_STYLE: str = "us" if os.getenv("LEGAL_FIRM_STYLE", "uk").strip().lower() == "us" else "uk"
     # Council Discovery (council/discovery.py, 2026-11-05): questions found by rules in the matter's records; only with the panel
     LEGAL_COUNCIL_DISCOVERY: bool = os.getenv("LEGAL_COUNCIL_DISCOVERY", "1").lower() in ("1", "true", "yes")
     LEGAL_DISCOVERY_DEADLINE_DAYS: int = int(os.getenv("LEGAL_DISCOVERY_DEADLINE_DAYS", "30"))

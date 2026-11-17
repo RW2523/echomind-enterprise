@@ -1,0 +1,21 @@
+{
+ "title": "Brightline Software - SaaS agreement with Atlas Federal Credit Union",
+ "client": {
+  "name": "Brightline Software, Inc.",
+  "code": "BLS"
+ },
+ "practice_area": "Technology & commercial contracts",
+ "jurisdiction": "New York",
+ "lead": "kenji",
+ "members": {
+  "alice": "attorney",
+  "theo": "reviewer"
+ },
+ "parties": [
+  [
+   "Atlas Federal Credit Union",
+   "adverse"
+  ]
+ ],
+ "paper": "letter"
+}

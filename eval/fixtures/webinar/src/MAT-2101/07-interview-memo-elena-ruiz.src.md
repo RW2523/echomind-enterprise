@@ -1,0 +1,81 @@
+---
+file: Interview memo - Elena Ruiz.docx
+title: Privileged interview memo - Elena Ruiz, Receiving Manager (October 5, 2026)
+kind: memo
+status: final
+render: docx
+style: report
+font: serif
+header: PRIVILEGED & CONFIDENTIAL - ATTORNEY WORK PRODUCT
+footer: CW-2101 - Interview memo (E. Ruiz)
+author: Harper Quinn
+---
+**CALDER & WYNNE LLP**
+
+# MEMORANDUM
+
+TO: Alice Moreno
+FROM: Harper Quinn
+CC: Carol Whitfield
+DATE: October 5, 2026
+RE: Hollis Medical Supply, Inc. v. Brennan Freight Lines, LLC, C.A. No. N26C-09-117 CCLD (CW-2101) - Interview of Elena Ruiz, Receiving Manager, Newark DC
+
+## 1. Summary
+
+I interviewed Elena Ruiz, Receiving Manager at Hollis's Newark DC, on Thursday, October 1, 2026, from 10:00 to 11:35 a.m. at the Newark DC (300 Pencader Drive). Carol Whitfield attended and took notes. Patricia Lowell joined by phone for the first twenty minutes. Before we began I gave Ms. Ruiz an Upjohn warning: we represent Hollis, not her personally; the conversation is privileged, but the privilege belongs to Hollis, which may decide to waive it. She said she understood.
+
+Ms. Ruiz is a clear, careful and credible witness. Her account matches the Newark DC receiving log in every respect. Her key evidence is that Shipment HMS-26-0588 arrived at the Newark DC on Saturday, June 6, 2026 at 9:40 a.m., on trailer BFL-R-217, with a temperature at receipt of 9.8 °C, and that no Brennan truck delivered that Shipment on June 3, 2026. Brennan's Incident Report of June 4, 2026, which says the Shipment was delivered on June 3 at 2:15 p.m., is in her view simply wrong.
+
+## 2. Background
+
+Ms. Ruiz has been Receiving Manager at the Newark DC since 2021 and has worked in pharmaceutical receiving and cold-chain logistics for about eleven years. She supervises two receiving clerks (D. Okafor and J. Tran) and runs the Saturday receiving shift herself. She is trained on Hollis's cold-chain receiving procedure and on the data logger reader used at the dock.
+
+## 3. Receiving practice
+
+Every delivery is entered in the receiving log (Form HMS-RCV-01) at the dock at the time of arrival, with the carrier, shipment number, trailer, seal, pallet count, temperature at receipt and the name of the person receiving it. Temperature-Controlled Goods are probed at the trailer door and the in-load logger is downloaded before the pallets leave the dock. The log is exported weekly; the June 1-7 export was made on Monday, June 8. Ms. Ruiz also signs the carrier's proof of delivery and writes the actual date and time of arrival on it.
+
+## 4. June 2-4: the missing Shipment
+
+Brennan's advance shipping notice showed HMS-26-0588 (22 pallets) picked up at Eddystone at 6:00 a.m. on Tuesday, June 2, on trailer BFL-R-204. The Shipment did not arrive on June 2.
+
+On Wednesday, June 3, at about 8:10 a.m., Ms. Ruiz called Brennan's dispatch line. She was told that the load had a "reefer problem" and would be rescheduled; no arrival time was given. Nobody from Brennan had called Hollis about the problem before she called.
+
+On Thursday, June 4, at about 10:25 a.m., she called again and spoke to Kim Delacroix, whom she knows as Brennan's dispatch supervisor. Ms. Delacroix told her there was still no arrival time and that the load would go out "as soon as we have a truck". Ms. Ruiz noted both calls in the receiving log. That morning another Brennan load, HMS-26-0594, had arrived on time on trailer BFL-R-211; its driver knew nothing about HMS-26-0588.
+
+## 5. June 6: arrival
+
+The Shipment arrived on Saturday, June 6, 2026 at 9:40 a.m. Ms. Ruiz received it herself. Points she recalls:
+
+(a) The trailer was BFL-R-217, not BFL-R-204 as shown on the advance shipping notice. The seal (BF-118904) was intact.
+
+(b) Her probe reading at the trailer door was 9.8 °C, outside the 2 °C to 8 °C range.
+
+(c) She downloaded the in-load logger at the dock. The reader showed a long period of high readings on June 2. She did not try to interpret the trace beyond that; Thomas Akers (QA) reviewed it the next day.
+
+(d) She quarantined all 22 pallets in the locked cold cage (Q-3) and called Mr. Akers at 9:55 a.m.
+
+(e) She signed Brennan's proof of delivery with the note "received subject to inspection - temp 9.8 C - quarantined" and wrote the date and time, "6/6/26 9:40". She kept the pink copy, which is in the receiving office file for the week.
+
+(f) The driver had no paperwork showing any earlier delivery attempt and offered no explanation for the delay. She does not know the driver's name.
+
+## 6. Brennan's Incident Report
+
+I showed Ms. Ruiz Brennan's Incident Report IR-26-0412 dated June 4, 2026, which Brennan sent to Ms. Lowell with the Logger Data on July 24, 2026. She had not seen it before. Her reaction to the statement that the Shipment was delivered to the Newark DC on June 3, 2026 at 2:15 p.m. was immediate: "That didn't happen." She points out that (i) the log shows no Brennan arrival on June 3; (ii) she was on site that afternoon; (iii) on June 4, the date of the report, Ms. Delacroix herself told her on the phone that the load had not yet gone out; and (iv) a delivery at 2:15 p.m. on June 3 would have been logged by whoever was at the dock, with a temperature reading.
+
+## 7. Documents
+
+Ms. Ruiz holds or can locate: (a) the receiving log for June 1-7, 2026 (already produced to us); (b) her signed copy of the proof of delivery for HMS-26-0588; (c) the logger reader printout from June 6; and (d) the dock camera footage, if it has not been overwritten. She was not sure how long the dock camera keeps footage.
+
+## 8. Assessment
+
+Ms. Ruiz will make a good witness at deposition and at trial. She is precise about times, keeps contemporaneous records and does not overstate what she knows. She is careful to say that she cannot speak to where the Goods were between June 2 and June 6, or to the condition of the reefer unit on BFL-R-204. Her evidence, with the receiving log and Mr. Akers's Temperature Excursion Report, establishes the June 6 delivery and undermines Brennan's Incident Report. It also supports the Late Delivery Credit claim under Section 7.4: the Shipment was due by 6:00 a.m. on June 3 and arrived at 9:40 a.m. on June 6, three full days late.
+
+## 9. Follow-up
+
+(a) Carol to collect the signed proof of delivery and the logger reader printout from the receiving office this week, and to ask Hollis IT whether the June 6 dock camera footage still exists; if it does, preserve it under the litigation hold.
+
+(b) In discovery, request Brennan's copy of the proof of delivery, the GPS and telematics data for tractor T-1186 and trailers BFL-R-204 and BFL-R-217 for June 2-6, the Eddystone yard gate log, and dispatch call recordings for June 3 and June 4.
+
+(c) Prepare Ms. Ruiz for deposition once Brennan notices it; she has no planned leave before the end of the year.
+
+H.Q.

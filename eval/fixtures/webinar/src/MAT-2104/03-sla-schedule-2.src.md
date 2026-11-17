@@ -1,0 +1,87 @@
+---
+file: SLA Schedule - Schedule 2.docx
+title: SLA Schedule (Schedule 2) - Availability and service credits
+kind: contract
+status: draft
+render: docx
+style: table
+font: serif
+header: BRIGHTLINE FORM - SCHEDULE 2 (SLA SCHEDULE) - 10/01/2026
+footer: Brightline / Atlas - Master Subscription Agreement - Schedule 2
+---
+# SCHEDULE 2 - SLA SCHEDULE
+
+## Availability and Service Credits
+
+This Schedule 2 (the "SLA Schedule") forms part of the Master Subscription Agreement between Brightline Software, Inc. ("Brightline") and Atlas Federal Credit Union ("Customer") (the "Agreement"). Capitalized terms used but not defined in this SLA Schedule have the meanings given in the Agreement.
+
+## 1. Definitions
+
+"Downtime" means any period of one minute or more during which the production environment of the Service is unavailable to Authorized Users, as determined under paragraph 2.3, other than Excluded Downtime.
+
+"Excluded Downtime" means Scheduled Maintenance carried out in accordance with paragraph 4 and any unavailability resulting from the events listed in paragraph 5.
+
+"Scheduled Maintenance" means planned maintenance of the Service notified to Customer in accordance with paragraph 4.1.
+
+"Total Minutes" means the total number of minutes in the relevant calendar month.
+
+## 2. Availability Commitment
+
+2.1 Brightline will make the production environment of the Service available with a monthly Availability of at least 99.9% in each calendar month (the "Availability Commitment"), as provided in Section 5.1 of the Agreement.
+
+2.2 Availability for a calendar month is calculated as follows and expressed as a percentage, rounded to two decimal places:
+
+Availability = ((Total Minutes - Excluded Downtime - Downtime) / (Total Minutes - Excluded Downtime)) x 100
+
+2.3 Availability is measured by Brightline's independent external monitoring service, which tests the Service's login page and core application programming interface at one-minute intervals. A minute counts as Downtime if the Service fails to respond, or returns an error, to every test in that minute.
+
+## 3. Service Credits
+
+3.1 If the monthly Availability in any calendar month falls below the Availability Commitment, Customer will be entitled to a service credit equal to the percentage of the Monthly Fees for that month set out in the table below:
+
+| Monthly Availability | Service credit |
+|---|---|
+| ≥ 99.9% | none |
+| < 99.9% but ≥ 99.5% | 5% |
+| < 99.5% but ≥ 99.0% | 10% |
+| < 99.0% | 25% |
+
+3.2 "Monthly Fees" means one twelfth of the annual Subscription Fees. Based on Subscription Fees of $480,000 per year, the Monthly Fees are $40,000.
+
+3.3 The total service credits for any calendar month will not exceed 25% of the Monthly Fees for that month, regardless of the number or duration of the failures in that month.
+
+3.4 As provided in Section 5.3 of the Agreement, service credits are Customer's sole and exclusive remedy for any failure by Brightline to meet the Availability Commitment.
+
+3.5 Service credits have no cash value. Brightline will apply each credit against the next invoice for Subscription Fees. If the Agreement ends before a credit has been applied, Brightline will pay the credit to Customer within thirty (30) days after the end of the Agreement, unless the Agreement was terminated by Brightline for Customer's breach.
+
+## 4. Scheduled Maintenance
+
+4.1 Brightline may perform Scheduled Maintenance of up to 8 hours in any calendar month, provided that it notifies Customer at least 72 hours in advance by email and through the customer portal, stating the expected start time and duration.
+
+4.2 Brightline will use reasonable efforts to perform Scheduled Maintenance outside Customer's normal business hours and to minimize its duration.
+
+4.3 Scheduled Maintenance that is notified and performed in accordance with paragraph 4.1 is Excluded Downtime. Any maintenance in excess of 8 hours in a calendar month, or for which less than 72 hours' notice is given, counts as Downtime.
+
+## 5. Other Exclusions
+
+The following are also Excluded Downtime and do not count against the Availability Commitment:
+
+(a) unavailability caused by a force majeure event under Section 15.3 of the Agreement;
+
+(b) unavailability caused by the acts or omissions of Customer or its Authorized Users, or by Customer's equipment, software, networks or internet connectivity;
+
+(c) failures of the public internet or of third-party networks outside Brightline's reasonable control;
+
+(d) a suspension of the Service in accordance with Section 4.4 of the Agreement; and
+
+(e) the unavailability of any feature that Brightline has designated in writing as a beta or preview feature.
+
+## 6. Claiming Service Credits
+
+6.1 To receive a service credit, Customer must submit a written request to Brightline through the customer portal or by email within thirty (30) days after the end of the calendar month in which the Availability Commitment was not met, identifying the dates and approximate times of the Downtime.
+
+6.2 Brightline will confirm the Availability for the month from its monitoring records and respond to the request within ten (10) Business Days. If Customer disputes Brightline's determination, the parties will review the monitoring records together in good faith.
+
+## 7. Reporting
+
+Brightline will publish a report of the Availability achieved in each calendar month, including the duration of any Downtime and Scheduled Maintenance, in the customer portal within ten (10) Business Days after the end of that month, as provided in Section 5.5 of the Agreement.

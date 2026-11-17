@@ -1,0 +1,21 @@
+{
+ "title": "Meadowgate Foods - FDA allergen labeling",
+ "client": {
+  "name": "Meadowgate Foods, Inc.",
+  "code": "MGF"
+ },
+ "practice_area": "Regulatory",
+ "jurisdiction": "Federal (FDA)",
+ "lead": "kenji",
+ "members": {
+  "alice": "attorney",
+  "theo": "reviewer"
+ },
+ "parties": [
+  [
+   "Prairie Mills Ingredients, LLC",
+   "related"
+  ]
+ ],
+ "paper": "letter"
+}

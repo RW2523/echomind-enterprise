@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check the synthetic dataset's answer keys against its documents (2026-11-12).
 
-    python3 scripts/law/synthetic/check_keys.py [eval/fixtures/synthetic/answer_key_*.jsonl]
+    python3 scripts/law/synthetic/check_keys.py [--base eval/fixtures/webinar] [eval/fixtures/synthetic/answer_key_*.jsonl]
 
 Errors (exit 1): a malformed item, a duplicate id, an unknown matter or kind, a `source` that is not a document title of
 the matter, or an `evidence` segment that is not in its document's reader text (eval/fixtures/synthetic/text/; pieces
@@ -35,10 +35,14 @@ def norm(s: str) -> str:
 
 
 def main() -> int:
-    files = [Path(a) for a in sys.argv[1:]] or sorted(BASE.glob("answer_key_*.jsonl"))
-    manifest = json.loads((BASE / "manifest.json").read_text())
+    args = sys.argv[1:]
+    base = BASE
+    if args[:1] == ["--base"]:                 # another dataset folder, e.g. eval/fixtures/webinar (2026-11-16)
+        base, args = Path(args[1]).resolve(), args[2:]
+    files = [Path(a) for a in args] or sorted(base.glob("answer_key_*.jsonl"))
+    manifest = json.loads((base / "manifest.json").read_text())
     titles = {c["number"]: {d["title"]: d for d in c["documents"]} for c in manifest["cases"]}
-    texts = {c["number"]: {d["title"]: norm((BASE / "text" / (d["file"] + ".txt")).read_text()) for d in c["documents"]}
+    texts = {c["number"]: {d["title"]: norm((base / "text" / (d["file"] + ".txt")).read_text()) for d in c["documents"]}
              for c in manifest["cases"]}
     errors, warnings, seen, kinds = [], [], set(), Counter()
     for f in files:
